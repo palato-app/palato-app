@@ -75,3 +75,39 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Rationale:** On-brand (we're building a coffee thing, so we give coffee), caps cost at the number of interviews actually conducted (~$125–175 for 5), signals the interviewer is a coffee insider rather than a market researcher buying signal.
 **Tradeoffs accepted:** Slightly more fulfillment friction (manually ordering 5 bags vs. sending one gift-card link).
 **Linked competency:** B (Voice of Customer)
+
+---
+
+## #009 — April 25, 2026 — Enabled automatic Row Level Security on Supabase
+**Decision:** Turn on automatic RLS at project creation so every new table starts locked-down by default.
+**Alternatives considered:** Leave RLS off (Supabase default for new projects); enable per-table manually as needed.
+**Rationale:** Multi-user app with personal data (ratings, notes, taste profiles) requires per-user data isolation. Forcing the discipline of writing access policies for every new table from day one is easier than retrofitting after a leak. Demonstrates security-aware thinking for any future case study.
+**Tradeoffs accepted:** Slightly more friction per new table — must write a policy before queries return data. Learning curve on RLS syntax.
+**Linked competency:** D (artifact rigor); tangentially A (foundation for safe AI pipelines downstream)
+
+---
+
+## #010 — April 25, 2026 — Hardened .gitignore to exclude all .env variants
+**Decision:** Add explicit ignore rules for `.env`, `.env.local`, and `.env.*.local` after Vite's default scaffold did not cover plain `.env`.
+**Alternatives considered:** Trust Vite's defaults (caught at first commit attempt — would have leaked anon key).
+**Rationale:** Secrets management hygiene is non-negotiable for a multi-service app (Supabase now, Anthropic API soon, more later). Explicit defense beats trusting any framework's defaults.
+**Tradeoffs accepted:** None meaningful.
+**Linked competency:** D; tangentially A (secret leaks in AI pipelines are a real production risk)
+
+---
+
+## #011 — April 25, 2026 — Use VITE_ prefix convention for client-exposed environment variables
+**Decision:** Adopt Vite's `VITE_` prefix convention for any environment variable the React client needs. Server-only secrets (Anthropic API key, future service-role keys) will deliberately *not* use the prefix.
+**Alternatives considered:** Use a generic prefix and remember which vars are safe for the client; expose all vars to the client.
+**Rationale:** The prefix is a security firewall — Vite literally cannot expose a non-`VITE_` var to the browser bundle. Adopting the discipline now means future server-only secrets cannot accidentally leak to client code.
+**Tradeoffs accepted:** None.
+**Linked competency:** D, A
+
+---
+
+## #012 — April 25, 2026 — Made GitHub repo public to enable free Vercel deployment
+**Decision:** Change `palato-app/palato-app` from private to public to qualify for Vercel's Hobby (free) tier.
+**Alternatives considered:** Pay $20/mo for Vercel Pro; transfer repo from org to personal account; switch host to Cloudflare Pages or Netlify.
+**Rationale:** Vercel Hobby deploys public org repos for free but gates private org repos behind Pro — a structural cost we didn't anticipate when creating the `palato-app` org for branding reasons. Public is the cheapest path with zero architecture changes. Doubles as a portfolio artifact: a documented public repo (PRD, brand guide, decisions, working code) is a stronger signal to a hiring manager than the same repo hidden. `.gitignore` already protects secrets. Reversible — visibility toggles back at any time.
+**Tradeoffs accepted:** Code, documents, and commit history are publicly visible. Acknowledged trade we'd want to revisit if the project ever develops genuine competitive IP.
+**Linked competency:** D (work-as-portfolio); also a small Competency C signal (cost-aware infrastructure choices)
