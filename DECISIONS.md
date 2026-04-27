@@ -122,3 +122,11 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Tradeoffs accepted:** All founder risk — blind spots, hard calls, accountability — lands on one person with no real-time pressure-test from a partner.
 **Linked competency:** Founder self-awareness (outside the A–E set).
 
+---
+
+## #014 — April 26, 2026 — Adopted versioned SQL migrations via Supabase CLI for schema management
+**Decision:** Manage all Supabase schema changes via versioned `.sql` files in `supabase/migrations/`, executed through the Supabase CLI. Schema design conversations happen in Claude.ai, schema spec is committed to the repo, migrations run via CLI.
+**Alternatives considered:** Supabase SQL Editor (UI-driven, faster but no version control); raw SQL files run manually via psql.
+**Rationale:** Version-controlled migrations are a Competency D artifact and standard professional practice. Every schema change becomes durable, reversible, reviewable, and visible to future hires or hiring managers reading the repo. Trade is ~10 min of one-time CLI setup.
+**Tradeoffs accepted:** More setup overhead; schema changes now require a commit, not just a click.
+**Linked competency:** D (Product Artifacts); also a small A (foundation for safe AI-pipeline data eval work).
