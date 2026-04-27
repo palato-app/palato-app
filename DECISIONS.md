@@ -111,3 +111,14 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Rationale:** Vercel Hobby deploys public org repos for free but gates private org repos behind Pro — a structural cost we didn't anticipate when creating the `palato-app` org for branding reasons. Public is the cheapest path with zero architecture changes. Doubles as a portfolio artifact: a documented public repo (PRD, brand guide, decisions, working code) is a stronger signal to a hiring manager than the same repo hidden. `.gitignore` already protects secrets. Reversible — visibility toggles back at any time.
 **Tradeoffs accepted:** Code, documents, and commit history are publicly visible. Acknowledged trade we'd want to revisit if the project ever develops genuine competitive IP.
 **Linked competency:** D (work-as-portfolio); also a small Competency C signal (cost-aware infrastructure choices)
+
+---
+
+## #013 — April 25, 2026 — Decided against bringing on a co-founder for Phase 0 and Phase 1.
+**Decision:** I decided against it for Phase 0 and Phase 1.
+**Alternatives considered:** Approaching Jono, Jeremy, or Matt about becoming co-founders; seeking a technical co-founder through the FaithTech network.
+**Rationale:** The impulse was driven by confidence-seeking and isolation-avoidance, not by an unfilled strategic gap.
+**Mitigation:** Build a scaffolding of thought partners (Jono, Matt, Jeremy) with defined, scoped engagement. Revisit after Phase 1 launch with evidence of where the actual gap is.
+**Tradeoffs accepted:** All founder risk — blind spots, hard calls, accountability — lands on one person with no real-time pressure-test from a partner.
+**Linked competency:** Founder self-awareness (outside the A–E set).
+
