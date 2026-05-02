@@ -22,6 +22,7 @@ Names of respondents who explicitly engaged via personal email: first name only.
 - Interview yeses (no email captured): 1 — Kyle (replied "Sure!" but didn't leave email; needs follow-up)
 - Maybe (business email): 1 — Kevin
 - Declined: 1 — Jes (no email left)
+- Out-of-band interviews conducted: 1 — Josh S. (May 2, 2026; recruited via Jesse's personal network, not screener)
 
 ## Round 1 — April 25–26, 2026
 
@@ -83,6 +84,35 @@ Names of respondents who explicitly engaged via personal email: first name only.
 - **No Comfortable tier** (Intentional Explorer's lower band).
 - **Recruitment bias:** DMs went to Jesse's network, heavy on coffee professionals. Round 2 needs deliberately different channels.
 
+---
+
+## Round 1 Interviews — May 2026
+
+### Josh S. — May 2, 2026
+
+**Profile:** Business Analyst, strong tech background. Self-described non-specialist coffee drinker — places him in the **Curious Upgrader** segment (matches PRD definition: transitioning into specialty, not yet deeply in the culture). Notable because the screener sample skewed heavily Professional; Josh is the first confirmed Curious Upgrader in the interview record.
+
+**Concept reaction:** Strongly positive. Unprompted, said he would use the app constantly. Validated without needing much explanation.
+
+**Verbatim worth keeping:**
+
+- "If you don't build this, I will." — strongest unsolicited concept validation in Round 1.
+- "This sounds like a powerful app, I would definitely use this all the time."
+- "If you can attach a strong regression model, that's what would make this an app worth using again and again, I'd want that kind of data."
+
+**Key signal — the Oura Ring positioning frame:**
+Josh suggested repositioning Palato less as a Vivino-for-coffee and more as a **data wearable for coffee** — the Oura Ring or Apple Watch for your morning cup. The analogy: people tolerate daily data entry into fitness apps because the output (trends, insights, personalized analysis) creates a feedback loop they want to return to. If Palato can deliver that kind of personalized data back to the user, the daily rating becomes habitual rather than effortful. He explicitly tied this to retention: more entry → better model → better insight → more entry.
+
+*What it means:* This is a meaningful positioning signal. The "Vivino for coffee" frame anchors Palato in discovery and social proof. The "Oura for coffee" frame anchors it in self-knowledge and personalized analysis. These aren't mutually exclusive, but they suggest different retention loops. Worth pressure-testing in future interviews: which frame resonates more with Curious Upgraders vs Professionals?
+
+**Key signal — regression models:**
+Josh (as a BA with quantitative background) pushed hard on integrating regression models early — suggesting they'd be the mechanism that makes the data meaningful over time rather than just a log. He acknowledged Jesse needed to research this further before committing to it. *Treat this as a credible signal from a technically fluent user, not a feature commitment.* The underlying ask: "help me understand what my data means, don't just store it."
+
+*What it means:* Palato's long-term value prop may depend on whether we can surface pattern-level insights ("you consistently rate naturals from Ethiopia 0.8 stars higher than anaerobic Colombians") rather than just logging. This is directionally aligned with Theme 4 from screener synthesis (variety expansion within a known palate) but goes further — the user wants the *app* to discover their palate for them. Needs research before any schema or architecture decisions are made.
+
+**Implication for atomic action + engagement loop:**
+Josh's framing suggests the rating flow shouldn't end at "submit." A short set of post-rating questions ("how did you brew this?", "time of day?", "what were you in the mood for?") could be the equivalent of Apple Watch's daily health inputs — low friction individually, high signal in aggregate. Jesse wants to explore this explicitly as a next step (see action items below).
+
 ### Round 1 → action items
 
 - [ ] Reach out to ~10 Curious Upgrader prospects via different channels before booking interviews
@@ -91,3 +121,7 @@ Names of respondents who explicitly engaged via personal email: first name only.
 - [ ] Push to schedule Kevin — most useful skeptic in sample
 - [ ] Add `roast_date`, separated tasting notes, and `producer`/`farm` fields to schema (informs tonight's migration)
 - [ ] Pressure-test the Q3 categories in Round 2 screener design (self-report vs behavior mismatch)
+- [ ] Research regression models in the context of taste profiling — understand what's feasible and what data schema would be required before committing to a direction (Josh's signal; credible but needs grounding)
+- [ ] Explore the post-rating engagement loop: what are the 3–5 "daily input" questions a user could answer after rating that would build enough signal to generate personalized insights? Map these to the atomic action flow.
+- [ ] Test the Oura/Apple Watch positioning frame in the next 2 interviews — does it resonate across segments or is it specific to data-oriented users like Josh?
+- [ ] Log a DECISIONS.md entry on the positioning tension: "Vivino for coffee" vs "Oura for coffee" — not a decision yet, but the frame is worth documenting so it can be pressure-tested deliberately.
