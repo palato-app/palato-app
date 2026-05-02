@@ -130,3 +130,49 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Rationale:** Version-controlled migrations are a Competency D artifact and standard professional practice. Every schema change becomes durable, reversible, reviewable, and visible to future hires or hiring managers reading the repo. Trade is ~10 min of one-time CLI setup.
 **Tradeoffs accepted:** More setup overhead; schema changes now require a commit, not just a click.
 **Linked competency:** D (Product Artifacts); also a small A (foundation for safe AI-pipeline data eval work).
+
+---
+
+## #015 — May 2, 2026 — Rating architecture: hybrid (bag-level headline + optional brew sessions)
+**Decision:** Ratings attach at the bag level by default. Brew sessions exist as optional records underneath any bag rating, capturing the variables that define a specific cup (method, grind, ratio, temperature, etc.).
+**Alternatives considered:** Rate the bag only (Vivino-equivalent) — simple but loses extraction-quality signal; rate the brew only — richest data but kills activation speed with multi-step session logging; hybrid (chosen).
+**Rationale:** Coffee diverges from wine in a fundamental way — the bag is not the drink. A 3-second bag rating preserves activation speed while brew sessions capture the data that powers personalization and recommendations.
+**Tradeoffs accepted:** Increased data model complexity (a `brew_sessions` table joined to `ratings`) and a UI that handles two levels of abstraction.
+**Implication:** v1 data model needs a `brew_sessions` table; ratings should be able to attach to either a bag or a specific brew session.
+**Linked competency:** A (data foundation for AI features), D (architectural artifact)
+
+---
+
+## #016 — May 2, 2026 — Rating scale: 1–5 dial with 0.1 increments + Claude-extracted SCA score
+**Decision:** User-facing rating is a 1–5 dial with 0.1-increment granularity (Vivino-style). Separately, the SCA score printed on the bag is captured as an informational field — extracted by Claude during scanning, never user-entered.
+**Alternatives considered:** 1–5 stars (J-curve clustering, dead middle space); 1–10 (marginal improvement, cultural calibration drift); SCA 100-point cupping scale (effectively compresses to 80–100, intimidates Curious Upgrader segment); 1–5 dial with 0.1 increments + SCA capture (chosen).
+**Rationale:** The dial answers "how was it?" — emotional, fast, recognizable. Brew session data and flavor tagging carry the precision load. Surfacing SCA scores earns credibility with roasters and pros without forcing every user to think in 87-point terms; doubles as vocabulary-building for Curious Upgraders.
+**Tradeoffs accepted:** Two parallel rating numbers may confuse some users initially. Mitigation: visual hierarchy — user dial is primary; SCA appears as a small badge or detail field.
+**Linked competency:** D (UX decision with documented rationale)
+
+---
+
+## #017 — May 2, 2026 — Post-rating flow: progressive disclosure + behavioral adaptation
+**Decision:** The post-rating flow uses progressive disclosure with smart defaults. Required fields are minimal. Default-visible fields are pre-populated from the user's history. Deeper fields are one tap away. The system observes actual usage and adjusts what's visible over time.
+**Alternatives considered:** Uniform flow (same for everyone — floors the ceiling for power users); adaptive-by-segment (paternalistic, unreliable segment assignment); user-chooses-depth ("Quick log" vs "Full session" — adds a meta-decision before the flow); progressive disclosure + behavioral adaptation (chosen).
+**Rationale:** Lets every user finish in seconds if they want, and lets any user go deep without being prompted to. Avoids segment guessing. Adaptation is driven by what users actually do: if a user always expands brew detail, surface it earlier; if they never do, hide it harder or invite them back with a contextual prompt.
+**Tradeoffs accepted:** More implementation complexity than a static flow. Requires usage telemetry to drive adaptation.
+**Linked competency:** B (designed with VoC adaptation built in), D (UX architecture artifact)
+
+---
+
+## #018 — May 2, 2026 — Design principle: every optional question must visibly return as insight
+**Decision:** Adopt "insight-return" as the standing constraint on any optional field added to the rating or post-rating flow. If a piece of data we collect doesn't eventually surface back to the user as personal insight, it doesn't earn its place in the flow.
+**Alternatives considered:** Maximize data collection (ask everything the recommender might want — corrodes trust over time); minimize friction (Vivino's tendency — optimizes activation but product knows less about you than expected after months); insight-return principle (chosen).
+**Rationale:** The Aura/Whoop reframe — users aren't averse to data collection; they're averse to *unrewarded* data collection. Making the user the protagonist of their own taste dashboard, rather than the source material for ours, is the wedge Palato uses to out-design Vivino on the post-rating flow. Concrete test: "what was your grind size?" doesn't earn its slot unless it eventually produces something like "you tend to rate medium-coarse pour-overs higher than fine espresso pulls."
+**Tradeoffs accepted:** Every new field requires a paired insight commitment, which adds ongoing design overhead.
+**Linked competency:** A (governs what data the AI features need to return), D (design heuristic that constrains future decisions)
+
+---
+
+## #019 — May 2, 2026 — Defer regression-based recommender to v1.1+; design v1 schema to support one
+**Decision:** v1 will not include a trained regression model for recommendations. v1's data schema will be designed to capture the user-side, coffee-side, and context-side features that a regression model would require, so one can be trained on real Palato data in v1.1+.
+**Alternatives considered:** Build a regression-based recommender into v1 (premature — no training data); skip regression permanently and stay Claude-only (forfeits fast quantitative prediction once data exists); defer build, design schema for it (chosen).
+**Rationale:** The disciplined version of the feedback from Josh S. (April 2026 user interview) was not "build a regression model now" — it was "design for one." A regression model trained on no data is worse than no model. Claude serves as the v1 recommender while ratings accumulate. With ~5,000 ratings across ~500 users, there's enough signal to train a meaningful first model. Schema migrations are expensive; getting the fields right from the start is the cheap version of this decision.
+**Tradeoffs accepted:** Schema work upfront that won't pay off for months.
+**Linked competency:** A (foundational architecture for evolving AI capability), D (technical decision with documented forecasting)
