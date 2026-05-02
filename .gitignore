@@ -27,3 +27,5 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+# Claude Code session state — local only, do not commit
+.claude/
