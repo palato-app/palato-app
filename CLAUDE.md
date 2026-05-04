@@ -43,13 +43,15 @@ When work maps to one of these, flag it. This is not optional — it's part of t
 
 ---
 
-## Brand Temperature (and Why We're Not Using It Yet)
+## Brand Temperature
 
-Palato's eventual voice is warm, hand-touched, editorial, and opinionated. Typography: Fraunces (display) + DM Sans (body). Aesthetic: specialty coffee shop, not enterprise SaaS.
+Palato's voice is warm, hand-touched, editorial, and opinionated. Aesthetic: specialty coffee shop, not enterprise SaaS.
 
-**For the current prototype build: deliberately unfinished.** User interviewees during Phase 0 should critique flows and information architecture, not visuals. Premature brand polish biases feedback toward aesthetics. Full brand layers in at v1.1, post-interview synthesis.
+**Current direction (per Decision #019):** Magazine-spread aesthetic (Apartamento, Drift Magazine register). Typography: **Boldonse** for the wordmark only, **Instrument Serif** as the working display face, **Geist** as body. Cream `#F4EAD5` background with subtle paper-grain texture, Espresso `#1E1410` text, **Ember `#D94E1F`** as eyebrow accent and primary CTA color (use sparingly). Light-to-dark category ordering with Body & Mouthfeel separated as its own perceptual register.
 
-For prototype UI, default to system fonts, Raw Cream `#F4EAD5` for backgrounds, Espresso `#1E1410` for text, and minimal styling. The temperature can be present without the polish. Do not suggest custom fonts, illustrations, or styled components until explicitly asked.
+This direction departs from `palato-brand-guide-v01.md`, which specified Fraunces — the brand guide itself is now formally out of sync and needs a v02 update. When in doubt, follow Decision #019 in `DECISIONS.md`, not the brand guide.
+
+Do not suggest reverting to system fonts, Fraunces, or generic styling. Do not suggest illustrations, custom icons, or hand-drawn elements yet — those are explicitly deferred to v1.1 per the brand guide's phased craft rollout.
 
 ---
 
@@ -77,28 +79,35 @@ For prototype UI, default to system fonts, Raw Cream `#F4EAD5` for backgrounds, 
 
 ## Current State
 
-Live at `palato-app.vercel.app`, talking to Supabase. See `git log` and `DECISIONS.md` for the authoritative current state of commits and logged decisions.
+Live at `palato-app.vercel.app`, talking to Supabase. Auth via Google OAuth (test mode). Logged-in homepage renders the full 168-row flavor taxonomy with magazine-spread design. See `git log` and `DECISIONS.md` for the authoritative current state.
 
-**Phase:** Phase 0 — Foundation. Infrastructure is wired. Next task: database schema migration — `coffees`, `ratings`, `scans`, and `profiles` tables, with RLS policies on each.
+**Phase:** Phase 0 — Foundation. Schema is migrated, taxonomy seeded, auth is live, brand-aware frontend deployed. **Next tasks:** seed real coffees so the journal isn't empty for interviewees, build the rating flow (atomic action), write the bag-scanning AI prompt as the first AI workflow (Competency A milestone).
 
 ---
 
 ## Architecture
 
-**Stack:** React 19 + TypeScript, Vite, Supabase (auth/db/storage), Vercel (deployment), Anthropic API (Claude) for AI features — same stack as Flight Deck.
+**Stack:** React 19 + TypeScript, Vite, Supabase (auth/db/storage), Vercel (deployment), Anthropic API (Claude) for AI features.
 
 **Entry points:**
-- `src/main.tsx` → React root
-- `src/App.tsx` → app shell (currently just a Supabase connection check)
-- `src/lib/supabase.ts` → singleton Supabase client; throws at startup if env vars are missing
+- `src/main.tsx` → React root, wraps `<App />` in `<AuthProvider>`
+- `src/App.tsx` → app shell, routes between logged-out (Sign in with Google) and logged-in (TaxonomyView)
+- `src/lib/supabase.ts` → singleton Supabase client
+- `src/lib/auth.tsx` → AuthContext, `useAuth()` hook, OAuth sign-in/out
+- `src/lib/useFlavorDescriptors.ts` → custom hook for querying the taxonomy
+- `src/TaxonomyView.tsx` → magazine-spread render of the 168-descriptor taxonomy
 
-**Planned data model** (not yet migrated):
-- `coffees` — global catalog (roaster, name, origin, process, roast level, tasting notes)
-- `ratings` — per-user ratings linked to `coffees`
-- `scans` — raw AI extractions + user corrections (eval dataset for measuring and improving pipeline accuracy — Competency A)
-- `profiles` — per-user taste preferences and metadata
+**Database schema (live in Supabase, see `supabase/migrations/`):**
+- `profiles` — 1:1 with `auth.users`, app-specific user data (display_name, experience_level, preferred_brew_methods)
+- `coffees` — global catalog with intrinsic attributes (roaster, name, origin, process, roast level, etc.)
+- `ratings` — per-user rating events with rich brew variables (dose_grams, water_temp, grind_size, brew_time) and contextual fields (setting, paired_with) for pattern-surfacing
+- `scans` — AI extraction events with `model_version` and `prompt_version` for eval pipeline (Competency A)
+- `flavor_descriptors` — 168 SCA-aligned taxonomy rows seeded from `palato-flavor-taxonomy-v01.csv`
+- `coffee_flavor_descriptors` — M2M: roaster's claimed notes per coffee
+- `rating_flavor_descriptors` — M2M: user's perceived flavors per rating
+- `descriptor_suggestions` — user-contributed taxonomy candidates with review lifecycle (Competency B)
 
-Separating `coffees` from `ratings` enables community aggregation and deduplication as multiple users scan the same bag.
+All tables have RLS enabled with explicit policies. Schema changes go through versioned migrations: write `.sql` file → commit → `supabase db push` (per Decision #014).
 
 ---
 
