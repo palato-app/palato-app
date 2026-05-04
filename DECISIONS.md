@@ -130,3 +130,56 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Rationale:** Version-controlled migrations are a Competency D artifact and standard professional practice. Every schema change becomes durable, reversible, reviewable, and visible to future hires or hiring managers reading the repo. Trade is ~10 min of one-time CLI setup.
 **Tradeoffs accepted:** More setup overhead; schema changes now require a commit, not just a click.
 **Linked competency:** D (Product Artifacts); also a small A (foundation for safe AI-pipeline data eval work).
+
+---
+
+## #015 — May 2, 2026 — Applied initial schema + v01 flavor taxonomy via Supabase CLI
+**Decision:** Migrate the Phase 0 database schema and seed the 168-row flavor taxonomy as two versioned SQL files (`0001_initial_schema.sql`, `0002_seed_flavor_taxonomy.sql`), executed via `supabase db push`. This realizes Decision #014's commitment to versioned migrations.
+**Alternatives considered:** Run schema as raw SQL in Supabase's SQL Editor (faster but bypasses the version-control commitment from #014); split migrations more granularly per table.
+**Rationale:** Two migration files keeps schema and seed data as separate logical units while remaining a single coherent change set. Wrapping the seed in a transaction makes it atomic — either all 168 descriptors land or none do. The CLI workflow now becomes the only path for schema changes going forward, which is the discipline #014 was designed to enforce.
+**Tradeoffs accepted:** ~30 minutes of CLI setup overhead (login, link, password retrieval) before any schema work could happen tonight; a more complex local toolchain than SQL Editor; one-time learning curve on `supabase migration list` / `supabase db push` semantics.
+**Linked competency:** D (versioned migrations as a portfolio artifact); A (the `scans` table now exists with `model_version` and `prompt_version` columns, foundational for AI-pipeline eval work).
+
+---
+
+## #016 — May 2, 2026 — Adopted v01 flavor taxonomy as canonical schema input
+**Decision:** Honor the prior `palato-coffee-attributes-v01.md` and `palato-flavor-taxonomy-v01.csv` work as the authoritative source for tonight's schema design, rather than improvising flavor-note storage from screener-round signal alone.
+**Alternatives considered:** Improvise tasting-note storage from scratch (text arrays only, no controlled vocabulary); defer the SCA flavor wheel integration to v1.1.
+**Rationale:** A previous Claude session produced a fully designed 168-descriptor taxonomy with category colors, aliases, defects flagging, and rationale documentation — work that almost got skipped in tonight's session. Catching that gap before writing the migration was a real save. The v01 design holds up: hierarchy via category/subcategory, descriptor uniqueness via slug, alias-based deduplication for scan extraction, defects flagged separately, and color/sort metadata baked in for future UI work. This decision also surfaces the broader pattern: prior project artifacts in the repo are durable; conversation context in Claude.ai chats is not. Always check the repo before designing.
+**Tradeoffs accepted:** Tonight's schema is more complex than a minimal "ratings + tasting_notes text[]" shape would have been (3 extra tables: `flavor_descriptors`, `coffee_flavor_descriptors`, `rating_flavor_descriptors`, plus `descriptor_suggestions`). Worth it: the structured taxonomy enables aggregation, search, recommendations, and the user-contribution pipeline that no other coffee app has.
+**Linked competency:** D (preserving and applying prior product artifacts); B (the `descriptor_suggestions` table is the user-contribution pipeline made concrete — first VoC feature in the schema itself).
+
+---
+
+## #017 — May 3, 2026 — Kept Supabase email confirmation enabled even with Google OAuth
+**Decision:** Leave Supabase's "Confirm email" setting ON for sign-ups, even though Google OAuth already verifies email ownership.
+**Alternatives considered:** Disable email confirmation since Google has already verified the email (Anthropic-recommended; reduces signup friction by ~1 step).
+**Rationale:** Defense-in-depth. Even if a Google account is compromised, the second confirmation step adds a verification layer. Aligns with Jesse's instinct to keep the auth flow strict at v0.1; relaxing it later is easier than tightening.
+**Tradeoffs accepted:** Slight onboarding friction (users see a confirmation email after signing in with Google). UX needs to handle "you signed in AND got an email" without confusing the user.
+
+---
+
+## #018 — May 3, 2026 — Configured Google OAuth as the sole auth provider for v0.1
+**Decision:** Use Google OAuth via Supabase Auth as the only sign-in method for v0.1. No email/password fallback. Test mode in Google Cloud Console with explicit test-user whitelist.
+**Alternatives considered:** Google + email/password (broader user coverage, more onboarding flows to maintain); Supabase magic-link email (no Google dependency, but adds a 60-second roundtrip).
+**Rationale:** Specialty coffee enthusiasts skew tech-comfortable, so Google covers ~95% of the target audience. One auth path means one set of edge cases to handle, faster path to a working sign-in flow. Test mode means no Google verification process required (no privacy policy/ToS yet) while still allowing real interviewees to sign in.
+**Tradeoffs accepted:** Users without a Google account (small minority) cannot sign in until we add email/password. The OAuth consent screen shows "Sign in to sroncfxyueuofcpzeztm.supabase.co" rather than "Palato" — looks unpolished but is fixable later via custom domain on Supabase Pro tier ($25/mo) or full Google verification. Test users must be explicitly whitelisted, which adds friction when scheduling interviews.
+**Linked competency:** D (auth as a documented infrastructure choice, with explicit scope boundaries).
+
+---
+
+## #019 — May 4, 2026 — Locked visual design direction for v0.1: magazine-spread aesthetic
+**Decision:** Replace the brand guide's recommended Fraunces display face with **Instrument Serif** (Google Fonts, free) for working display headings. Keep **Boldonse** for the "Palato" wordmark only. **Geist** stays as body. Light-to-dark category ordering with **Fermented & Funky promoted to position #3** (the descriptors inside it skew bright/fruit-derived, not heavy). **Body & Mouthfeel separated visually** as its own perceptual register (italic title, *feel* divider above). The aesthetic register is magazine-spread (Apartamento, Drift Magazine) — asymmetric hero, oversized italic headlines, paper-grain background, Ember as eyebrow accent.
+**Alternatives considered:** Stay with Fraunces (rejected — read as "1990s wine professor" in practice, despite reading well in the brand guide); zine/poster aesthetic (too rough for a product UI); coffee-shop chalkboard aesthetic (too informal); pill-grid layout (mockup B — felt more product-shaped but less editorial).
+**Rationale:** The brand guide's "Black Keys came by my coffee shop" voice didn't survive Fraunces in execution — the typeface read literary rather than confident. Instrument Serif sits in the same editorial-magazine register but reads modern rather than academic. Boldonse as wordmark-only is the right scope for that font (it's too aggressive for working display use). The Body & Mouthfeel separation reflects a real taxonomic distinction: flavor (gustatory) vs. mouthfeel (tactile) are different perceptual systems and shouldn't render as siblings.
+**Tradeoffs accepted:** The brand guide v01 is now formally out of sync with the live UI on the typography decision. Brand guide v02 will need to be updated to reflect Instrument Serif as the working display face. Mobile responsiveness has not been pressure-tested — the asymmetric hero and 240px sticky meta column will need reworking at narrow widths.
+**Linked competency:** D (design direction documented as a deliberate departure from the brand guide, with rationale); B (the "wine professor" rejection was a real Voice-of-Self check — the founder's own taste as a sample of one).
+
+---
+
+## #020 — May 4, 2026 — Deferred flavor wheel UI to the rating flow
+**Decision:** The logged-in homepage taxonomy view renders as a flat reference list (categories → subcategories → descriptors). The interactive flavor wheel — the canonical SCA wheel as a tappable SVG — is deferred to the rating flow as its own focused build.
+**Alternatives considered:** Build the wheel now as the primary taxonomy display on the homepage (rejected — overscope for tonight, and the wheel has no job to do on a reference page).
+**Rationale:** A flavor wheel is a *judgment-making* UI, not a *reference* UI. On the homepage, the user is seeing "here is the language we use." In the rating flow, the user is making active choices about what they tasted — that's where the wheel earns its complexity. Building it on the homepage means half-implementing the rating-flow interaction without the data model behind it. Better to wait until the wheel has a job.
+**Tradeoffs accepted:** Homepage doesn't visually showcase the wheel structure interviewers might expect to see in a "Vivino for coffee" demo. Mitigation: the categorized list still communicates the structure (Fruit → Berry → Blueberry/Blackberry/Raspberry…) — just statically.
+**Linked competency:** D (scope discipline made explicit); A (correctly placing the wheel as a rating-flow UI puts it in the AI-enabled-workflow path, where descriptor selection becomes data the recommendation engine reads).
