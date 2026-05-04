@@ -1,32 +1,74 @@
 import { useAuth } from './lib/auth'
+import { TaxonomyView } from './TaxonomyView'
+
+const cream = '#F4EAD5'
+const espresso = '#1E1410'
+const ember = '#D94E1F'
+
+const pageStyle = {
+  padding: '3rem 2.5rem 6rem',
+  fontFamily: 'Geist, system-ui, sans-serif',
+  backgroundColor: cream,
+  minHeight: '100vh',
+  color: espresso,
+  maxWidth: '980px',
+  margin: '0 auto',
+  // very subtle paper grain
+  backgroundImage:
+    'radial-gradient(rgba(30,20,16,0.025) 1px, transparent 1px), radial-gradient(rgba(30,20,16,0.02) 1px, transparent 1px)',
+  backgroundSize: '3px 3px, 7px 7px',
+  backgroundPosition: '0 0, 1px 2px',
+} as const
 
 function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
 
   if (loading) {
     return (
-      <div style={{ padding: '2rem', fontFamily: 'system-ui', backgroundColor: '#F4EAD5', minHeight: '100vh', color: '#1E1410' }}>
-        <p>Loading...</p>
+      <div style={pageStyle}>
+        <p style={{ opacity: 0.5 }}>Loading…</p>
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div style={{ padding: '2rem', fontFamily: 'system-ui', backgroundColor: '#F4EAD5', minHeight: '100vh', color: '#1E1410' }}>
-        <h1>Palato</h1>
-        <p>The specialty coffee app that learns what you love.</p>
+      <div style={pageStyle}>
+        <h1
+          style={{
+            fontFamily: '"Boldonse", system-ui',
+            fontSize: 'clamp(3rem, 8vw, 5rem)',
+            letterSpacing: '-0.02em',
+            margin: '0 0 1rem',
+            lineHeight: 1,
+          }}
+        >
+          PALATO
+        </h1>
+        <p
+          style={{
+            fontFamily: '"Instrument Serif", serif',
+            fontSize: '1.5rem',
+            opacity: 0.8,
+            margin: '0 0 3rem',
+            maxWidth: '540px',
+            lineHeight: 1.3,
+          }}
+        >
+          The specialty coffee app that learns what you love.
+        </p>
         <button
           onClick={signInWithGoogle}
           style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: '#D94E1F',
-            color: '#F4EAD5',
+            padding: '0.85rem 1.75rem',
+            backgroundColor: ember,
+            color: cream,
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '100px',
             fontSize: '1rem',
+            fontFamily: 'Geist, system-ui, sans-serif',
+            fontWeight: 500,
             cursor: 'pointer',
-            marginTop: '1rem',
           }}
         >
           Sign in with Google
@@ -36,25 +78,43 @@ function App() {
   }
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui', backgroundColor: '#F4EAD5', minHeight: '100vh', color: '#1E1410' }}>
-      <h1>Palato</h1>
-      <p>Welcome, {user.user_metadata.full_name || user.email}</p>
-      <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>You're logged in. Journal coming soon.</p>
-      <button
-        onClick={signOut}
+    <div style={pageStyle}>
+      <header
         style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: 'transparent',
-          color: '#1E1410',
-          border: '1px solid #1E1410',
-          borderRadius: '8px',
-          fontSize: '0.9rem',
-          cursor: 'pointer',
-          marginTop: '1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '0',
         }}
       >
-        Sign out
-      </button>
+        <h1
+          style={{
+            fontFamily: '"Boldonse", system-ui',
+            fontSize: '2rem',
+            letterSpacing: '-0.02em',
+            margin: 0,
+          }}
+        >
+          PALATO
+        </h1>
+        <button
+          onClick={signOut}
+          style={{
+            padding: '0.45rem 1rem',
+            backgroundColor: 'transparent',
+            color: espresso,
+            border: '1px solid rgba(30, 20, 16, 0.25)',
+            borderRadius: '100px',
+            fontSize: '0.85rem',
+            fontFamily: 'Geist, system-ui, sans-serif',
+            cursor: 'pointer',
+          }}
+        >
+          Sign out
+        </button>
+      </header>
+
+      <TaxonomyView />
     </div>
   )
 }
