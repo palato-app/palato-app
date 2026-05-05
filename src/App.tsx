@@ -1,5 +1,7 @@
 import { useAuth } from './lib/auth'
 import { TaxonomyView } from './TaxonomyView'
+import { AddCoffeeForm } from './AddCoffeeForm'
+import { useIsAdmin } from './lib/useIsAdmin'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -22,6 +24,7 @@ const pageStyle = {
 
 function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
+  const isAdmin = useIsAdmin()
 
   if (loading) {
     return (
@@ -115,6 +118,7 @@ function App() {
       </header>
 
       <TaxonomyView />
+      {isAdmin && <AddCoffeeForm />}
     </div>
   )
 }
