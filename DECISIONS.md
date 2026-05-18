@@ -201,3 +201,12 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Rationale:** Standardizing the *input* makes the *output* predictable everywhere — browse cards, eventual coffee detail page, eventual rating flow card, eventual journal thumbnail. One constraint at upload time, simpler everywhere downstream. Square crops also force more deliberate framing (center the bag in the photo) which improves catalog visual consistency.
 **Tradeoffs accepted:** Manual cropping adds an upload step. Coffees already in the catalog have non-square images that remain awkwardly cropped until re-uploaded — captured as tech debt.
 **Linked competency:** D (design constraint documented so future contributors don't reinvent the call).
+
+---
+
+## #023 — May 18, 2026 — Rating scale: decimal 1.0-5.0 input (Vivino-style)
+**Decision:** Users enter ratings on a continuous 1.0-5.0 scale with one decimal place (4.2, 3.8, 4.7, etc.). Match Vivino's input pattern. Schema migration required: change `ratings.rating` from `smallint check (between 1 and 5)` to `numeric(2,1) check (between 1.0 and 5.0)`.
+**Alternatives considered:** Whole-star input only (simpler UI, less expressive); half-star input with decimal aggregates (closer to early Vivino but less granular); 1-10 scale (more granular but loses the 5-star familiarity).
+**Rationale:** Decimal granularity captures real preference distinctions ("this is a 4.3, not a 4 — it's better than the average 4 but not as good as the 4.5s"). Specialty coffee enthusiasts, like Vivino users, often have strong opinions about the difference between a 4.0 and a 4.3 cup. Single decimal place keeps the cognitive load manageable (10× the granularity of whole stars; not 100× like full numeric).
+**Tradeoffs accepted:** UI requires a continuous input (slider or fine-grained selector) rather than 5 simple star buttons — more code, more design care. Schema migration needed before the rating flow can ship.
+**Linked competency:** D (rating scale documented as a deliberate design choice with reference to a known reference product).

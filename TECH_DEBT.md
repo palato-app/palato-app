@@ -67,3 +67,21 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Cosmetic, low priority.
 - **Fix:** Product marketing pass on all hero copy across the app once core flows are built and we're not iterating on structure.
 - **Surfaced:** May 18, 2026.
+
+### CoffeeDetail v0.1 — secondary fields not yet surfaced
+- **What:** The detail page renders bag image, roaster, coffee name, origin, process, roast level, variety, elevation, and SCA score. It does NOT render `producer`, `farm`, `process_detail`, `roast_date`, `roaster_tasting_notes_raw` (the array of roaster-stated flavor notes), or the curated Palato flavor descriptor chips from `coffee_flavor_descriptors`.
+- **Why it's debt:** These fields exist in the schema and belong on the detail page eventually. Producer and farm are origin-story info that specialty drinkers actually read. Roaster flavor notes vs. Palato descriptor chips is a design decision (which representation wins, or do both live there?) we haven't made yet.
+- **Fix:** Two passes. (1) Add producer, farm, process_detail, roast_date as additional fact-grid entries (cheap). (2) Decide the flavor-notes design — likely chips for Palato descriptors with raw roaster notes as fallback / secondary — and build the chip component.
+- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.
+
+### CoffeeDetail desktop-only layout
+- **What:** The detail page hero uses a two-column grid (image | details) that will look squished on mobile.
+- **Why it's debt:** Palato is mobile-first eventually. Two-column desktop layouts that don't stack on narrow viewports are a known regression.
+- **Fix:** Add a media query (or CSS Grid `minmax`) that collapses the hero to a single column under ~720px. Apply same treatment to BrowseCoffees hero, which has the same issue.
+- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.
+
+### CoffeeDetail has no community or personal rating signals
+- **What:** The detail page does not display community average rating, rating count, or the current user's prior ratings on this coffee.
+- **Why it's debt:** No rating data exists yet. Once the rating flow ships and accumulates data, the detail page is the obvious place to surface "your last rating: 4.2" and "37 community ratings · avg 4.1".
+- **Fix:** After 30+ ratings exist across the catalog, add a "your rating" block (above or beside the Rate button) and a community block below the fact grid.
+- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.

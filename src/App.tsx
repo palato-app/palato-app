@@ -9,7 +9,7 @@ const cream = '#F4EAD5'
 const espresso = '#1E1410'
 const ember = '#D94E1F'
 
-type View = 'browse' | 'flavors'
+type View = 'browse' | 'flavors' | 'coffee-detail' | 'rating'
 
 const pageStyle = {
   padding: '3rem 2.5rem 6rem',
@@ -43,6 +43,7 @@ function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
   const isAdmin = useIsAdmin()
   const [view, setView] = useState<View>('browse')
+  const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
 
   if (loading) {
     return (
@@ -125,10 +126,22 @@ function App() {
             gap: '1.5rem',
           }}
         >
-          <button onClick={() => setView('browse')} style={headerNavButton(view === 'browse')}>
+          <button
+            onClick={() => {
+              setView('browse')
+              setSelectedCoffeeId(null)
+            }}
+            style={headerNavButton(view === 'browse')}
+          >
             Coffees
           </button>
-          <button onClick={() => setView('flavors')} style={headerNavButton(view === 'flavors')}>
+          <button
+            onClick={() => {
+              setView('flavors')
+              setSelectedCoffeeId(null)
+            }}
+            style={headerNavButton(view === 'flavors')}
+          >
             Flavors
           </button>
           <button
