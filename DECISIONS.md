@@ -286,3 +286,15 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 - v0.1 polish, not v1.0 polish — will need visual iteration
 **Linked competency:** D (custom component shipped tonight, design rationale documented).
 **Linked next-action:** Iterate visual treatment; add keyboard support; add haptic feedback on mobile.
+
+---
+
+## #030 — May 18, 2026 — Ship Journal view in v0.1 to close the rating loop
+**Decision:** Built a Journal ("Your journal / The cups.") view as the third top-nav item between Coffees and Flavors. Reverse-chronological feed of the user's own ratings with coffee context, rating value, optional tasting notes, and selected descriptor chips. Hero stat shows ratings count, unique roasters, total flavor notes, first-rating date.
+**Alternatives considered:**
+- Wait for the next session (original plan)
+- Build it as "My Coffees" in the user's profile area only (more hidden)
+**Rationale:** Without the Journal, the rating flow is open-loop — users rate but can't see their own data. The interstitial's "coffee #X for you" copy implies a history the user can't navigate to. Journal closes that loop and validates the persistence work that shipped earlier in the session.
+**Tradeoffs accepted:** Cards aren't clickable yet, no edit/delete, no filters or sort. All tech-debted.
+**Linked competency:** D (third user-facing view shipped tonight).
+**Linked next-action:** Tap-to-detail once CoffeeDetail surfaces the user's own rating; edit/delete; filter by rating/roaster; group by week or month.

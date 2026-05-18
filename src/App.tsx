@@ -4,6 +4,7 @@ import { TaxonomyView } from './TaxonomyView'
 import { BrowseCoffees } from './BrowseCoffees'
 import { CoffeeDetail } from './CoffeeDetail'
 import { RateCoffee } from './RateCoffee'
+import { Journal } from './Journal'
 import { AddCoffeeForm } from './AddCoffeeForm'
 import { useIsAdmin } from './lib/useIsAdmin'
 
@@ -11,7 +12,7 @@ const cream = '#F4EAD5'
 const espresso = '#1E1410'
 const ember = '#D94E1F'
 
-type View = 'browse' | 'flavors' | 'coffee-detail' | 'rating'
+type View = 'browse' | 'journal' | 'flavors' | 'coffee-detail' | 'rating'
 
 const pageStyle = {
   padding: '3rem 2.5rem 6rem',
@@ -49,6 +50,11 @@ function App() {
 
   const goToBrowse = () => {
     setView('browse')
+    setSelectedCoffeeId(null)
+  }
+
+  const goToJournal = () => {
+    setView('journal')
     setSelectedCoffeeId(null)
   }
 
@@ -154,6 +160,9 @@ function App() {
           <button onClick={goToBrowse} style={headerNavButton(view === 'browse')}>
             Coffees
           </button>
+          <button onClick={goToJournal} style={headerNavButton(view === 'journal')}>
+            Journal
+          </button>
           <button onClick={goToFlavors} style={headerNavButton(view === 'flavors')}>
             Flavors
           </button>
@@ -176,6 +185,7 @@ function App() {
       </header>
 
       {view === 'browse' && <BrowseCoffees onSelectCoffee={goToCoffee} />}
+      {view === 'journal' && <Journal />}
       {view === 'flavors' && <TaxonomyView />}
       {view === 'coffee-detail' && selectedCoffeeId && (
         <CoffeeDetail

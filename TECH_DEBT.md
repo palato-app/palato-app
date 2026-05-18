@@ -145,3 +145,15 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
   - Define a multi-stop gradient on the dial path that mirrors the Vivino color story (cool → warm → hot).
   - Add a small CSS transition on the handle position (~150ms ease-out) for non-drag updates.
 - **Surfaced:** May 18, 2026 — Decision #029, dial v0.1.1 ships without these.
+
+### Journal v0.1 — known omissions
+- **What:** The Journal ships with intentional v0.1 limitations:
+  - **Cards are not clickable.** Tapping a rating card *should* navigate to the coffee's detail page, but CoffeeDetail doesn't surface the user's own rating yet (separate debt item). Wiring the click before CoffeeDetail is upgraded would land the user on a page that doesn't acknowledge they rated this coffee.
+  - **No edit or delete on past ratings.** Once submitted, ratings can only be inserted, not modified. Users will eventually want to fix typos, update flavor descriptors, change a rating, or delete an embarrassing one.
+  - **No filters or sort.** Only reverse-chronological. No "show me only 4+ ratings", "only this roaster", "this month".
+  - **No grouping.** A long journal will become hard to navigate without month/week dividers.
+  - **No empty-state CTA.** "No ratings yet. Pop the bag." sits there with no button to take the user to Coffees. A "Browse coffees" CTA would close the loop.
+  - **Date format is en-US locale only.**
+- **Why it's debt:** All are real UX gaps that emerge once the user has more than a handful of ratings. None block v0.1 ship.
+- **Fix:** Add each progressively as the catalog grows and the user has more journal entries. Click-to-detail comes when CoffeeDetail surfaces user ratings. Edit/delete is a meaningful schema + UI design effort (consider a rating-detail page or modal). Filters/sort/grouping can be client-side with the existing data.
+- **Surfaced:** May 18, 2026 — Decision #030, Journal v0.1 build.
