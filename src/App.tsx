@@ -1,11 +1,15 @@
+import { useState } from 'react'
 import { useAuth } from './lib/auth'
 import { TaxonomyView } from './TaxonomyView'
+import { BrowseCoffees } from './BrowseCoffees'
 import { AddCoffeeForm } from './AddCoffeeForm'
 import { useIsAdmin } from './lib/useIsAdmin'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
 const ember = '#D94E1F'
+
+type View = 'browse' | 'flavors'
 
 const pageStyle = {
   padding: '3rem 2.5rem 6rem',
@@ -15,16 +19,30 @@ const pageStyle = {
   color: espresso,
   maxWidth: '980px',
   margin: '0 auto',
-  // very subtle paper grain
   backgroundImage:
     'radial-gradient(rgba(30,20,16,0.025) 1px, transparent 1px), radial-gradient(rgba(30,20,16,0.02) 1px, transparent 1px)',
   backgroundSize: '3px 3px, 7px 7px',
   backgroundPosition: '0 0, 1px 2px',
 } as const
 
+const headerNavButton = (active: boolean) => ({
+  background: 'none',
+  border: 'none',
+  padding: '0.3rem 0',
+  fontFamily: 'Geist, system-ui, sans-serif',
+  fontSize: '0.9rem',
+  fontWeight: 500,
+  color: espresso,
+  opacity: active ? 1 : 0.5,
+  cursor: 'pointer' as const,
+  borderBottom: active ? `1.5px solid ${espresso}` : '1.5px solid transparent',
+  transition: 'opacity 0.15s',
+})
+
 function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
   const isAdmin = useIsAdmin()
+  const [view, setView] = useState<View>('browse')
 
   if (loading) {
     return (
@@ -100,24 +118,40 @@ function App() {
         >
           PALATO
         </h1>
-        <button
-          onClick={signOut}
+        <nav
           style={{
-            padding: '0.45rem 1rem',
-            backgroundColor: 'transparent',
-            color: espresso,
-            border: '1px solid rgba(30, 20, 16, 0.25)',
-            borderRadius: '100px',
-            fontSize: '0.85rem',
-            fontFamily: 'Geist, system-ui, sans-serif',
-            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1.5rem',
           }}
         >
-          Sign out
-        </button>
+          <button onClick={() => setView('browse')} style={headerNavButton(view === 'browse')}>
+            Coffees
+          </button>
+          <button onClick={() => setView('flavors')} style={headerNavButton(view === 'flavors')}>
+            Flavors
+          </button>
+          <button
+            onClick={signOut}
+            style={{
+              padding: '0.45rem 1rem',
+              backgroundColor: 'transparent',
+              color: espresso,
+              border: '1px solid rgba(30, 20, 16, 0.25)',
+              borderRadius: '100px',
+              fontSize: '0.85rem',
+              fontFamily: 'Geist, system-ui, sans-serif',
+              cursor: 'pointer',
+            }}
+          >
+            Sign out
+          </button>
+        </nav>
       </header>
 
-      <TaxonomyView />
+      {view === 'browse' && <BrowseCoffees />}
+      {view === 'flavors' && <TaxonomyView />}
+
       {isAdmin && <AddCoffeeForm />}
     </div>
   )
