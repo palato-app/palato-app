@@ -84,6 +84,12 @@ const styles = {
     border: '1px solid rgba(30, 20, 16, 0.15)',
     borderRadius: '12px',
     background: 'rgba(255, 255, 255, 0.25)',
+    width: '100%',
+    fontFamily: 'inherit',
+    color: 'inherit',
+    textAlign: 'left' as const,
+    cursor: 'pointer' as const,
+    transition: 'border-color 0.15s, transform 0.15s',
   } as const,
   cardImage: {
     width: '100px',
@@ -161,7 +167,11 @@ const styles = {
   } as const,
 }
 
-export function Journal() {
+type Props = {
+  onSelectCoffee: (coffeeId: string) => void
+}
+
+export function Journal({ onSelectCoffee }: Props) {
   const { ratings, loading, error } = useUserRatings()
 
   if (loading) return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Loading…</p>
@@ -212,14 +222,24 @@ export function Journal() {
 
       <div style={styles.list}>
         {ratings.map((r) => (
-          <RatingCard key={r.id} rating={r} />
+          <RatingCard
+            key={r.id}
+            rating={r}
+            onClick={() => r.coffee && onSelectCoffee(r.coffee.id)}
+          />
         ))}
       </div>
     </div>
   )
 }
 
-function RatingCard({ rating }: { rating: RatedCoffee }) {
+function RatingCard({
+  rating,
+  onClick,
+}: {
+  rating: RatedCoffee
+  onClick: () => void
+}) {
   const coffee = rating.coffee
   if (!coffee) return null
 
@@ -228,7 +248,7 @@ function RatingCard({ rating }: { rating: RatedCoffee }) {
     : ''
 
   return (
-    <article style={styles.card}>
+    <button onClick={onClick} style={styles.card}>
       {coffee.bag_image_url ? (
         <img
           src={coffee.bag_image_url}
@@ -277,6 +297,6 @@ function RatingCard({ rating }: { rating: RatedCoffee }) {
           </div>
         )}
       </div>
-    </article>
+    </button>
   )
 }

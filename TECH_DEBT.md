@@ -110,12 +110,6 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Build a "Journal" or "My Coffees" view. Chronological feed of user's ratings, with the coffee context, rating, tasting notes, and selected descriptors visible. Filterable by rating, sortable by date. Likely needs a new top-nav entry.
 - **Surfaced:** May 18, 2026 — surfaced by the absence of UI after RateCoffee ships. Highest priority for next session.
 
-### CoffeeDetail does not show the current user's rating on this coffee
-- **What:** The coffee detail page does not display "your rating: 4.2" or surface the user's prior tasting notes for this coffee.
-- **Why it's debt:** Detail page is the natural place to land after a rating; without surfacing the user's own rating it feels like nothing happened.
-- **Fix:** Query `ratings` for `(user_id, coffee_id)` on detail page load; if a rating exists, show it in a small "your rating" block above the Rate button. Change "Rate this coffee" button copy to "Update rating" when one already exists.
-- **Surfaced:** May 18, 2026 — surfaced alongside RateCoffee.
-
 ### Interstitial is a placeholder for a Whoop-for-coffee insight surface
 - **What:** The confirmation interstitial is one line of italic serif plus a count. Decision #026 frames it as a placeholder for a much richer "your palate is getting sharper" experience.
 - **Why it's debt:** The framing in the decision log promises more than the v0.1 UI delivers. Right now it's a confirmation, not insight.
@@ -148,7 +142,6 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 ### Journal v0.1 — known omissions
 - **What:** The Journal ships with intentional v0.1 limitations:
-  - **Cards are not clickable.** Tapping a rating card *should* navigate to the coffee's detail page, but CoffeeDetail doesn't surface the user's own rating yet (separate debt item). Wiring the click before CoffeeDetail is upgraded would land the user on a page that doesn't acknowledge they rated this coffee.
   - **No edit or delete on past ratings.** Once submitted, ratings can only be inserted, not modified. Users will eventually want to fix typos, update flavor descriptors, change a rating, or delete an embarrassing one.
   - **No filters or sort.** Only reverse-chronological. No "show me only 4+ ratings", "only this roaster", "this month".
   - **No grouping.** A long journal will become hard to navigate without month/week dividers.
@@ -157,3 +150,15 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** All are real UX gaps that emerge once the user has more than a handful of ratings. None block v0.1 ship.
 - **Fix:** Add each progressively as the catalog grows and the user has more journal entries. Click-to-detail comes when CoffeeDetail surfaces user ratings. Edit/delete is a meaningful schema + UI design effort (consider a rating-detail page or modal). Filters/sort/grouping can be client-side with the existing data.
 - **Surfaced:** May 18, 2026 — Decision #030, Journal v0.1 build.
+
+### CoffeeDetail does not surface per-coffee rating history (count > 1)
+- **What:** When a user has rated the same coffee more than once, the detail page shows only the most recent rating. There's no UI affordance to see "you've also rated this 2 other times" or expand to view past ratings.
+- **Why it's debt:** Repeat ratings are a real signal — taste evolution over a single bag matters. The journal shows all ratings chronologically, but you can't currently see them grouped by coffee.
+- **Fix:** Add a small pill or count above the "your rating" block when there's more than one rating ("3 ratings since May 12 · view all"). Tap expands to a small history list or jumps to a coffee-filtered view of the journal.
+- **Surfaced:** May 18, 2026 — Decision #031, surfaced by allowing multiple ratings per coffee.
+
+### Date formatting + utility duplication
+- **What:** A `formatDate` helper now lives identically in `CoffeeDetail.tsx` and `Journal.tsx`. Same with `ROAST_LABELS` (now in three places: CoffeeDetail, Journal, BrowseCoffees).
+- **Why it's debt:** Two divergence risks now exist — same constant, three places to keep aligned. Easy to forget when adding a new roast level enum value.
+- **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS and other enum→display maps). Cheap refactor, takes 5 minutes.
+- **Surfaced:** May 18, 2026 — second copy of formatDate created in CoffeeDetail build.

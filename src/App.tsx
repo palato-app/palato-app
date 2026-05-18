@@ -185,7 +185,7 @@ function App() {
       </header>
 
       {view === 'browse' && <BrowseCoffees onSelectCoffee={goToCoffee} />}
-      {view === 'journal' && <Journal />}
+      {view === 'journal' && <Journal onSelectCoffee={goToCoffee} />}
       {view === 'flavors' && <TaxonomyView />}
       {view === 'coffee-detail' && selectedCoffeeId && (
         <CoffeeDetail

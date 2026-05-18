@@ -298,3 +298,15 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Tradeoffs accepted:** Cards aren't clickable yet, no edit/delete, no filters or sort. All tech-debted.
 **Linked competency:** D (third user-facing view shipped tonight).
 **Linked next-action:** Tap-to-detail once CoffeeDetail surfaces the user's own rating; edit/delete; filter by rating/roaster; group by week or month.
+
+---
+
+## #031 — May 18, 2026 — Surface user's latest rating on CoffeeDetail; allow multiple ratings per coffee
+**Decision:** The CoffeeDetail page now shows the user's most recent rating (value, date, notes, descriptors) above the Rate button in a left-bordered ember block that visually distinguishes "your data" from the coffee's public facts. When a prior rating exists, the CTA flips from "Rate this coffee" → "Rate it again," and submitting creates a new rating row rather than updating the old one. Journal cards become clickable and navigate to coffee detail. Multiple ratings per user per coffee are explicitly supported.
+**Alternatives considered:**
+- One rating per user per coffee, with edit-in-place (would require update logic, a unique constraint, and a "are you sure you want to overwrite?" UX)
+- Show all the user's ratings of this coffee inline on detail page (richer but visually noisy at low counts)
+**Rationale:** Coffee changes — the bag oxidizes, your brew method evolves, your palate shifts. Locking a user to one rating per coffee misrepresents how people actually experience the same bag over a week. Each rating is a moment-in-time event; the journal preserves the full history; the detail page surfaces the latest as the "current sentiment." This matches Vivino's model for repeat-tasted wines.
+**Tradeoffs accepted:** Detail page shows only the latest, not the user's full per-coffee history. Surfacing per-coffee history is its own design problem (could be a small "you've rated this 3 times" pill that expands) — deferred.
+**Linked competency:** D (loop-closing product decision, schema interpreted as a feature).
+**Linked next-action:** "View all your ratings of this coffee" pill on detail when count > 1; eventual edit/delete affordances on past ratings.

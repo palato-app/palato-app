@@ -1,4 +1,5 @@
 import { useCoffee } from './lib/useCoffee'
+import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -7,6 +8,14 @@ const ROAST_LABELS: Record<string, string> = {
   medium_dark: 'Medium-dark',
   dark: 'Dark',
   unspecified: '',
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 const styles = {
@@ -100,6 +109,59 @@ const styles = {
     margin: 0,
     lineHeight: 1.3,
   } as const,
+  userRatingBlock: {
+    padding: '1.25rem 1.5rem',
+    marginBottom: '2rem',
+    background: 'rgba(217, 78, 31, 0.05)',
+    borderLeft: '3px solid #D94E1F',
+    borderRadius: '6px',
+  } as const,
+  userRatingHeader: {
+    display: 'flex',
+    justifyContent: 'space-between' as const,
+    alignItems: 'baseline' as const,
+    gap: '1rem',
+  } as const,
+  userRatingEyebrow: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.12em',
+    color: '#1E1410',
+    opacity: 0.65,
+    margin: 0,
+  } as const,
+  userRatingValue: {
+    fontFamily: '"Instrument Serif", serif',
+    fontStyle: 'italic' as const,
+    fontSize: '2.5rem',
+    color: '#D94E1F',
+    lineHeight: 1,
+    margin: 0,
+  } as const,
+  userRatingNotes: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.95rem',
+    color: '#1E1410',
+    opacity: 0.85,
+    lineHeight: 1.5,
+    margin: '0.75rem 0 0',
+  } as const,
+  userRatingChips: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: '0.35rem',
+    marginTop: '0.75rem',
+  } as const,
+  chip: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.75rem',
+    padding: '0.25rem 0.7rem',
+    borderRadius: '100px',
+    border: '1px solid',
+    fontWeight: 500,
+  } as const,
   rateButton: {
     padding: '1rem 2rem',
     backgroundColor: '#D94E1F',
@@ -122,9 +184,15 @@ type Props = {
 
 export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
   const { coffee, loading, error } = useCoffee(coffeeId)
+  const { rating: userRating } = useUserRatingForCoffee(coffeeId)
 
   if (loading) return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Loading…</p>
-  if (error) return <p style={{ color: '#D94E1F', marginTop: '3rem' }}>Couldn't load this coffee: {error}</p>
+  if (error)
+    return (
+      <p style={{ color: '#D94E1F', marginTop: '3rem' }}>
+        Couldn't load this coffee: {error}
+      </p>
+    )
   if (!coffee) return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Coffee not found.</p>
 
   const roastLabel = coffee.roaster_stated_roast_level
@@ -194,7 +262,44 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
             )}
           </div>
 
-          <button onClick={onRate} style={styles.rateButton}>Rate this coffee</button>
+          {userRating && (
+            <div style={styles.userRatingBlock}>
+              <div style={styles.userRatingHeader}>
+                <p style={styles.userRatingEyebrow}>
+                  You rated this · {formatDate(userRating.created_at)}
+                </p>
+                <p style={styles.userRatingValue}>{userRating.rating.toFixed(1)}</p>
+              </div>
+              {userRating.user_tasting_notes && (
+                <p style={styles.userRatingNotes}>{userRating.user_tasting_notes}</p>
+              )}
+              {userRating.descriptors.length > 0 && (
+                <div style={styles.userRatingChips}>
+                  {userRating.descriptors.map((d) => {
+                    const iconColor = d.category_icon_color ?? '#1E1410'
+                    const tintColor = d.category_pill_tint ?? 'rgba(30, 20, 16, 0.06)'
+                    return (
+                      <span
+                        key={d.id}
+                        style={{
+                          ...styles.chip,
+                          background: tintColor,
+                          color: iconColor,
+                          borderColor: `${iconColor}40`,
+                        }}
+                      >
+                        {d.descriptor}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          <button onClick={onRate} style={styles.rateButton}>
+            {userRating ? 'Rate it again' : 'Rate this coffee'}
+          </button>
         </div>
       </section>
     </div>
