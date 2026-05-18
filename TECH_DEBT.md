@@ -49,3 +49,21 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
   - **Prevention:** Add file-type validation to AddCoffeeForm — reject files outside `image/jpeg`, `image/png`, `image/webp`. ~5 min.
   - **Cleanup:** Either re-upload existing HEIC coffees as JPEGs (manual, ~20 min) or add server-side HEIC→JPEG conversion (overscope).
 - **Surfaced:** May 18, 2026 — first time the browse view rendered real catalog photos and the HEICs appeared as broken.
+
+### Card image proportions — bags get awkwardly cropped at 1:1
+- **What:** The browse view uses `aspect-ratio: 1/1` with `object-fit: cover` on bag images. Roaster bag photos are mostly portrait, so the crop chops the top and bottom of the bag in many cases.
+- **Why it's debt:** Visual identity of the bag is partly cropped away. At a small enough card size it's fine; at larger sizes it looks bad.
+- **Fix:** Either (a) require square crops at upload time in the AddCoffeeForm (force a crop step), or (b) switch the card image to a portrait aspect ratio (3:4 or 4:5) so most bag photos fit naturally, or (c) let the image be its natural aspect ratio with a fixed max-height and `object-fit: contain` (with a cream fill behind it).
+- **Surfaced:** May 18, 2026 — visible in first browse view render.
+
+### Browse view filter functionality
+- **What:** Browse view currently shows all coffees in a flat grid. No filtering by origin, process, roast level, or roaster.
+- **Why it's debt:** Useful at 13 coffees, becomes navigation friction at 30+.
+- **Fix:** Add filter chips at top of browse view. State management for active filters. Filters apply to the existing useCoffees data client-side; no schema changes needed.
+- **Surfaced:** Browse view build session, May 18, 2026 — filters explicitly deferred per session decision.
+
+### Browse view hero copy ("What's good.")
+- **What:** Copy on the browse view hero feels off. "What's good." reads as marketing-language rather than product-language.
+- **Why it's debt:** Cosmetic, low priority.
+- **Fix:** Product marketing pass on all hero copy across the app once core flows are built and we're not iterating on structure.
+- **Surfaced:** May 18, 2026.
