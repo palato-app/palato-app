@@ -210,3 +210,79 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Rationale:** Decimal granularity captures real preference distinctions ("this is a 4.3, not a 4 — it's better than the average 4 but not as good as the 4.5s"). Specialty coffee enthusiasts, like Vivino users, often have strong opinions about the difference between a 4.0 and a 4.3 cup. Single decimal place keeps the cognitive load manageable (10× the granularity of whole stars; not 100× like full numeric).
 **Tradeoffs accepted:** UI requires a continuous input (slider or fine-grained selector) rather than 5 simple star buttons — more code, more design care. Schema migration needed before the rating flow can ship.
 **Linked competency:** D (rating scale documented as a deliberate design choice with reference to a known reference product).
+
+---
+
+## #024 — May 18, 2026 — Rating input is a horizontal slider for v0.1
+**Decision:** The decimal rating input (1.0–5.0, one decimal place, per #023) is a native HTML range slider with the value displayed beside it in large italic serif. The slider position defaults to 3.0 visually but the rating value is null until the user interacts; submit stays disabled until the slider is touched.
+**Alternatives considered:**
+- Vivino-style dial/wheel with haptic feedback (mobile gestures, more tactile, closer to the reference product)
+- 5 tap-stars + a fine-tune slider/stepper underneath (hybrid coarse + fine)
+**Rationale:** The dial is the destination but requires a custom component, gesture handling, and accessibility work that doesn't pay off without user data. The slider ships tonight, works on all input modes, and is replaceable.
+**Tradeoffs accepted:** Native range styling is browser-default ugly. Tech-debted for a styled track + thumb pass.
+**Linked competency:** D (input design documented as deliberate v0.1 → v1.1 sequence).
+
+---
+
+## #025 — May 18, 2026 — Flavor descriptor selection is type-to-filter chips for v0.1
+**Decision:** The rating form surfaces all 168 descriptors as toggleable chips, color-coded by category, with a single search input that filters by descriptor name, category, subcategory, or alias. Chips are grouped by category with small headers for scannability. No category-first navigation, no "popular" chips section.
+**Alternatives considered:**
+- Category-first navigation (tap a category → see its chips, like a flavor wheel)
+- Both: search bar plus persistent category browser
+**Rationale:** Search-and-filter is one good component. Iterate from real user behavior — if users struggle to find descriptors without category navigation, add it in v1.1.
+**Tradeoffs accepted:** 168 chips is visually heavy on first render. Acceptable cost for the speed of build and the discoverability advantage over hidden-by-default search.
+**Linked competency:** B (taxonomy UX as testable design choice).
+
+---
+
+## #026 — May 18, 2026 — Post-submit confirmation interstitial with auto-redirect
+**Decision:** Submitting a rating shows a brief interstitial — "Logged." in italic ember serif, plus a dynamic stat ("That's coffee #X for you") — then auto-redirects to the browse view after 2 seconds.
+**Alternatives considered:**
+- Snap back to coffee detail page (problem: detail doesn't surface user's rating yet)
+- Snap back to browse without ceremony
+**Rationale:** Submission is the most important interaction in the app. It deserves a moment of acknowledgement that gestures at user progress. v0.1 framing is minimal but the *direction* matters: this is the seed of a Whoop-style "your palate is getting sharper" insight surface that should grow over time.
+**Tradeoffs accepted:** 2-second forced wait isn't optional. Users who hate it will tell us. Adjust to 1.5s or add a "skip" affordance based on feedback.
+**Linked competency:** E (feedback loop as product — this is the user-facing receipt that the rating system is alive).
+**Linked next-action:** Long-term direction is a Whoop-for-coffee insight panel — flavor profile evolution, palate-sharpening signals, evidence the app is doing something for the user. The interstitial is the seed, not the destination.
+
+---
+
+## #027 — May 18, 2026 — Split rating sensory input into "How did it taste?" vs "How did it feel?"
+**Decision:** Future versions of the rating form will split the sensory section into two distinct questions:
+- **"How did it taste?"** — flavor descriptors only (fruity, floral, sweet, nutty, spices, roasted, sour/fermented, and **defects/off-flavors elevated to this section**). Defects are flavor characteristics and belong here, not hidden.
+- **"How did it feel?"** — body/mouthfeel descriptors (full-bodied, silky, drying, astringent, etc.). Tactile, not flavor.
+**Alternatives considered:**
+- Keep all 10 categories under one "What did you taste?" section (current v0.1 — what's live now)
+- Hide defects entirely
+**Rationale:** Aligns with the SCA cupping form's structural distinction between taste and tactile. Separating them produces cleaner downstream data — flavor preference and body preference are different signals worth tracking independently. Defects are taste data and should be promoted, not hidden in a scroll.
+**Tradeoffs accepted:** Two sections is more visual weight than one. Descriptors need a structural grouping field beyond `category` — could be inferred from category name (treat "Body/Mouthfeel" specially) or stored as a new `sensory_type` column ('taste' | 'feel').
+**Linked competency:** B (taxonomy structure as deliberate UX choice).
+**Linked next-action:** When the merged-prose-with-detection form (#028) is built, this taste/feel split is built with it.
+
+---
+
+## #028 — May 18, 2026 — Long-term direction: merged prose + auto-detected descriptors
+**Decision:** The rating form's tasting input will evolve from "type prose + tap chips separately" to a single Vivino-style textarea that detects flavor descriptors inline as the user writes. Matched words highlight in their category color and auto-record into `rating_flavor_descriptors`. Tap a highlight to unselect. Chip browser remains as a fallback for descriptors the user didn't write about (especially defects, which users may not voluntarily use in prose).
+**Alternatives considered:**
+- Keep separate prose + chips (current v0.1)
+- Replace chips entirely with inline detection (would miss descriptors users don't write about)
+**Rationale:** The natural way a coffee drinker describes a cup is as a sentence. The system should extract structure from natural language, not force the user to translate their experience into two formats. Closer to how Vivino handles wine descriptors. Bonus: produces richer data (raw prose + structured tags from the same input) which is exactly the kind of text-to-structured workflow Claude can refine over time.
+**Tradeoffs accepted:** Real engineering lift — tokenization, multi-word phrase matching ("cane sugar" → "cane sugar" descriptor), alias matching, stem matching ("lemony" → "lemon"), and either a contenteditable or styled-textarea-with-overlay for inline highlighting. Not a v0.1 fit.
+**Linked competency:** A (AI-enabled workflows — text-to-structured-tags is exactly the kind of thing Claude could power and we could measure accuracy on, parallel to bag scanning).
+**Linked next-action:** v1.1+. The v0.1 form proves users want to capture flavor data; #028 makes the capture feel native.
+
+---
+
+## #029 — May 18, 2026 — Custom radial dial replaces the slider in v0.1.1
+**Decision:** Replaced the native HTML range slider with a custom SVG-based radial dial component (`RatingDial.tsx`). The dial sweeps 270° from bottom-left (min) to bottom-right (max), with integer tick marks, an Ochre→Ember gradient on the filled portion, and the value displayed in the center. Built using SVG arcs + Pointer Events with pointer capture for unified mouse/touch handling.
+**Alternatives considered:**
+- Stay with the native slider and add a scale visualization behind it (Decision #024's path)
+- Defer the dial to v1.1+ as originally planned
+**Rationale:** First-user feedback was immediate and specific — the slider "lacks scale" and "feels too naked." A custom dial gives both the visual gradation AND the emotional weight the rating moment deserves. This is the atomic action of the entire product; it earns the engineering investment now rather than later.
+**Tradeoffs accepted:**
+- No keyboard support yet (mouse/touch only — accessibility debt)
+- No haptic feedback (mobile)
+- Single linear gradient — not the multi-stop Vivino has
+- v0.1 polish, not v1.0 polish — will need visual iteration
+**Linked competency:** D (custom component shipped tonight, design rationale documented).
+**Linked next-action:** Iterate visual treatment; add keyboard support; add haptic feedback on mobile.

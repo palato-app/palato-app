@@ -3,6 +3,7 @@ import { useCoffee } from './lib/useCoffee'
 import { useFlavorDescriptors, type FlavorDescriptor } from './lib/useFlavorDescriptors'
 import { supabase } from './lib/supabase'
 import { useAuth } from './lib/auth'
+import { RatingDial } from './RatingDial'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -65,6 +66,7 @@ const styles = {
     lineHeight: 1.15,
   } as const,
   section: { marginBottom: '3rem' } as const,
+  ratingSection: { marginBottom: '3rem', textAlign: 'center' as const } as const,
   label: {
     fontFamily: 'Geist, system-ui, sans-serif',
     fontSize: '0.7rem',
@@ -73,30 +75,7 @@ const styles = {
     letterSpacing: '0.15em',
     color: '#1E1410',
     opacity: 0.55,
-    margin: '0 0 1rem',
-  } as const,
-  ratingRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2rem',
-  } as const,
-  slider: {
-    flex: 1,
-    height: '4px',
-    accentColor: '#D94E1F',
-    cursor: 'pointer' as const,
-  } as const,
-  ratingValue: {
-    fontFamily: '"Instrument Serif", serif',
-    fontSize: '3rem',
-    color: '#1E1410',
-    lineHeight: 1,
-    minWidth: '4rem',
-    textAlign: 'right' as const,
-    fontStyle: 'italic' as const,
-  } as const,
-  ratingValueMuted: {
-    opacity: 0.25,
+    margin: '0 0 1.5rem',
   } as const,
   textarea: {
     width: '100%',
@@ -229,7 +208,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
   const [submitted, setSubmitted] = useState(false)
   const [coffeeCount, setCoffeeCount] = useState<number | null>(null)
 
-  // Auto-redirect after successful submission
   useEffect(() => {
     if (!submitted) return
     const timer = setTimeout(() => onComplete(), 2000)
@@ -251,7 +229,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
     setSubmitting(true)
     setSubmitError(null)
 
-    // 1. Insert the rating
     const { data: ratingData, error: ratingError } = await supabase
       .from('ratings')
       .insert({
@@ -269,7 +246,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
       return
     }
 
-    // 2. Insert flavor descriptor links (if any)
     if (selectedDescriptorIds.size > 0) {
       const rows = Array.from(selectedDescriptorIds).map((descriptorId) => ({
         rating_id: ratingData.id,
@@ -281,13 +257,10 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
         .insert(rows)
 
       if (descError) {
-        // Rating saved but descriptors didn't — log and continue
-        // The rating still counts; user can re-tag later (once edit is built)
         console.error('Failed to save descriptors:', descError.message)
       }
     }
 
-    // 3. Get total rating count for the interstitial
     const { count } = await supabase
       .from('ratings')
       .select('*', { count: 'exact', head: true })
@@ -298,7 +271,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
     setSubmitted(true)
   }
 
-  // Filter descriptors by search query
   const filteredDescriptors = searchQuery.trim()
     ? descriptors.filter((d) => {
         const q = searchQuery.toLowerCase()
@@ -311,7 +283,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
       })
     : descriptors
 
-  // Group filtered descriptors by category for visual organization
   const grouped = filteredDescriptors.reduce<Record<string, FlavorDescriptor[]>>(
     (acc, d) => {
       if (!acc[d.category]) acc[d.category] = []
@@ -321,7 +292,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
     {}
   )
 
-  // Loading states
   if (coffeeLoading || descriptorsLoading) {
     return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Loading…</p>
   }
@@ -330,7 +300,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
     return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Coffee not found.</p>
   }
 
-  // Interstitial state — auto-redirects after 2s
   if (submitted) {
     return (
       <div style={interstitialStyles.container}>
@@ -354,7 +323,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
         ← Back
       </button>
 
-      {/* Coffee context */}
       <div style={styles.coffeeContext}>
         {coffee.bag_image_url ? (
           <img
@@ -374,32 +342,11 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
         </div>
       </div>
 
-      {/* Rating */}
-      <section style={styles.section}>
+      <section style={styles.ratingSection}>
         <p style={styles.label}>How was it?</p>
-        <div style={styles.ratingRow}>
-          <input
-            type="range"
-            min="1.0"
-            max="5.0"
-            step="0.1"
-            value={rating ?? 3.0}
-            onChange={(e) => setRating(parseFloat(e.target.value))}
-            style={styles.slider}
-            aria-label="Rating"
-          />
-          <span
-            style={{
-              ...styles.ratingValue,
-              ...(rating === null ? styles.ratingValueMuted : {}),
-            }}
-          >
-            {rating !== null ? rating.toFixed(1) : '—'}
-          </span>
-        </div>
+        <RatingDial value={rating} onChange={setRating} />
       </section>
 
-      {/* Tasting notes */}
       <section style={styles.section}>
         <p style={styles.label}>Anything specific?</p>
         <textarea
@@ -410,7 +357,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
         />
       </section>
 
-      {/* Flavor descriptors */}
       <section style={styles.section}>
         <p style={styles.label}>What did you taste?</p>
         <input
@@ -455,7 +401,6 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
         )}
       </section>
 
-      {/* Submit */}
       <div style={styles.submitRow}>
         {submitError && <p style={styles.error}>Couldn't save: {submitError}</p>}
         <button

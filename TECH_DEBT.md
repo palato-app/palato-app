@@ -121,3 +121,27 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** The framing in the decision log promises more than the v0.1 UI delivers. Right now it's a confirmation, not insight.
 - **Fix:** Once 20+ ratings exist per active user, design and ship a real insight surface — flavor profile growth, dominant categories, palate-sharpening trend lines. Likely a multi-week design + build effort, not a quick win.
 - **Surfaced:** May 18, 2026 — surfaced by Decision #026 framing.
+
+### RateCoffee UX/UI issues surfaced on first self-test
+- **What:** First end-to-end test (Jesse, May 18 2026) surfaced four issues:
+  1. **Rating slider lacks visual scale.** Numbers float in space without anchor. Need markers, endpoint labels ("Skip it" → "I'm hooked"), color gradient, or another visual treatment that gives "3.3" meaning.
+  2. **"Anything specific?" prose and "What did you taste?" chips feel redundant.** The user types descriptors in the prose, then is asked to tag them again from chips. Same data, two formats.
+  3. **Body & Mouthfeel is mis-categorized as flavor.** Tactile/sensation, not taste. Belongs in its own section.
+  4. **Defects & Off-flavors are hidden.** They're flavor characteristics and should live up front with taste, not buried.
+- **Why it's debt:** Direct first-user UX feedback, structural rather than cosmetic.
+- **Fix:** Addressed across Decisions #027 (taste/feel split) and #028 (merged prose + auto-detect). Slider scale (#1) handled separately — see slider style debt entry.
+- **Surfaced:** May 18, 2026 — first self-test of RateCoffee v0.1.
+
+### RatingDial — accessibility and platform polish
+- **What:** The new radial dial component has known gaps:
+  - **No keyboard support.** Can't tab to the dial and arrow-key to set a value. Screen readers won't see it as an interactive control.
+  - **No haptic feedback on mobile.** Real Vivino-style dials have a soft tick on each step. We have nothing.
+  - **Single linear gradient.** Vivino uses a multi-stop gradient that telegraphs intensity more vividly. Ours is functional, not polished.
+  - **No "snap" animation when releasing the handle.** Currently the handle stops wherever it lands.
+- **Why it's debt:** Accessibility is non-negotiable for any rating control that ships to real users. The rest is polish that compounds the brand.
+- **Fix:**
+  - Add `tabIndex={0}`, `role="slider"`, `aria-valuenow/min/max`, and onKeyDown handler for arrow keys (← →, ↑ ↓, PageUp/PageDown).
+  - Add `navigator.vibrate(10)` on each step change on touch devices (or use the Web Vibration API when available).
+  - Define a multi-stop gradient on the dial path that mirrors the Vivino color story (cool → warm → hot).
+  - Add a small CSS transition on the handle position (~150ms ease-out) for non-drag updates.
+- **Surfaced:** May 18, 2026 — Decision #029, dial v0.1.1 ships without these.
