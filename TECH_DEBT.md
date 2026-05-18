@@ -41,3 +41,11 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Anyone reading the repo gets two contradicting sources of truth on typography.
 - **Fix:** Brand guide v02 update — typography section minimum, ideally also in-product translation section.
 - **Surfaced:** Decision #019, May 4, 2026.
+
+### HEIC images don't render in browser
+- **What:** Some coffees in the catalog have `bag_image_url` pointing at `.heic` files uploaded from iPhone Photos via the AddCoffeeForm. Browsers can't display HEIC, so the images render as broken icons even though the files exist in Storage.
+- **Why it's debt:** Catalog looks half-broken when displaying these coffees. Will surface in any interview or demo.
+- **Fix (two parts):**
+  - **Prevention:** Add file-type validation to AddCoffeeForm — reject files outside `image/jpeg`, `image/png`, `image/webp`. ~5 min.
+  - **Cleanup:** Either re-upload existing HEIC coffees as JPEGs (manual, ~20 min) or add server-side HEIC→JPEG conversion (overscope).
+- **Surfaced:** May 18, 2026 — first time the browse view rendered real catalog photos and the HEICs appeared as broken.
