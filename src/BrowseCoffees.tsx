@@ -57,7 +57,13 @@ const styles = {
     borderRadius: '12px',
     overflow: 'hidden' as const,
     background: 'rgba(255, 255, 255, 0.25)',
-    transition: 'transform 0.15s, box-shadow 0.15s',
+    transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
+    padding: 0,
+    fontFamily: 'inherit',
+    color: 'inherit',
+    textAlign: 'left' as const,
+    cursor: 'pointer' as const,
+    width: '100%',
   },
   imageWrapper: {
     width: '100%',
@@ -120,7 +126,11 @@ const styles = {
   },
 }
 
-export function BrowseCoffees() {
+type Props = {
+  onSelectCoffee: (coffeeId: string) => void
+}
+
+export function BrowseCoffees({ onSelectCoffee }: Props) {
   const { coffees, loading, error } = useCoffees()
 
   if (loading) return <p style={{ opacity: 0.5 }}>Loading coffees…</p>
@@ -146,20 +156,24 @@ export function BrowseCoffees() {
 
       <div style={styles.grid}>
         {coffees.map((coffee) => (
-          <CoffeeCard key={coffee.id} coffee={coffee} />
+          <CoffeeCard
+            key={coffee.id}
+            coffee={coffee}
+            onClick={() => onSelectCoffee(coffee.id)}
+          />
         ))}
       </div>
     </div>
   )
 }
 
-function CoffeeCard({ coffee }: { coffee: Coffee }) {
+function CoffeeCard({ coffee, onClick }: { coffee: Coffee; onClick: () => void }) {
   const roastLabel = coffee.roaster_stated_roast_level
     ? ROAST_LABELS[coffee.roaster_stated_roast_level] ?? ''
     : ''
 
   return (
-    <article style={styles.card}>
+    <button onClick={onClick} style={styles.card}>
       <div style={styles.imageWrapper}>
         {coffee.bag_image_url ? (
           <img src={coffee.bag_image_url} alt={`${coffee.coffee_name} bag`} style={styles.image} />
@@ -176,6 +190,6 @@ function CoffeeCard({ coffee }: { coffee: Coffee }) {
           {roastLabel && <span>{roastLabel}</span>}
         </div>
       </div>
-    </article>
+    </button>
   )
 }
