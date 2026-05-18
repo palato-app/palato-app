@@ -85,3 +85,39 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** No rating data exists yet. Once the rating flow ships and accumulates data, the detail page is the obvious place to surface "your last rating: 4.2" and "37 community ratings · avg 4.1".
 - **Fix:** After 30+ ratings exist across the catalog, add a "your rating" block (above or beside the Rate button) and a community block below the fact grid.
 - **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.
+
+### Rating slider styled with browser defaults
+- **What:** The rating slider in RateCoffee uses native `<input type="range">` with `accent-color: #D94E1F` and a thin track. No custom thumb or fill styling.
+- **Why it's debt:** Native range inputs look different across browsers (Safari vs Chrome vs Firefox) and don't match the editorial brand polish.
+- **Fix:** Style ::-webkit-slider-thumb, ::-webkit-slider-runnable-track, ::-moz-range-track, ::-moz-range-thumb. Or replace with a custom slider component when the Vivino-style dial work happens (#024).
+- **Surfaced:** May 18, 2026 — RateCoffee v0.1 build.
+
+### Rating + descriptor inserts are not transactional
+- **What:** Submitting a rating runs two sequential Supabase inserts: first into `ratings`, then into `rating_flavor_descriptors` for each selected descriptor. If the descriptor insert fails, the rating still exists without its tags.
+- **Why it's debt:** Data inconsistency. A rating without its flavor descriptors is partial. Today we `console.error` and proceed; the user sees a successful submit.
+- **Fix:** Move to a Postgres RPC function (`create_rating_with_descriptors`) that wraps both inserts in a transaction. Either both succeed or both roll back.
+- **Surfaced:** May 18, 2026 — RateCoffee v0.1 build.
+
+### Descriptor search is substring, not fuzzy
+- **What:** The descriptor search filters by `String.includes()` against descriptor name, category, subcategory, and aliases. "lmon" won't match "lemon."
+- **Why it's debt:** Typo tolerance and stem matching ("lemony" → "lemon") would meaningfully improve UX, especially on mobile where typing is error-prone.
+- **Fix:** Lightweight fuzzy match library (fuse.js or similar) on the client. 168 rows is small enough that client-side fuzzy ranking is free.
+- **Surfaced:** May 18, 2026 — RateCoffee v0.1 build.
+
+### No "My Coffees" / journal view yet — submitted ratings persist but aren't visible to the user
+- **What:** Ratings save to Supabase correctly, but there's no UI for a user to see their list of rated coffees. The interstitial ("That's coffee #X for you") implies a history exists, but the user can't navigate it.
+- **Why it's debt:** The product loop is open — users rate but can't review. Closing the loop is the highest-value next feature.
+- **Fix:** Build a "Journal" or "My Coffees" view. Chronological feed of user's ratings, with the coffee context, rating, tasting notes, and selected descriptors visible. Filterable by rating, sortable by date. Likely needs a new top-nav entry.
+- **Surfaced:** May 18, 2026 — surfaced by the absence of UI after RateCoffee ships. Highest priority for next session.
+
+### CoffeeDetail does not show the current user's rating on this coffee
+- **What:** The coffee detail page does not display "your rating: 4.2" or surface the user's prior tasting notes for this coffee.
+- **Why it's debt:** Detail page is the natural place to land after a rating; without surfacing the user's own rating it feels like nothing happened.
+- **Fix:** Query `ratings` for `(user_id, coffee_id)` on detail page load; if a rating exists, show it in a small "your rating" block above the Rate button. Change "Rate this coffee" button copy to "Update rating" when one already exists.
+- **Surfaced:** May 18, 2026 — surfaced alongside RateCoffee.
+
+### Interstitial is a placeholder for a Whoop-for-coffee insight surface
+- **What:** The confirmation interstitial is one line of italic serif plus a count. Decision #026 frames it as a placeholder for a much richer "your palate is getting sharper" experience.
+- **Why it's debt:** The framing in the decision log promises more than the v0.1 UI delivers. Right now it's a confirmation, not insight.
+- **Fix:** Once 20+ ratings exist per active user, design and ship a real insight surface — flavor profile growth, dominant categories, palate-sharpening trend lines. Likely a multi-week design + build effort, not a quick win.
+- **Surfaced:** May 18, 2026 — surfaced by Decision #026 framing.

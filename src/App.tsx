@@ -3,6 +3,7 @@ import { useAuth } from './lib/auth'
 import { TaxonomyView } from './TaxonomyView'
 import { BrowseCoffees } from './BrowseCoffees'
 import { CoffeeDetail } from './CoffeeDetail'
+import { RateCoffee } from './RateCoffee'
 import { AddCoffeeForm } from './AddCoffeeForm'
 import { useIsAdmin } from './lib/useIsAdmin'
 
@@ -46,7 +47,6 @@ function App() {
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
 
-  // Navigation handlers
   const goToBrowse = () => {
     setView('browse')
     setSelectedCoffeeId(null)
@@ -185,33 +185,11 @@ function App() {
         />
       )}
       {view === 'rating' && selectedCoffeeId && (
-        <div style={{ marginTop: '3rem' }}>
-          <button
-            onClick={goBackToCoffee}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '0.5rem 0',
-              fontFamily: 'Geist, system-ui, sans-serif',
-              fontSize: '0.85rem',
-              color: espresso,
-              opacity: 0.6,
-              cursor: 'pointer',
-              marginBottom: '2.5rem',
-            }}
-          >
-            ← Back
-          </button>
-          <p
-            style={{
-              fontFamily: '"Instrument Serif", serif',
-              fontSize: '1.5rem',
-              opacity: 0.8,
-            }}
-          >
-            Rating flow coming next.
-          </p>
-        </div>
+        <RateCoffee
+          coffeeId={selectedCoffeeId}
+          onCancel={goBackToCoffee}
+          onComplete={goToBrowse}
+        />
       )}
 
       {isAdmin && view === 'browse' && <AddCoffeeForm />}
