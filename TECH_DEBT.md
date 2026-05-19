@@ -42,14 +42,6 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Brand guide v02 update — typography section minimum, ideally also in-product translation section.
 - **Surfaced:** Decision #019, May 4, 2026.
 
-### HEIC images don't render in browser
-- **What:** Some coffees in the catalog have `bag_image_url` pointing at `.heic` files uploaded from iPhone Photos via the AddCoffeeForm. Browsers can't display HEIC, so the images render as broken icons even though the files exist in Storage.
-- **Why it's debt:** Catalog looks half-broken when displaying these coffees. Will surface in any interview or demo.
-- **Fix (two parts):**
-  - **Prevention:** Add file-type validation to AddCoffeeForm — reject files outside `image/jpeg`, `image/png`, `image/webp`. ~5 min.
-  - **Cleanup:** Either re-upload existing HEIC coffees as JPEGs (manual, ~20 min) or add server-side HEIC→JPEG conversion (overscope).
-- **Surfaced:** May 18, 2026 — first time the browse view rendered real catalog photos and the HEICs appeared as broken.
-
 ### Card image proportions — bags get awkwardly cropped at 1:1
 - **What:** The browse view uses `aspect-ratio: 1/1` with `object-fit: cover` on bag images. Roaster bag photos are mostly portrait, so the crop chops the top and bottom of the bag in many cases.
 - **Why it's debt:** Visual identity of the bag is partly cropped away. At a small enough card size it's fine; at larger sizes it looks bad.
@@ -86,12 +78,6 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** After 30+ ratings exist across the catalog, add a "your rating" block (above or beside the Rate button) and a community block below the fact grid.
 - **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.
 
-### Rating slider styled with browser defaults
-- **What:** The rating slider in RateCoffee uses native `<input type="range">` with `accent-color: #D94E1F` and a thin track. No custom thumb or fill styling.
-- **Why it's debt:** Native range inputs look different across browsers (Safari vs Chrome vs Firefox) and don't match the editorial brand polish.
-- **Fix:** Style ::-webkit-slider-thumb, ::-webkit-slider-runnable-track, ::-moz-range-track, ::-moz-range-thumb. Or replace with a custom slider component when the Vivino-style dial work happens (#024).
-- **Surfaced:** May 18, 2026 — RateCoffee v0.1 build.
-
 ### Rating + descriptor inserts are not transactional
 - **What:** Submitting a rating runs two sequential Supabase inserts: first into `ratings`, then into `rating_flavor_descriptors` for each selected descriptor. If the descriptor insert fails, the rating still exists without its tags.
 - **Why it's debt:** Data inconsistency. A rating without its flavor descriptors is partial. Today we `console.error` and proceed; the user sees a successful submit.
@@ -103,12 +89,6 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Typo tolerance and stem matching ("lemony" → "lemon") would meaningfully improve UX, especially on mobile where typing is error-prone.
 - **Fix:** Lightweight fuzzy match library (fuse.js or similar) on the client. 168 rows is small enough that client-side fuzzy ranking is free.
 - **Surfaced:** May 18, 2026 — RateCoffee v0.1 build.
-
-### No "My Coffees" / journal view yet — submitted ratings persist but aren't visible to the user
-- **What:** Ratings save to Supabase correctly, but there's no UI for a user to see their list of rated coffees. The interstitial ("That's coffee #X for you") implies a history exists, but the user can't navigate it.
-- **Why it's debt:** The product loop is open — users rate but can't review. Closing the loop is the highest-value next feature.
-- **Fix:** Build a "Journal" or "My Coffees" view. Chronological feed of user's ratings, with the coffee context, rating, tasting notes, and selected descriptors visible. Filterable by rating, sortable by date. Likely needs a new top-nav entry.
-- **Surfaced:** May 18, 2026 — surfaced by the absence of UI after RateCoffee ships. Highest priority for next session.
 
 ### Interstitial is a placeholder for a Whoop-for-coffee insight surface
 - **What:** The confirmation interstitial is one line of italic serif plus a count. Decision #026 frames it as a placeholder for a much richer "your palate is getting sharper" experience.
@@ -162,3 +142,9 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Two divergence risks now exist — same constant, three places to keep aligned. Easy to forget when adding a new roast level enum value.
 - **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS and other enum→display maps). Cheap refactor, takes 5 minutes.
 - **Surfaced:** May 18, 2026 — second copy of formatDate created in CoffeeDetail build.
+
+### CoffeeDetail has no community rating signals
+- **What:** The detail page now shows the user's own latest rating (per Decision #031) but does not display community average rating or community rating count from other users.
+- **Why it's debt:** No multi-user rating data exists yet. Once 30+ ratings exist across users for the same coffees, the detail page is the obvious place to surface "37 community ratings · avg 4.1" alongside the user's own rating.
+- **Fix:** Add a community block below or beside the user's own rating block. Compute aggregate rating + count via a Supabase view or SQL function (`coffee_community_ratings`) for efficient querying.
+- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build, narrowed to community-only after Decision #031.
