@@ -36,6 +36,12 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Brand guide v02 update — typography section minimum, ideally also in-product translation section.
 - **Surfaced:** Decision #019, May 4, 2026.
 
+### No edit capability for catalog coffees
+- **What:** The AddCoffeeForm only *creates* coffee records. Once a coffee is saved, no field can be edited through the UI — fixing a typo or a wrong value isn't possible without direct database access.
+- **Why it's debt:** A deferred feature more than a fragile pattern, but it gets more acute with the scan flow: if a bag-scan extraction saves with an error and is only noticed later, there's no recovery path in-app. Edit is *update* logic on an existing record — a distinct operation from *create* — so it's deliberately out of scope for the scan build to keep that build tight.
+- **Fix:** Add an edit mode to the coffee form (or a dedicated edit route) that loads an existing record and updates rather than inserts, admin-gated for now. Natural to build alongside or just after the scan flow.
+- **Surfaced:** May 22, 2026 — scan-flow planning; flagged as adjacent-but-separate scope.
+
 ---
 
 ## Browse
