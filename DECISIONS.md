@@ -334,3 +334,19 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Reversibility:** Two-way door, time-boxed. The contribution model is revisited after beta; the long-term answer (canonical entries, dedup, who can write to the global catalog) is the deferred piece, not the global-vs-private question.
 **Linked competency:** B (user contribution behavior as Voice-of-Customer signal); D (product call documented with an explicit expiry).
 **Linked next-action:** Post-beta, design the dedup / canonical-coffee model before opening the catalog beyond the beta cohort.
+
+## #035 — May 23, 2026 — Defer web-augmentation of scanned bag data to v1.1 (incl. price → average-cost feature)
+**Decision:** The bag-scan pipeline extracts only what is visible on the bag (per #033). Augmenting that with web data — the roaster's product page, etc. — is deferred to v1.1. The highest-value target is **price**, which would enable a Vivino-style "average cost" signal (Vivino shows average bottle price; Palato could show typical bag price) — a strong user-value and monetization hook.
+**Alternatives considered:** Build augmentation into v1 now (richer catalog immediately, but adds per-scan API cost and an entity-matching problem); never augment (loses price/origin/process enrichment that many bags don't print).
+**Rationale:** Two unknowns gate it. (1) Cost — web search adds search calls + result tokens to every scan; must be measured, not assumed. (2) Matching risk — a roaster has many similar coffees, and pulling the *wrong* one's data yields confident-but-wrong fields, worse than a clean null. For v1, the human-in-the-loop form is the enrichment path (admin fills website-only fields by hand), which carries neither risk. Augmentation becomes a v1.1 experiment gated by its own cost + accuracy eval.
+**Tradeoffs accepted:** v1 won't auto-capture website-only fields for bags that don't print them; the human fills these.
+**Linked competency:** A (future augmentation experiment with its own eval); C (price → average-cost insight → monetization, ties to #006).
+**Linked next-action:** v1.1 — measure per-scan cost of augmentation and the wrong-match rate before committing.
+
+## #036 — May 23, 2026 — Treat coffee_name as a human-canonicalized field, not a prompt target
+**Decision:** The bag-scan extracts a best-guess coffee_name from the most prominent name-like text on the bag; the human canonicalizes it in the review step. We will NOT prompt-engineer to "fix" coffee_name, because there is no consistent right answer extractable from the bag alone.
+**Evidence:** Three bags, three roasters (Be Bright, Heart, Prodigal). The bag's prominent name matched Jesse's canonical preference only once (Prodigal → "Finca Las Delicias"). The others he'd canonicalize differently — "Honduras Benjamin Paz La Salsa" (origin + producer + bag name), "Nelson Flores" (producer). Roasters name inconsistently: by producer, region, farm, lot, product line, or fanciful name.
+**Consequence for the eval:** coffee_name corrections must be read as *inherent ambiguity*, not prompt weakness. Its per-field correction rate measures a human-judgment field, not prompt quality. Keep this category of correction separate from prompt-fixable ones.
+**Alternatives considered:** Aggressive coffee_name prompting (no consistent ground truth to aim at); multi-candidate name extraction surfaced to the human (possible future aid, deferred).
+**Open thread:** Jesse's canonicalization leans composite (origin + producer + name). Worth exploring whether Palato's coffee *identity* should be a derived composite of structured fields rather than a single free-text "name" — to be tackled with the parked canonical-identity / dedup question (#004, open Q4).
+**Linked competency:** A/B (eval-framework refinement: separating ambiguity corrections from prompt-weakness corrections).
