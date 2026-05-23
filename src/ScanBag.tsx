@@ -28,9 +28,13 @@ export function ScanBag() {
       const imageUrl = await uploadBagImage(ready, user.id)
 
       setStatus('Reading the bag…')
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/scan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token ?? ''}`,
+        },
         body: JSON.stringify({ imageUrl }),
       })
       const data = await res.json()
