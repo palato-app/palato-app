@@ -7,6 +7,7 @@ import { RateCoffee } from './RateCoffee'
 import { Journal } from './Journal'
 import { AddCoffeeForm } from './AddCoffeeForm'
 import { useIsAdmin } from './lib/useIsAdmin'
+import { ScanBag } from './ScanBag'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -202,6 +203,7 @@ function App() {
         />
       )}
 
+      {isAdmin && view === 'browse' && <ScanBag />}
       {isAdmin && view === 'browse' && <AddCoffeeForm />}
     </div>
   )
