@@ -42,6 +42,12 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Add an edit mode to the coffee form (or a dedicated edit route) that loads an existing record and updates rather than inserts, admin-gated for now. Natural to build alongside or just after the scan flow.
 - **Surfaced:** May 22, 2026 — scan-flow planning; flagged as adjacent-but-separate scope.
 
+### Anthropic key is on a temporary test account. 
+- **What:** We'll need to switch from a separate user account and generate API Calls from Palato.coffee directly. 
+- **Why it's debt:** Need to research if the API call feature via Anthropic demands having a Pro account or not. 
+- **Fix:** Research the question above and switch costs to the best account.
+- **Surfaced:** May 23, 2026 — scan-flow planning; flagged as adjacent-but-separate scope.
+
 ---
 
 ## Browse
@@ -91,6 +97,12 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Repeat ratings are a real signal — taste evolution over a single bag matters. The journal shows all ratings chronologically, but you can't currently see them grouped by coffee.
 - **Fix:** Add a small pill or count above the "your rating" block when there's more than one rating ("3 ratings since May 12 · view all"). Tap expands to a small history list or jumps to a coffee-filtered view of the journal.
 - **Surfaced:** May 18, 2026 — Decision #031, surfaced by allowing multiple ratings per coffee.
+
+### Elevation as a single int can't represent ranges
+- **What:** `coffees.elevation_masl` is an integer, but bags often print elevation as a range (e.g., "1,800–2,100 masl"). The scan prompt captures it as a string, so the range survives extraction — but it can't land in an int column losslessly.
+- **Why it's debt:** Collapsing a range to one int (midpoint or low end) loses real signal that a future recommender could use.
+- **Fix:** Decide at Step 3 (extraction→DB mapping): (a) `elevation` as text, (b) `elevation_min_masl` + `elevation_max_masl` ints, or (c) single int + accept the loss.
+- **Surfaced:** May 23, 2026 — Step 1 prompt review.
 
 ---
 
