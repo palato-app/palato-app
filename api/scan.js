@@ -1,7 +1,14 @@
 // /api/scan.js
+// Bag-scan relay: takes an image URL, asks Claude to extract structured data,
+// returns it as JSON. Gated to authenticated Supabase users.
+
 import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
 
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 const MODEL = 'claude-sonnet-4-6';
 const PROMPT_VERSION = 'v1';
@@ -34,15 +41,33 @@ Respond with ONLY a valid JSON object — no explanation, no markdown, no code f
 }`;
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Use POST.' });
-      }
-    
-    const { imageUrl } = req.body || {};
-    if (!imageUrl) {
-        return res.status(400).json({ error: 'Missing imageUrl in request body.' });
-      }
+  // 1. Only accept POST requests.
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Use POST.' });
+  }
 
+  // 2. Auth gate — require a valid Supabase session.
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ error: 'Not authenticated.' });
+  }
+  try {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Invalid session.' });
+    }
+  } catch {
+    return res.status(500).json({ error: 'Failed to authenticate.' });
+  }
+
+  // 3. Require an image URL in the request body.
+  const { imageUrl } = req.body || {};
+  if (!imageUrl) {
+    return res.status(400).json({ error: 'Missing imageUrl in request body.' });
+  }
+
+  // 4. Ask Claude to extract the bag's data and return it.
   try {
     const message = await anthropic.messages.create({
       model: MODEL,
@@ -64,8 +89,7 @@ export default async function handler(req, res) {
     try {
       extracted = JSON.parse(rawText.replace(/```json|```/g, '').trim());
     } catch {
-      // Claude returned something that wasn't clean JSON — surface it so we can see why
-      return res.status(200).json({ parseError: true, rawText });
+      return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, parseError: true, rawText });
     }
 
     return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, extracted });
