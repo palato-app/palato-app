@@ -1,10 +1,10 @@
 # Palato — Tech Debt
 
-A living list of known imperfections, deferred decisions, and known-fragile patterns. Items get added when surfaced and removed when fixed. Not the same as DECISIONS.md (decisions are append-only history); this is a working backlog.
+A living list of known imperfections, deferred decisions, and known-fragile patterns. Items get added when surfaced and removed when fixed. Not the same as DECISIONS.md (decisions are append-only history); this is a working backlog, grouped by area.
 
 ---
 
-## Active
+## Infrastructure & Admin
 
 ### Storage policy hardcodes admin email
 - **What:** The `bag-images` Storage policy in Supabase checks `auth.jwt() ->> 'email' = 'jesse@palato.coffee'` directly.
@@ -19,21 +19,15 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Surfaced:** Decision #021, May 4, 2026.
 
 ### AddCoffeeForm UI is unstyled
-- **What:** The admin-only AddCoffeeForm has functional but unrefined visual styling — labels are uppercase, inputs are basic, no responsive layout.
+- **What:** The admin-only AddCoffeeForm has functional but unrefined visual styling — labels are uppercase, inputs are basic, no responsive layout. (Note: HEIC auto-conversion and file-type validation were added May 18; the styling debt is unchanged.)
 - **Why it's debt:** Fine for v0.1 admin tooling, but if non-admin users ever see it (or if Jesse demos screen-sharing the admin flow), it'll look unfinished.
 - **Fix:** Style pass aligning the form with the magazine-spread aesthetic from Decision #019. Low priority unless a demo scenario requires it.
 - **Surfaced:** Session of May 4, 2026.
 
 ### Image rights for catalog-sourced coffee photos
-- **What:** Catalog will be populated using bag images sourced from roaster websites (copyrighted by roasters).
+- **What:** Catalog is populated using bag images sourced from roaster websites (copyrighted by roasters).
 - **Why it's debt:** Acceptable for prototype dev/testing. Becomes a product policy issue before public launch — Vivino solved this by letting wineries upload official labels themselves.
 - **Fix:** Pre-launch product decision needed: (a) Jesse's own photos only, (b) explicit roaster permission, or (c) a roaster-onboarding flow letting roasters upload their own.
-- **Surfaced:** Session of May 4, 2026.
-
-### CLI version drift
-- **What:** Local Supabase CLI is v2.95.4; latest is v2.98.1.
-- **Why it's debt:** Minor version skew is fine, but staying on outdated CLI can surface bugs that have already been fixed upstream.
-- **Fix:** `brew upgrade supabase` next time we're at a clean checkpoint.
 - **Surfaced:** Session of May 4, 2026.
 
 ### Brand guide v02 not yet written
@@ -41,6 +35,10 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Anyone reading the repo gets two contradicting sources of truth on typography.
 - **Fix:** Brand guide v02 update — typography section minimum, ideally also in-product translation section.
 - **Surfaced:** Decision #019, May 4, 2026.
+
+---
+
+## Browse
 
 ### Card image proportions — bags get awkwardly cropped at 1:1
 - **What:** The browse view uses `aspect-ratio: 1/1` with `object-fit: cover` on bag images. Roaster bag photos are mostly portrait, so the crop chops the top and bottom of the bag in many cases.
@@ -50,7 +48,7 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 ### Browse view filter functionality
 - **What:** Browse view currently shows all coffees in a flat grid. No filtering by origin, process, roast level, or roaster.
-- **Why it's debt:** Useful at 13 coffees, becomes navigation friction at 30+.
+- **Why it's debt:** Useful at 27 coffees, becomes navigation friction at 50+.
 - **Fix:** Add filter chips at top of browse view. State management for active filters. Filters apply to the existing useCoffees data client-side; no schema changes needed.
 - **Surfaced:** Browse view build session, May 18, 2026 — filters explicitly deferred per session decision.
 
@@ -59,6 +57,10 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Cosmetic, low priority.
 - **Fix:** Product marketing pass on all hero copy across the app once core flows are built and we're not iterating on structure.
 - **Surfaced:** May 18, 2026.
+
+---
+
+## Coffee Detail
 
 ### CoffeeDetail v0.1 — secondary fields not yet surfaced
 - **What:** The detail page renders bag image, roaster, coffee name, origin, process, roast level, variety, elevation, and SCA score. It does NOT render `producer`, `farm`, `process_detail`, `roast_date`, `roaster_tasting_notes_raw` (the array of roaster-stated flavor notes), or the curated Palato flavor descriptor chips from `coffee_flavor_descriptors`.
@@ -72,11 +74,21 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Add a media query (or CSS Grid `minmax`) that collapses the hero to a single column under ~720px. Apply same treatment to BrowseCoffees hero, which has the same issue.
 - **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.
 
-### CoffeeDetail has no community or personal rating signals
-- **What:** The detail page does not display community average rating, rating count, or the current user's prior ratings on this coffee.
-- **Why it's debt:** No rating data exists yet. Once the rating flow ships and accumulates data, the detail page is the obvious place to surface "your last rating: 4.2" and "37 community ratings · avg 4.1".
-- **Fix:** After 30+ ratings exist across the catalog, add a "your rating" block (above or beside the Rate button) and a community block below the fact grid.
-- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build.
+### CoffeeDetail has no community rating signals
+- **What:** The detail page now shows the user's own latest rating (per Decision #031) but does not display community average rating or community rating count from other users.
+- **Why it's debt:** No multi-user rating data exists yet. Once 30+ ratings exist across users for the same coffees, the detail page is the obvious place to surface "37 community ratings · avg 4.1" alongside the user's own rating.
+- **Fix:** Add a community block below or beside the user's own rating block. Compute aggregate rating + count via a Supabase view or SQL function (`coffee_community_ratings`) for efficient querying.
+- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build, narrowed to community-only after Decision #031.
+
+### CoffeeDetail does not surface per-coffee rating history (count > 1)
+- **What:** When a user has rated the same coffee more than once, the detail page shows only the most recent rating. There's no UI affordance to see "you've also rated this 2 other times" or expand to view past ratings.
+- **Why it's debt:** Repeat ratings are a real signal — taste evolution over a single bag matters. The journal shows all ratings chronologically, but you can't currently see them grouped by coffee.
+- **Fix:** Add a small pill or count above the "your rating" block when there's more than one rating ("3 ratings since May 12 · view all"). Tap expands to a small history list or jumps to a coffee-filtered view of the journal.
+- **Surfaced:** May 18, 2026 — Decision #031, surfaced by allowing multiple ratings per coffee.
+
+---
+
+## Rating Flow
 
 ### Rating + descriptor inserts are not transactional
 - **What:** Submitting a rating runs two sequential Supabase inserts: first into `ratings`, then into `rating_flavor_descriptors` for each selected descriptor. If the descriptor insert fails, the rating still exists without its tags.
@@ -96,18 +108,18 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Once 20+ ratings exist per active user, design and ship a real insight surface — flavor profile growth, dominant categories, palate-sharpening trend lines. Likely a multi-week design + build effort, not a quick win.
 - **Surfaced:** May 18, 2026 — surfaced by Decision #026 framing.
 
-### RateCoffee UX/UI issues surfaced on first self-test
-- **What:** First end-to-end test (Jesse, May 18 2026) surfaced four issues:
-  1. **Rating slider lacks visual scale.** Numbers float in space without anchor. Need markers, endpoint labels ("Skip it" → "I'm hooked"), color gradient, or another visual treatment that gives "3.3" meaning.
-  2. **"Anything specific?" prose and "What did you taste?" chips feel redundant.** The user types descriptors in the prose, then is asked to tag them again from chips. Same data, two formats.
-  3. **Body & Mouthfeel is mis-categorized as flavor.** Tactile/sensation, not taste. Belongs in its own section.
-  4. **Defects & Off-flavors are hidden.** They're flavor characteristics and should live up front with taste, not buried.
+### RateCoffee — structural improvements pending (taste/feel split, merged input)
+- **What:** First end-to-end self-test (May 18, 2026) surfaced structural issues with the rating form, three of which remain open:
+  1. **"Anything specific?" prose and "What did you taste?" chips feel redundant.** The user types descriptors in the prose, then is asked to tag them again from chips. Same data, two formats.
+  2. **Body & Mouthfeel is mis-categorized as flavor.** Tactile/sensation, not taste. Belongs in its own "How did it feel?" section.
+  3. **Defects & Off-flavors are hidden.** They're flavor characteristics and should live up front with taste, not buried.
+  (A fourth issue — the slider lacking visual scale — was resolved by replacing the slider with the RatingDial component, Decision #029.)
 - **Why it's debt:** Direct first-user UX feedback, structural rather than cosmetic.
-- **Fix:** Addressed across Decisions #027 (taste/feel split) and #028 (merged prose + auto-detect). Slider scale (#1) handled separately — see slider style debt entry.
+- **Fix:** Decision #027 (taste/feel split, defects elevated) and Decision #028 (merged prose + inline descriptor auto-detect) define the path. Both are strong next-session candidates.
 - **Surfaced:** May 18, 2026 — first self-test of RateCoffee v0.1.
 
 ### RatingDial — accessibility and platform polish
-- **What:** The new radial dial component has known gaps:
+- **What:** The radial dial component has known gaps:
   - **No keyboard support.** Can't tab to the dial and arrow-key to set a value. Screen readers won't see it as an interactive control.
   - **No haptic feedback on mobile.** Real Vivino-style dials have a soft tick on each step. We have nothing.
   - **Single linear gradient.** Vivino uses a multi-stop gradient that telegraphs intensity more vividly. Ours is functional, not polished.
@@ -115,10 +127,14 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Accessibility is non-negotiable for any rating control that ships to real users. The rest is polish that compounds the brand.
 - **Fix:**
   - Add `tabIndex={0}`, `role="slider"`, `aria-valuenow/min/max`, and onKeyDown handler for arrow keys (← →, ↑ ↓, PageUp/PageDown).
-  - Add `navigator.vibrate(10)` on each step change on touch devices (or use the Web Vibration API when available).
-  - Define a multi-stop gradient on the dial path that mirrors the Vivino color story (cool → warm → hot).
+  - Add `navigator.vibrate(10)` on each step change on touch devices (Web Vibration API).
+  - Define a multi-stop gradient on the dial path mirroring the Vivino color story (cool → warm → hot).
   - Add a small CSS transition on the handle position (~150ms ease-out) for non-drag updates.
 - **Surfaced:** May 18, 2026 — Decision #029, dial v0.1.1 ships without these.
+
+---
+
+## Journal
 
 ### Journal v0.1 — known omissions
 - **What:** The Journal ships with intentional v0.1 limitations:
@@ -128,23 +144,15 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
   - **No empty-state CTA.** "No ratings yet. Pop the bag." sits there with no button to take the user to Coffees. A "Browse coffees" CTA would close the loop.
   - **Date format is en-US locale only.**
 - **Why it's debt:** All are real UX gaps that emerge once the user has more than a handful of ratings. None block v0.1 ship.
-- **Fix:** Add each progressively as the catalog grows and the user has more journal entries. Click-to-detail comes when CoffeeDetail surfaces user ratings. Edit/delete is a meaningful schema + UI design effort (consider a rating-detail page or modal). Filters/sort/grouping can be client-side with the existing data.
+- **Fix:** Add each progressively. Edit/delete is a meaningful schema + UI design effort (consider a rating-detail page or modal). Filters/sort/grouping can be client-side with the existing data. Empty-state CTA is a 5-minute add.
 - **Surfaced:** May 18, 2026 — Decision #030, Journal v0.1 build.
 
-### CoffeeDetail does not surface per-coffee rating history (count > 1)
-- **What:** When a user has rated the same coffee more than once, the detail page shows only the most recent rating. There's no UI affordance to see "you've also rated this 2 other times" or expand to view past ratings.
-- **Why it's debt:** Repeat ratings are a real signal — taste evolution over a single bag matters. The journal shows all ratings chronologically, but you can't currently see them grouped by coffee.
-- **Fix:** Add a small pill or count above the "your rating" block when there's more than one rating ("3 ratings since May 12 · view all"). Tap expands to a small history list or jumps to a coffee-filtered view of the journal.
-- **Surfaced:** May 18, 2026 — Decision #031, surfaced by allowing multiple ratings per coffee.
+---
+
+## Cross-cutting
 
 ### Date formatting + utility duplication
 - **What:** A `formatDate` helper now lives identically in `CoffeeDetail.tsx` and `Journal.tsx`. Same with `ROAST_LABELS` (now in three places: CoffeeDetail, Journal, BrowseCoffees).
-- **Why it's debt:** Two divergence risks now exist — same constant, three places to keep aligned. Easy to forget when adding a new roast level enum value.
-- **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS and other enum→display maps). Cheap refactor, takes 5 minutes.
+- **Why it's debt:** Divergence risk — same constant, multiple places to keep aligned. Easy to forget when adding a new roast level enum value.
+- **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS and other enum→display maps). Cheap refactor, ~5 minutes.
 - **Surfaced:** May 18, 2026 — second copy of formatDate created in CoffeeDetail build.
-
-### CoffeeDetail has no community rating signals
-- **What:** The detail page now shows the user's own latest rating (per Decision #031) but does not display community average rating or community rating count from other users.
-- **Why it's debt:** No multi-user rating data exists yet. Once 30+ ratings exist across users for the same coffees, the detail page is the obvious place to surface "37 community ratings · avg 4.1" alongside the user's own rating.
-- **Fix:** Add a community block below or beside the user's own rating block. Compute aggregate rating + count via a Supabase view or SQL function (`coffee_community_ratings`) for efficient querying.
-- **Surfaced:** May 18, 2026 — CoffeeDetail v0.1 build, narrowed to community-only after Decision #031.
