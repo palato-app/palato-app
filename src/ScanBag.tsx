@@ -5,23 +5,38 @@ import { prepareImage, uploadBagImage } from './lib/bagImage'
 export function ScanBag() {
   const { user } = useAuth()
   const [preview, setPreview] = useState<string | null>(null)
-  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [result, setResult] = useState<unknown | null>(null)
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
     setError(null)
-    setImageUrl(null)
+    setResult(null)
     setBusy(true)
     try {
+      setStatus('Preparing image…')
       const ready = await prepareImage(file)
       setPreview(URL.createObjectURL(ready))
-      const url = await uploadBagImage(ready, user.id)
-      setImageUrl(url)
+
+      setStatus('Uploading…')
+      const imageUrl = await uploadBagImage(ready, user.id)
+
+      setStatus('Reading the bag…')
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Scan failed.')
+      setResult(data)
+      setStatus(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed.')
+      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      setStatus(null)
     } finally {
       setBusy(false)
     }
@@ -41,16 +56,26 @@ export function ScanBag() {
         disabled={busy}
       />
 
-      {busy && <p style={{ opacity: 0.6, marginTop: '1rem' }}>Uploading…</p>}
-      {error && <p style={{ color: '#D94E1F', marginTop: '1rem' }}>{error}</p>}
       {preview && (
         <img src={preview} alt="bag preview" style={{ display: 'block', maxWidth: 200, borderRadius: 8, marginTop: '1rem' }} />
       )}
-      {imageUrl && (
-        <p style={{ fontSize: '0.8rem', marginTop: '1rem', wordBreak: 'break-all', opacity: 0.7 }}>
-          Uploaded. URL:<br />
-          {imageUrl}
-        </p>
+      {status && <p style={{ opacity: 0.6, marginTop: '1rem' }}>{status}</p>}
+      {error && <p style={{ color: '#D94E1F', marginTop: '1rem' }}>{error}</p>}
+      {result != null && (
+        <pre
+          style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: 'rgba(30,20,16,0.05)',
+            borderRadius: 8,
+            fontSize: '0.8rem',
+            overflowX: 'auto',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
+          {JSON.stringify(result, null, 2)}
+        </pre>
       )}
     </div>
   )

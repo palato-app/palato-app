@@ -34,10 +34,14 @@ Respond with ONLY a valid JSON object — no explanation, no markdown, no code f
 }`;
 
 export default async function handler(req, res) {
-  const imageUrl = req.query.image;
-  if (!imageUrl) {
-    return res.status(400).json({ error: 'Missing ?image=<url> query parameter' });
-  }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Use POST.' });
+      }
+    
+    const { imageUrl } = req.body || {};
+    if (!imageUrl) {
+        return res.status(400).json({ error: 'Missing imageUrl in request body.' });
+      }
 
   try {
     const message = await anthropic.messages.create({
