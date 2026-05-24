@@ -85,7 +85,11 @@ const styles = {
   scanBanner: { background: 'rgba(217, 78, 31, 0.1)', color: '#D94E1F', border: '1px solid rgba(217, 78, 31, 0.25)', padding: '0.65rem 1rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.5rem' },
 }
 
-export function AddCoffeeForm() {
+type AddCoffeeFormProps = {
+  onRate?: (coffeeId: string) => void
+}
+
+export function AddCoffeeForm({ onRate }: AddCoffeeFormProps) {
   const { user } = useAuth()
   const [state, setState] = useState<FormState>(initialState)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -100,6 +104,7 @@ export function AddCoffeeForm() {
   const [scanError, setScanError] = useState<string | null>(null)
   const [scanId, setScanId] = useState<string | null>(null)
   const [prefilledSnapshot, setPrefilledSnapshot] = useState<FormState | null>(null)
+  const [lastSaved, setLastSaved] = useState<{ id: string; name: string } | null>(null)
 
   const handleChange =
     (field: keyof FormState) =>
@@ -113,6 +118,7 @@ export function AddCoffeeForm() {
     if (!file || !user) return
     setMessage(null)
     setScanError(null)
+    setLastSaved(null)
     setScanning(true)
     try {
       setScanStatus('Preparing image…')
@@ -201,6 +207,7 @@ export function AddCoffeeForm() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setMessage(null)
+    setLastSaved(null)
 
     if (!user) {
       setMessage({ type: 'error', text: 'You must be signed in.' })
@@ -286,13 +293,14 @@ export function AddCoffeeForm() {
           .eq('id', scanId)
       }
 
-      // Reset.
+      // Reset. (lastSaved is set below so the optional "Rate it now" path stays available.)
       setState(initialState)
       setImageFile(null)
       setImagePreview(null)
       setBagImageUrl(null)
       setScanId(null)
       setPrefilledSnapshot(null)
+      setLastSaved({ id: coffeeRow.id, name: state.coffee_name })
       setMessage({ type: 'success', text: `Added "${state.coffee_name}" from ${state.roaster_name}.` })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
@@ -411,6 +419,27 @@ export function AddCoffeeForm() {
           <div style={{ ...styles.message, ...(message.type === 'success' ? styles.successMessage : styles.errorMessage) }}>
             {message.text}
           </div>
+        )}
+
+        {lastSaved && onRate && (
+          <button
+            type="button"
+            onClick={() => onRate(lastSaved.id)}
+            style={{
+              padding: '0.85rem 1.75rem',
+              backgroundColor: 'transparent',
+              color: '#D94E1F',
+              border: '1px solid #D94E1F',
+              borderRadius: '100px',
+              fontSize: '1rem',
+              fontFamily: 'Geist, system-ui, sans-serif',
+              fontWeight: 500,
+              cursor: 'pointer',
+              justifySelf: 'start',
+            }}
+          >
+            Rate "{lastSaved.name}" now →
+          </button>
         )}
 
         <button type="submit" style={{ ...styles.submitButton, ...(submitting || scanning ? styles.submitDisabled : {}) }} disabled={submitting || scanning}>

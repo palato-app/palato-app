@@ -21,7 +21,7 @@ The result: consumers waste money on bags they don't enjoy, struggle to remember
 
 ## 2. Target User
 
-**Primary:** The "Intentional Explorer" — someone who buys specialty coffee 2-4x per month, cares about origin and process, has a preferred brew method, and is actively trying to expand their palate. They're not a professional roaster or Q grader, but they know the difference between a washed Ethiopian and a natural Brazilian. Age 25-45, urban, digitally native.
+**Primary:** The "Intentional Explorer" — someone who buys a specialty coffee bag 2-4x per month, cares about origin and process, has a preferred brew method, and is actively trying to expand their palate. They're not a professional roaster or Q grader, but they know the difference between a washed Ethiopian and a natural Brazilian. Age 25-45, urban, digitally native.
 
 **Secondary:** The "Curious Upgrader" — someone transitioning from commercial coffee to specialty. They've had a few great cups but don't have vocabulary for what they like yet. Palato helps them build that vocabulary.
 

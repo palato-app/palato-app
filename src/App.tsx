@@ -76,6 +76,11 @@ function App() {
     setView('coffee-detail')
   }
 
+  const goToRateCoffee = (id: string) => {
+    setSelectedCoffeeId(id)
+    setView('rating')
+  }
+
   if (loading) {
     return (
       <div style={pageStyle}>
@@ -202,7 +207,7 @@ function App() {
         />
       )}
 
-      {isAdmin && view === 'browse' && <AddCoffeeForm />}
+      {isAdmin && view === 'browse' && <AddCoffeeForm onRate={goToRateCoffee} />}
     </div>
   )
 }
