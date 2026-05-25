@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth } from './lib/auth'
 import { TaxonomyView } from './TaxonomyView'
 import { BrowseCoffees } from './BrowseCoffees'
@@ -8,6 +8,7 @@ import { Journal } from './Journal'
 import { AddAndRateFlow } from './AddAndRateFlow'
 import { FloatingAddButton } from './components/FloatingAddButton'
 import { PalateDashboard } from './features/palate/PalateDashboard'
+import { LoadingScreen } from './components/LoadingScreen'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -47,6 +48,8 @@ function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
+  const [splashDone, setSplashDone] = useState(false)
+  const onSplashComplete = useCallback(() => setSplashDone(true), [])
 
   const goToBrowse = () => {
     setView('browse')
@@ -86,6 +89,10 @@ function App() {
     setSelectedCoffeeId(null)
   }
 
+  if (!splashDone) {
+    return <LoadingScreen onComplete={onSplashComplete} />
+  }
+
   if (loading) {
     return (
       <div className="palato-page" style={pageStyle}>
@@ -97,17 +104,16 @@ function App() {
   if (!user) {
     return (
       <div className="palato-page" style={pageStyle}>
-        <h1
+        <img
+          src="/palato-wordmark.png"
+          alt="Palato"
           style={{
-            fontFamily: '"Boldonse", system-ui',
-            fontSize: 'clamp(3rem, 8vw, 5rem)',
-            letterSpacing: '-0.02em',
+            width: 'clamp(200px, 50vw, 340px)',
+            height: 'auto',
+            mixBlendMode: 'multiply',
             margin: '0 0 1rem',
-            lineHeight: 1,
           }}
-        >
-          PALATO
-        </h1>
+        />
         <p
           style={{
             fontFamily: '"Instrument Serif", serif',
@@ -150,16 +156,15 @@ function App() {
           marginBottom: '0',
         }}
       >
-        <h1
+        <img
+          src="/palato-wordmark.png"
+          alt="Palato"
           style={{
-            fontFamily: '"Boldonse", system-ui',
-            fontSize: '2rem',
-            letterSpacing: '-0.02em',
-            margin: 0,
+            height: '2.2rem',
+            width: 'auto',
+            mixBlendMode: 'multiply',
           }}
-        >
-          PALATO
-        </h1>
+        />
         <nav
           className="palato-nav"
           style={{

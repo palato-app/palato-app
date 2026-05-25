@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Palato — Your Palate (mock)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Boldonse&family=Geist:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --cream:#F4EAD5;
+    --cream-deep:#EADCBF;
+    --espresso:#1E1410;
+    --ember:#D94E1F;
+    --ochre:#C89040;
+    --forest:#2F4A38;
+    --ink-70:rgba(30,20,16,0.70);
+    --ink-50:rgba(30,20,16,0.50);
+    --ink-35:rgba(30,20,16,0.35);
+    --ink-15:rgba(30,20,16,0.15);
+    --ink-08:rgba(30,20,16,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:#cdb88f;
+    font-family:'Geist',system-ui,sans-serif;
+    color:var(--espresso);
+    -webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;
+    padding:32px 16px;
+    min-height:100vh;
+  }
+  .phone{
+    width:430px;max-width:100%;
+    background:var(--cream);
+    border:10px solid var(--espresso);
+    border-radius:44px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:0 24px 60px rgba(30,20,16,0.35);
+  }
+  .grain{
+    position:absolute;inset:0;pointer-events:none;z-index:0;
+    opacity:0.5;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  }
+  .screen{position:relative;z-index:1;height:860px;overflow-y:auto;padding:0 0 28px;}
+  .screen::-webkit-scrollbar{width:0;}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 6px;}
+  .wordmark{font-family:'Boldonse',sans-serif;font-size:13px;letter-spacing:0.5px;color:var(--espresso);text-transform:lowercase;}
+  .topicons{font-size:13px;color:var(--ink-50);letter-spacing:0.3px;}
+
+  /* header */
+  .head{padding:6px 22px 4px;}
+  .eyebrow{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-50);}
+  h1{font-family:'Instrument Serif',serif;font-weight:400;font-size:52px;line-height:0.98;letter-spacing:-0.5px;margin-top:2px;}
+  .summary{font-family:'Instrument Serif',serif;font-size:21px;line-height:1.28;color:var(--ink-70);margin-top:12px;}
+  .summary .hot{color:var(--ember);font-style:italic;}
+
+  /* maturity / toggle row */
+  .meta-row{display:flex;align-items:center;justify-content:space-between;padding:16px 22px 8px;gap:10px;flex-wrap:wrap;}
+  .chip{font-size:11.5px;letter-spacing:0.4px;color:var(--ink-70);border:1px solid var(--ink-15);border-radius:999px;padding:5px 11px;display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--forest);display:inline-block;}
+  .seg{display:flex;border:1px solid var(--ink-15);border-radius:999px;overflow:hidden;}
+  .seg button{font-family:'Geist';font-size:11.5px;letter-spacing:0.3px;border:none;background:transparent;color:var(--ink-50);padding:6px 12px;cursor:pointer;transition:all .25s ease;}
+  .seg button.on{background:var(--espresso);color:var(--cream);}
+  .seg-label{font-size:10.5px;letter-spacing:0.6px;text-transform:uppercase;color:var(--ink-35);width:100%;margin:14px 0 -4px 2px;}
+
+  /* cards */
+  .card{margin:14px 16px 0;background:var(--cream);border:1px solid var(--ink-15);border-radius:16px;padding:18px 18px 16px;position:relative;}
+  .card.flush{background:transparent;border:none;padding:8px 18px 0;}
+  .card-title{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-50);display:flex;align-items:center;justify-content:space-between;}
+  .card-title .tag{font-size:10px;letter-spacing:0.6px;text-transform:none;color:var(--ochre);border:1px solid var(--ochre);border-radius:999px;padding:2px 8px;}
+  .read{font-family:'Instrument Serif',serif;font-size:18px;line-height:1.32;color:var(--espresso);margin-top:12px;}
+  .read em{color:var(--ember);font-style:italic;}
+
+  .canvas-wrap{position:relative;width:100%;margin-top:10px;}
+  .h-radar{height:248px;}
+  .h-bars{height:150px;}
+  .h-line{height:140px;}
+
+  /* origins */
+  .origin-row{display:flex;align-items:center;gap:10px;margin-top:11px;font-size:13px;}
+  .origin-name{width:78px;flex:none;color:var(--espresso);}
+  .origin-track{flex:1;height:8px;background:var(--ink-08);border-radius:999px;overflow:hidden;}
+  .origin-fill{height:100%;border-radius:999px;}
+  .origin-val{width:58px;flex:none;text-align:right;font-size:12px;color:var(--ink-70);font-variant-numeric:tabular-nums;}
+
+  /* rec card */
+  .rec{display:flex;gap:14px;align-items:flex-start;margin-top:12px;}
+  .rec-thumb{width:54px;height:78px;flex:none;border-radius:8px;background:linear-gradient(160deg,var(--ember),#b03e17);display:flex;align-items:center;justify-content:center;}
+  .rec-thumb span{font-family:'Boldonse';font-size:9px;color:var(--cream);text-transform:lowercase;transform:rotate(-90deg);white-space:nowrap;letter-spacing:0.5px;}
+  .rec-body .rname{font-family:'Instrument Serif',serif;font-size:20px;line-height:1.1;}
+  .rec-body .rmeta{font-size:12px;color:var(--ink-50);margin-top:3px;letter-spacing:0.2px;}
+  .rec-why{font-family:'Instrument Serif',serif;font-size:16px;line-height:1.34;color:var(--ink-70);margin-top:11px;}
+  .rec-why em{color:var(--ember);font-style:italic;}
+
+  /* locked placeholder */
+  .locked{margin-top:12px;border:1px dashed var(--ink-15);border-radius:12px;padding:22px 16px;text-align:center;}
+  .locked .lk-title{font-family:'Instrument Serif',serif;font-size:18px;color:var(--ink-70);}
+  .locked .lk-sub{font-size:12px;color:var(--ink-50);margin-top:6px;line-height:1.5;}
+
+  /* stats strip */
+  .stats{display:flex;flex-wrap:wrap;gap:18px 26px;padding:20px 22px 4px;border-top:1px solid var(--ink-08);margin:18px 16px 0;}
+  .stat .n{font-family:'Instrument Serif',serif;font-size:26px;line-height:1;}
+  .stat .l{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-50);margin-top:4px;}
+
+  .footnote{text-align:center;font-family:'Instrument Serif',serif;font-style:italic;font-size:14px;color:var(--ink-50);padding:22px 30px 6px;line-height:1.4;}
+
+  /* forming badge on radar */
+  .forming{position:absolute;top:16px;right:16px;font-size:10px;letter-spacing:0.5px;color:var(--ochre);border:1px solid var(--ochre);border-radius:999px;padding:3px 9px;display:none;}
+  body.early .forming{display:inline-block;}
+</style>
+</head>
+<body>
+  <div class="phone">
+    <div class="grain"></div>
+    <div class="screen">
+
+      <div class="topbar">
+        <span class="wordmark">palato</span>
+        <span class="topicons">journal · profile</span>
+      </div>
+
+      <div class="head">
+        <div class="eyebrow">your palate</div>
+        <h1 id="h1">Bright &amp;<br>fruit-forward</h1>
+        <p class="summary" id="summary"></p>
+      </div>
+
+      <div class="meta-row">
+        <span class="chip"><span class="dot" id="matdot"></span><span id="matchip">47 coffees rated</span></span>
+        <div class="seg" role="group" aria-label="preview palate maturity">
+          <button id="btn-est" class="on" onclick="setState('established')">Established · 47</button>
+          <button id="btn-early" onclick="setState('early')">Early · 12</button>
+        </div>
+      </div>
+
+      <!-- HERO: palate fingerprint -->
+      <div class="card">
+        <div class="card-title">Palate fingerprint</div>
+        <span class="forming">still forming</span>
+        <div class="canvas-wrap h-radar">
+          <canvas id="radar" role="img" aria-label="Radar chart of flavour family preferences"></canvas>
+        </div>
+        <p class="read" id="read-radar"></p>
+      </div>
+
+      <!-- sweet spots: roast -->
+      <div class="card">
+        <div class="card-title">Roast sweet spot</div>
+        <div class="canvas-wrap h-bars">
+          <canvas id="roast" role="img" aria-label="Average rating by roast level"></canvas>
+        </div>
+        <p class="read" id="read-roast"></p>
+      </div>
+
+      <!-- sweet spots: process -->
+      <div class="card">
+        <div class="card-title">Process</div>
+        <div class="canvas-wrap h-bars">
+          <canvas id="process" role="img" aria-label="Average rating by processing method"></canvas>
+        </div>
+        <p class="read" id="read-process"></p>
+      </div>
+
+      <!-- origins -->
+      <div class="card">
+        <div class="card-title">Origins</div>
+        <div id="origins"></div>
+        <p class="read" id="read-origin"></p>
+      </div>
+
+      <!-- evolution -->
+      <div class="card">
+        <div class="card-title">Palate evolution</div>
+        <div id="evo-live">
+          <div class="canvas-wrap h-line">
+            <canvas id="evo" role="img" aria-label="Average roast level over the last six months"></canvas>
+          </div>
+          <p class="read" id="read-evo"></p>
+        </div>
+        <div id="evo-locked" class="locked" style="display:none;">
+          <div class="lk-title">Not enough history yet</div>
+          <div class="lk-sub">Evolution needs about 20 coffees across a few weeks.<br>Keep rating — this is where you'll watch your palate move.</div>
+        </div>
+      </div>
+
+      <!-- what's next -->
+      <div class="card">
+        <div class="card-title">What's next <span class="tag">preview · v1.1 engine</span></div>
+        <div id="rec-live">
+          <div class="rec">
+            <div class="rec-thumb"><span>onyx</span></div>
+            <div class="rec-body">
+              <div class="rname" id="rec-name">Ethiopia Gelgelu</div>
+              <div class="rmeta" id="rec-meta">Onyx Coffee Lab · natural · light</div>
+            </div>
+          </div>
+          <p class="rec-why" id="rec-why"></p>
+        </div>
+        <div id="rec-early" class="locked" style="display:none;">
+          <div class="lk-title">We're still learning your palate</div>
+          <div class="lk-sub">A few more ratings and we'll start pointing you<br>somewhere worth your $22.</div>
+        </div>
+      </div>
+
+      <!-- stats strip -->
+      <div class="stats" id="stats"></div>
+
+      <p class="footnote">Your fingerprint sharpens with every coffee. Rate to watch it move.</p>
+
+    </div>
+  </div>
+
+<script>
+  const FAMILIES = ['Fruity','Floral','Sweet','Sour / ferment','Cocoa / nut','Spice','Roasted','Green'];
+
+  const DATA = {
+    established:{
+      h1:'Bright &amp;<br>fruit-forward',
+      summary:'Forty-seven coffees in. You\u2019re a bright, fruit-forward drinker who\u2019s quietly been <span class="hot">creeping lighter</span>.',
+      matchip:'47 coffees rated', matdot:'#2F4A38',
+      radar:[90,74,60,56,26,34,15,20],
+      readRadar:'Fruit and florals are your gravity. <em>Roasty and nutty leave you cold</em> \u2014 you\u2019ve never rated a dark roast above a three.',
+      roast:{labels:['Light','Med-light','Medium','Med-dark','Dark'],vals:[4.6,4.3,3.5,2.8,2.2]},
+      readRoast:'Your fives live in the light end. <em>Past medium, you check out.</em>',
+      process:{labels:['Natural','Honey','Anaerobic','Washed'],vals:[4.5,4.3,4.4,4.0]},
+      readProcess:'Naturals edge washed by half a star \u2014 you like them a little wild.',
+      origins:[
+        {name:'Ethiopia',val:4.6,n:12},
+        {name:'Kenya',val:4.4,n:8},
+        {name:'Colombia',val:3.9,n:6},
+        {name:'Guatemala',val:3.8,n:4},
+        {name:'Brazil',val:2.9,n:3}
+      ],
+      readOrigin:'Ethiopia is home. You\u2019ve never loved a Brazil \u2014 but <em>every Brazil you tried was a medium-dark</em>. Might be the roast, not the country.',
+      evo:[3.1,2.9,2.8,2.5,2.2,2.0],
+      readEvo:'Six months ago you drank medium. Now you reach for light. <em>Your palate\u2019s moving.</em>',
+      recName:'Ethiopia Gelgelu', recMeta:'Onyx Coffee Lab \u00b7 natural \u00b7 light',
+      recWhy:'You love wild Ethiopian naturals. This has the same <em>blueberry</em> as your top-rated Hambela, with more body \u2014 we think it lands at a five.',
+      evoLocked:false, recLocked:false, forming:false,
+      stats:[['47','coffees'],['19','roasters'],['9','origins'],['blueberry','top note']]
+    },
+    early:{
+      h1:'Taking<br>shape',
+      summary:'Twelve in. Early read: you <span class="hot">skew bright and fruity</span> \u2014 but it isn\u2019t locked yet.',
+      matchip:'12 coffees rated', matdot:'#C89040',
+      radar:[70,52,55,38,40,30,28,30],
+      readRadar:'Fruit is leading early. <em>Eight more coffees</em> and your fingerprint locks in \u2014 right now it\u2019s a sketch, not a signature.',
+      roast:{labels:['Light','Med-light','Medium','Med-dark','Dark'],vals:[4.4,4.1,3.6,3.0,0]},
+      readRoast:'Early pattern: light beats dark. You haven\u2019t tried a dark roast yet \u2014 worth one, just to be sure.',
+      process:{labels:['Natural','Honey','Anaerobic','Washed'],vals:[4.4,0,4.2,3.9]},
+      readProcess:'Naturals look like your lane. You\u2019ve not logged a honey yet.',
+      origins:[
+        {name:'Ethiopia',val:4.5,n:4},
+        {name:'Colombia',val:4.0,n:3},
+        {name:'Kenya',val:4.2,n:2}
+      ],
+      readOrigin:'Strong early start with Ethiopia. Too few origins to call a favourite \u2014 go explore.',
+      evo:[], readEvo:'',
+      recName:'', recMeta:'', recWhy:'',
+      evoLocked:true, recLocked:true, forming:true,
+      stats:[['12','coffees'],['7','roasters'],['4','origins'],['blueberry','top note']]
+    }
+  };
+
+  Chart.defaults.font.family = 'Geist';
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = 'rgba(30,20,16,0.55)';
+
+  const EMBER='#D94E1F', OCHRE='#C89040', FOREST='#2F4A38', ESP='#1E1410';
+  const charts = {};
+
+  function barColors(vals){
+    return vals.map(v => v>=4.3 ? EMBER : (v>=3.4 ? OCHRE : (v<=0 ? 'rgba(30,20,16,0.10)' : 'rgba(30,20,16,0.32)')));
+  }
+  function destroy(k){ if(charts[k]){ charts[k].destroy(); delete charts[k]; } }
+
+  function buildRadar(vals){
+    destroy('radar');
+    charts.radar = new Chart(document.getElementById('radar'),{
+      type:'radar',
+      data:{labels:FAMILIES,datasets:[{
+        data:vals, fill:true,
+        backgroundColor:'rgba(217,78,31,0.14)',
+        borderColor:EMBER, borderWidth:2,
+        pointBackgroundColor:EMBER, pointRadius:3, pointHoverRadius:4
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{r:{
+          suggestedMin:0,suggestedMax:100,
+          grid:{color:'rgba(30,20,16,0.12)'},
+          angleLines:{color:'rgba(30,20,16,0.12)'},
+          ticks:{display:false,stepSize:25},
+          pointLabels:{color:ESP,font:{family:'Geist',size:11}}
+        }},
+        layout:{padding:6}
+      }
+    });
+  }
+
+  function buildVBars(key,cfg){
+    destroy(key);
+    charts[key] = new Chart(document.getElementById(key),{
+      type:'bar',
+      data:{labels:cfg.labels,datasets:[{
+        data:cfg.vals.map(v=>v||0),
+        backgroundColor:barColors(cfg.vals),
+        borderRadius:6, borderSkipped:false, barPercentage:0.62, categoryPercentage:0.78
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{
+          y:{min:0,max:5,grid:{color:'rgba(30,20,16,0.07)'},border:{display:false},
+             ticks:{stepSize:1,color:'rgba(30,20,16,0.40)'}},
+          x:{grid:{display:false},border:{color:'rgba(30,20,16,0.15)'},
+             ticks:{color:ESP,font:{size:11},autoSkip:false,maxRotation:0,minRotation:0}}
+        }
+      }
+    });
+  }
+
+  function buildEvo(vals){
+    destroy('evo');
+    charts.evo = new Chart(document.getElementById('evo'),{
+      type:'line',
+      data:{labels:['6 mo','5','4','3','2','now'],datasets:[{
+        data:vals, borderColor:FOREST, borderWidth:2.5,
+        backgroundColor:'rgba(47,74,56,0.08)', fill:true, tension:0.35,
+        pointBackgroundColor:FOREST, pointRadius:3
+      }]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{
+          y:{reverse:true,min:1,max:4,grid:{color:'rgba(30,20,16,0.07)'},border:{display:false},
+             ticks:{stepSize:1,color:'rgba(30,20,16,0.35)',
+               callback:v=> v===1?'light':(v===4?'dark':'')}},
+          x:{grid:{display:false},border:{color:'rgba(30,20,16,0.15)'},
+             ticks:{color:'rgba(30,20,16,0.45)',font:{size:10}}}
+        }
+      }
+    });
+  }
+
+  function renderOrigins(rows){
+    const max=5, host=document.getElementById('origins');
+    host.innerHTML='';
+    rows.forEach(r=>{
+      const col = r.val>=4.3?EMBER:(r.val>=3.4?OCHRE:'rgba(30,20,16,0.30)');
+      const el=document.createElement('div');
+      el.className='origin-row';
+      el.innerHTML='<div class="origin-name">'+r.name+'</div>'+
+        '<div class="origin-track"><div class="origin-fill" style="width:'+Math.round(r.val/max*100)+'%;background:'+col+'"></div></div>'+
+        '<div class="origin-val">'+r.val.toFixed(1)+' \u00b7 '+r.n+'</div>';
+      host.appendChild(el);
+    });
+  }
+
+  function renderStats(rows){
+    const host=document.getElementById('stats');
+    host.innerHTML='';
+    rows.forEach(s=>{
+      const el=document.createElement('div');
+      el.className='stat';
+      el.innerHTML='<div class="n">'+s[0]+'</div><div class="l">'+s[1]+'</div>';
+      host.appendChild(el);
+    });
+  }
+
+  function setState(state){
+    const d = DATA[state];
+    document.body.classList.toggle('early', state==='early');
+    document.getElementById('btn-est').classList.toggle('on', state==='established');
+    document.getElementById('btn-early').classList.toggle('on', state==='early');
+
+    document.getElementById('h1').innerHTML = d.h1;
+    document.getElementById('summary').innerHTML = d.summary;
+    document.getElementById('matchip').textContent = d.matchip;
+    document.getElementById('matdot').style.background = d.matdot;
+
+    document.getElementById('read-radar').innerHTML = d.readRadar;
+    document.getElementById('read-roast').innerHTML = d.readRoast;
+    document.getElementById('read-process').innerHTML = d.readProcess;
+    document.getElementById('read-origin').innerHTML = d.readOrigin;
+
+    buildRadar(d.radar);
+    buildVBars('roast', d.roast);
+    buildVBars('process', d.process);
+    renderOrigins(d.origins);
+    renderStats(d.stats);
+
+    // evolution: live vs locked
+    document.getElementById('evo-live').style.display = d.evoLocked ? 'none':'block';
+    document.getElementById('evo-locked').style.display = d.evoLocked ? 'block':'none';
+    if(!d.evoLocked){ document.getElementById('read-evo').innerHTML = d.readEvo; buildEvo(d.evo); }
+    else destroy('evo');
+
+    // recommendation: live vs early
+    document.getElementById('rec-live').style.display = d.recLocked ? 'none':'block';
+    document.getElementById('rec-early').style.display = d.recLocked ? 'block':'none';
+    if(!d.recLocked){
+      document.getElementById('rec-name').textContent = d.recName;
+      document.getElementById('rec-meta').textContent = d.recMeta;
+      document.getElementById('rec-why').innerHTML = d.recWhy;
+    }
+  }
+
+  setState('established');
+</script>
+</body>
+</html>
