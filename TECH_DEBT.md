@@ -170,7 +170,29 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 ## Cross-cutting
 
 ### Date formatting + utility duplication
-- **What:** A `formatDate` helper now lives identically in `CoffeeDetail.tsx` and `Journal.tsx`. Same with `ROAST_LABELS` (now in three places: CoffeeDetail, Journal, BrowseCoffees).
+- **What:** A `formatDate` helper now lives identically in `CoffeeDetail.tsx` and `Journal.tsx`. Same with `ROAST_LABELS` (now in four places: CoffeeDetail, Journal, BrowseCoffees, and `palateTheme.ts`). Process label maps also duplicated between `AddCoffeeForm` and `palateTheme.ts`.
 - **Why it's debt:** Divergence risk — same constant, multiple places to keep aligned. Easy to forget when adding a new roast level enum value.
-- **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS and other enum→display maps). Cheap refactor, ~5 minutes.
-- **Surfaced:** May 18, 2026 — second copy of formatDate created in CoffeeDetail build.
+- **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS, PROCESS_LABELS, and other enum→display maps). Import everywhere including palateTheme. Cheap refactor, ~10 minutes.
+- **Surfaced:** May 18, 2026 — second copy of formatDate created in CoffeeDetail build. Updated May 24, 2026 — fourth copy of ROAST_LABELS added by Palate Dashboard build.
+
+---
+
+## Palate Dashboard
+
+### Headline text hardcoded in component instead of data layer
+- **What:** `PalateDashboard.tsx` derives the headline ("Bright & fruit-forward" vs "Taking shape") from the maturity state with inline JSX rather than from a field in the `PalateProfile` data contract.
+- **Why it's debt:** Every other piece of editorial copy flows through the data layer (summary, reads, recommendation reason). The headline is the exception, which breaks the single-seam design. When Claude-generated copy lands, both summary and headline need to be data-layer fields.
+- **Fix:** Add a `headline` field to `PalateProfile` (or to `PalateReads`). Move the headline text into `mockProfiles.ts`. Component renders the field, not a conditional.
+- **Surfaced:** May 24, 2026 — Decision #037, Palate Dashboard build.
+
+### Dev variant switch (`?variant=early`) ships to production
+- **What:** `getPalateProfile.ts` reads a `?variant=early` URL query param to toggle between established and early mock fixtures. This is a dev-only preview feature that has no production use.
+- **Why it's debt:** Harmless but unnecessary in production. Any user who stumbles onto the param sees mock data.
+- **Fix:** Remove the variant check when real Supabase aggregation replaces the mock data layer. Marked with `// TODO(jesse): remove when real aggregation lands`.
+- **Surfaced:** May 24, 2026 — Palate Dashboard build spec §10.
+
+### ESLint broken by orphaned worktrees
+- **What:** `npm run lint` fails on every file with "No tsconfigRootDir was set, and multiple candidate TSConfigRootDirs" because `.claude/worktrees/` contains orphaned worktree directories, each with their own `tsconfig.json`.
+- **Why it's debt:** Can't run ESLint. Pre-existing issue, not caused by any recent build.
+- **Fix:** Either (a) clean up the orphaned worktrees (`rm -rf .claude/worktrees/*/`), or (b) set `tsconfigRootDir` explicitly in the ESLint config's `parserOptions`, or (c) add `.claude/worktrees` to the ESLint ignore list.
+- **Surfaced:** May 24, 2026 — discovered during Palate Dashboard build verification.

@@ -350,3 +350,21 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Alternatives considered:** Aggressive coffee_name prompting (no consistent ground truth to aim at); multi-candidate name extraction surfaced to the human (possible future aid, deferred).
 **Open thread:** Jesse's canonicalization leans composite (origin + producer + name). Worth exploring whether Palato's coffee *identity* should be a derived composite of structured fields rather than a single free-text "name" — to be tackled with the parked canonical-identity / dedup question (#004, open Q4).
 **Linked competency:** A/B (eval-framework refinement: separating ambiguity corrections from prompt-weakness corrections).
+
+---
+
+## #037 — May 24, 2026 — Palate Dashboard: presentation-first build on mock data
+
+**Decision:** Build the full Palate dashboard — 7 modules (fingerprint radar, roast/process sweet spots, origins, palate evolution, recommendation, stats strip), typed data contract (`PalateProfile`), cold-start/maturity states, editorial reads — on a mock data layer before real ratings exist. The mock adapter (`getPalateProfile`) is the single seam; swapping it for a Supabase aggregation query touches no component code.
+
+**Alternatives considered:** Wait for real rating data and then design the views around what exists (loses the back-design payoff — the output surface wouldn't constrain the input flow); build a minimal version with fewer modules (loses the cold-start design, which is the hardest part to retrofit).
+
+**Rationale:** Designing the output surface first back-designs the data requirements for the rating flow. Every field in the `PalateProfile` type — fingerprint axes (from `rating_flavor_descriptors` rolled up to family), roast/process buckets (from `coffees` joined to `ratings`), origins, evolution points — maps to a specific aggregation the rating flow must produce. Cold-start states (full/forming/locked per module, with tunable thresholds) are designed into the architecture rather than retrofitted, which matters because the dashboard must never fake precision it hasn't earned. The editorial reads ("charts that talk") come from the data layer, not components, leaving a clean seam for Claude-generated copy later.
+
+**Technical choices:** Recharts (SVG, React-idiomatic, themeable to brand tokens). All brand colors centralized in `palateTheme.ts` — zero hex literals in components. Maturity thresholds centralized in `maturity.ts` — components never hardcode numbers. Instrumentation stubs (`palate_viewed`, `palate_recommendation_clicked`) fire via a no-op `track()` utility to capture the dashboard's success question (does seeing the palate pull users back into rating?) from day one.
+
+**Tradeoffs accepted:** Mock data could diverge from what real aggregations produce; the data contract may need revision once real queries land. Recharts adds ~120KB to the production bundle (acceptable for SVG chart quality over canvas). The headline text ("Bright & fruit-forward" / "Taking shape") is currently derived from maturity state in the component rather than from a data field — captured as tech debt.
+
+**Linked competency:** A (presentation layer for future Claude-generated copy — `summary` and `recommendation.reason` are the seams); C (instrumentation stubs for dashboard-view → next-rating conversion measurement); D (spec-driven build with typed contract, mock → real swap designed in).
+
+**Note:** CLAUDE.md references a Decision #037 for scan endpoint auth verification (`/api/scan` session token check) that was never logged in this file. That decision predates this one chronologically. Jesse: backfill it or renumber.
