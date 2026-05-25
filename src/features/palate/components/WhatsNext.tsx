@@ -1,8 +1,10 @@
 import type { PalateProfile } from '../data/types'
-import { recommendationMaturity } from '../data/maturity'
+import type { MaturityState } from '../data/maturity'
+import { remainingForModule } from '../data/maturity'
 import { theme, PROCESS_LABELS, ROAST_LABELS } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { parseEmphasis } from './EditorialRead'
+import { LockedTeaser } from './LockedTeaser'
 import { track } from '../../../lib/track'
 
 const styles = {
@@ -50,33 +52,14 @@ const styles = {
     color: theme.ink70,
     marginTop: '11px',
   } as const,
-  locked: {
-    marginTop: '12px',
-    border: `1px dashed ${theme.ink15}`,
-    borderRadius: '12px',
-    padding: '22px 16px',
-    textAlign: 'center' as const,
-  } as const,
-  lockedTitle: {
-    fontFamily: theme.displayFont,
-    fontSize: '18px',
-    color: theme.ink70,
-    margin: 0,
-  } as const,
-  lockedSub: {
-    fontSize: '12px',
-    color: theme.ink50,
-    marginTop: '6px',
-    lineHeight: 1.5,
-  } as const,
 }
 
 type Props = {
   profile: PalateProfile
+  maturity: MaturityState
 }
 
-export function WhatsNext({ profile }: Props) {
-  const maturity = recommendationMaturity(profile)
+export function WhatsNext({ profile, maturity }: Props) {
   const rec = profile.recommendation
 
   const handleClick = () => {
@@ -89,14 +72,10 @@ export function WhatsNext({ profile }: Props) {
   return (
     <ModuleCard title="What's next" tag="preview · v1.1 engine">
       {maturity === 'locked' || !rec ? (
-        <div style={styles.locked}>
-          <p style={styles.lockedTitle}>We're still learning your palate</p>
-          <p style={styles.lockedSub}>
-            A few more ratings and we'll start pointing you
-            <br />
-            somewhere worth your $22.
-          </p>
-        </div>
+        <LockedTeaser
+          remaining={remainingForModule(profile.ratingCount, 'recommendation')}
+          description="Personalized recommendations based on your palate"
+        />
       ) : (
         <div onClick={handleClick} style={{ cursor: 'pointer' }}>
           <div style={styles.rec}>

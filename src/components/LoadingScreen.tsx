@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { PalatoWordmark } from './PalatoWordmark'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -6,14 +7,13 @@ const ember = '#D94E1F'
 const gold = '#C89B3C'
 
 const phases = [
-  { bg: ember, filter: 'brightness(0) invert(1) sepia(0.08) brightness(1.08)' },
-  { bg: gold, filter: 'brightness(0) invert(1) sepia(0.08) brightness(1.08)' },
-  { bg: espresso, filter: 'brightness(0) invert(1) sepia(0.08) brightness(1.08)' },
-  { bg: cream, filter: 'none' },
+  { bg: ember, fg: cream },
+  { bg: gold, fg: cream },
+  { bg: espresso, fg: cream },
+  { bg: cream, fg: ember },
 ] as const
 
 const PHASE_MS = 600
-const TOTAL_MS = phases.length * PHASE_MS
 
 export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   const [phase, setPhase] = useState(0)
@@ -29,7 +29,7 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
     return () => { clearTimeout(fade); clearTimeout(done) }
   }, [phase, onComplete])
 
-  const { bg, filter } = phases[phase]
+  const { bg, fg } = phases[phase]
 
   return (
     <div
@@ -45,15 +45,12 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
         opacity: fading ? 0 : 1,
       }}
     >
-      <img
-        src="/palato-wordmark.png"
-        alt="Palato"
+      <PalatoWordmark
+        color={fg}
         style={{
           width: 'clamp(180px, 50vw, 320px)',
           height: 'auto',
-          filter,
-          mixBlendMode: filter === 'none' ? 'multiply' : 'normal',
-          transition: 'filter 0.35s ease',
+          transition: 'color 0.35s ease',
         }}
       />
     </div>

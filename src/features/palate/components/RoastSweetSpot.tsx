@@ -8,16 +8,31 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { RoastLevel, RatingBucket } from '../data/types'
+import type { MaturityState } from '../data/maturity'
+import { remainingForModule } from '../data/maturity'
 import { theme, barColor, ROAST_LABELS } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
+import { LockedTeaser } from './LockedTeaser'
 
 type Props = {
   buckets: RatingBucket<RoastLevel>[]
   read: string
+  maturity: MaturityState
+  ratingCount: number
 }
 
-export function RoastSweetSpot({ buckets, read }: Props) {
+export function RoastSweetSpot({ buckets, read, maturity, ratingCount }: Props) {
+  if (maturity === 'locked') {
+    return (
+      <ModuleCard title="Roast sweet spot">
+        <LockedTeaser
+          remaining={remainingForModule(ratingCount, 'sweetSpot')}
+          description="Discover which roast levels you score highest"
+        />
+      </ModuleCard>
+    )
+  }
   const chartData = buckets.map((b) => ({
     name: ROAST_LABELS[b.key] ?? b.key,
     value: b.avgRating ?? 0,

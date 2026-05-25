@@ -7,11 +7,13 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { FingerprintAxis } from '../data/types'
-import { fingerprintMaturity } from '../data/maturity'
+import type { MaturityState } from '../data/maturity'
+import { remainingForModule } from '../data/maturity'
 import type { PalateProfile } from '../data/types'
 import { theme, FLAVOR_FAMILY_LABELS } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
+import { LockedTeaser } from './LockedTeaser'
 
 const styles = {
   formingBadge: {
@@ -35,10 +37,21 @@ const styles = {
 type Props = {
   profile: PalateProfile
   read: string
+  maturity: MaturityState
 }
 
-export function PalateFingerprint({ profile, read }: Props) {
-  const maturity = fingerprintMaturity(profile)
+export function PalateFingerprint({ profile, read, maturity }: Props) {
+  if (maturity === 'locked') {
+    return (
+      <ModuleCard title="Palate fingerprint">
+        <LockedTeaser
+          remaining={remainingForModule(profile.ratingCount, 'fingerprint')}
+          description="See which flavor families define your palate"
+        />
+      </ModuleCard>
+    )
+  }
+
   const isForming = maturity === 'forming'
 
   const chartData = profile.fingerprint.map((axis: FingerprintAxis) => ({
@@ -47,9 +60,7 @@ export function PalateFingerprint({ profile, read }: Props) {
   }))
 
   return (
-    <ModuleCard title="Palate fingerprint">
-      {isForming && <span style={styles.formingBadge}>still forming</span>}
-
+    <ModuleCard title="Palate fingerprint" tag={isForming ? 'still forming' : undefined}>
       <div style={styles.chartWrap}>
         <ResponsiveContainer width="100%" height={248}>
           <RadarChart data={chartData} outerRadius="75%">

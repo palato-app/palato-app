@@ -7,52 +7,28 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { PalateProfile } from '../data/types'
-import { evolutionMaturity } from '../data/maturity'
+import type { MaturityState } from '../data/maturity'
+import { remainingForModule } from '../data/maturity'
 import { theme } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
-
-const styles = {
-  locked: {
-    marginTop: '12px',
-    border: `1px dashed ${theme.ink15}`,
-    borderRadius: '12px',
-    padding: '22px 16px',
-    textAlign: 'center' as const,
-  } as const,
-  lockedTitle: {
-    fontFamily: theme.displayFont,
-    fontSize: '18px',
-    color: theme.ink70,
-    margin: 0,
-  } as const,
-  lockedSub: {
-    fontSize: '12px',
-    color: theme.ink50,
-    marginTop: '6px',
-    lineHeight: 1.5,
-  } as const,
-}
+import { LockedTeaser } from './LockedTeaser'
 
 type Props = {
   profile: PalateProfile
   read: string
+  maturity: MaturityState
 }
 
-export function PalateEvolution({ profile, read }: Props) {
-  const maturity = evolutionMaturity(profile)
+export function PalateEvolution({ profile, read, maturity }: Props) {
 
   return (
     <ModuleCard title="Palate evolution">
       {maturity === 'locked' ? (
-        <div style={styles.locked}>
-          <p style={styles.lockedTitle}>Not enough history yet</p>
-          <p style={styles.lockedSub}>
-            Evolution needs about 20 coffees across a few weeks.
-            <br />
-            Keep rating — this is where you'll watch your palate move.
-          </p>
-        </div>
+        <LockedTeaser
+          remaining={remainingForModule(profile.ratingCount, 'evolution')}
+          description="Watch how your taste changes over time"
+        />
       ) : (
         <>
           <div style={{ width: '100%', marginTop: '10px' }}>

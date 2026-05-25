@@ -8,7 +8,12 @@ import { Journal } from './Journal'
 import { AddAndRateFlow } from './AddAndRateFlow'
 import { FloatingAddButton } from './components/FloatingAddButton'
 import { PalateDashboard } from './features/palate/PalateDashboard'
+import { PalateLocked } from './features/palate/components/PalateLocked'
+import { useRatingCount } from './features/palate/data/useRatingCount'
+import { screenAccessMaturity } from './features/palate/data/maturity'
 import { LoadingScreen } from './components/LoadingScreen'
+import { PalatoWordmark } from './components/PalatoWordmark'
+import { BottomTabBar } from './components/BottomTabBar'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -50,6 +55,8 @@ function App() {
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
   const [splashDone, setSplashDone] = useState(false)
   const onSplashComplete = useCallback(() => setSplashDone(true), [])
+  const { count: ratingCount } = useRatingCount()
+  const palateUnlocked = screenAccessMaturity(ratingCount) !== 'locked'
 
   const goToBrowse = () => {
     setView('browse')
@@ -104,13 +111,11 @@ function App() {
   if (!user) {
     return (
       <div className="palato-page" style={pageStyle}>
-        <img
-          src="/palato-wordmark.png"
-          alt="Palato"
+        <PalatoWordmark
+          color={ember}
           style={{
             width: 'clamp(200px, 50vw, 340px)',
             height: 'auto',
-            mixBlendMode: 'multiply',
             margin: '0 0 1rem',
           }}
         />
@@ -156,13 +161,11 @@ function App() {
           marginBottom: '0',
         }}
       >
-        <img
-          src="/palato-wordmark.png"
-          alt="Palato"
+        <PalatoWordmark
+          color={espresso}
           style={{
             height: '2.2rem',
             width: 'auto',
-            mixBlendMode: 'multiply',
           }}
         />
         <nav
@@ -206,7 +209,11 @@ function App() {
 
       {view === 'browse' && <BrowseCoffees onSelectCoffee={goToCoffee} />}
       {view === 'journal' && <Journal onSelectCoffee={goToCoffee} />}
-      {view === 'palate' && <PalateDashboard />}
+      {view === 'palate' && (
+        palateUnlocked
+          ? <PalateDashboard />
+          : <PalateLocked ratingCount={ratingCount} onGoRate={goToBrowse} />
+      )}
       {view === 'flavors' && <TaxonomyView />}
       {view === 'coffee-detail' && selectedCoffeeId && (
         <CoffeeDetail
@@ -227,6 +234,17 @@ function App() {
       )}
 
       {view !== 'add-flow' && <FloatingAddButton onClick={goToAddFlow} />}
+
+      <BottomTabBar
+        activeView={view}
+        onNavigate={(v) => {
+          if (v === 'browse') goToBrowse()
+          else if (v === 'journal') goToJournal()
+          else if (v === 'palate') goToPalate()
+        }}
+        onGoToFlavors={goToFlavors}
+        onSignOut={signOut}
+      />
     </div>
   )
 }

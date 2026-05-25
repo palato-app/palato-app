@@ -8,16 +8,31 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { ProcessMethod, RatingBucket } from '../data/types'
+import type { MaturityState } from '../data/maturity'
+import { remainingForModule } from '../data/maturity'
 import { theme, barColor, PROCESS_LABELS } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
+import { LockedTeaser } from './LockedTeaser'
 
 type Props = {
   buckets: RatingBucket<ProcessMethod>[]
   read: string
+  maturity: MaturityState
+  ratingCount: number
 }
 
-export function ProcessSweetSpot({ buckets, read }: Props) {
+export function ProcessSweetSpot({ buckets, read, maturity, ratingCount }: Props) {
+  if (maturity === 'locked') {
+    return (
+      <ModuleCard title="Process">
+        <LockedTeaser
+          remaining={remainingForModule(ratingCount, 'sweetSpot')}
+          description="See which processing methods suit your palate"
+        />
+      </ModuleCard>
+    )
+  }
   const chartData = buckets.map((b) => ({
     name: PROCESS_LABELS[b.key] ?? b.key,
     value: b.avgRating ?? 0,

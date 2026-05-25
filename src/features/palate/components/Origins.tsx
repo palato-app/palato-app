@@ -1,7 +1,10 @@
 import type { OriginStat } from '../data/types'
+import type { MaturityState } from '../data/maturity'
+import { remainingForModule } from '../data/maturity'
 import { theme, originBarColor } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
+import { LockedTeaser } from './LockedTeaser'
 
 const MAX_RATING = 5
 
@@ -39,9 +42,21 @@ const styles = {
 type Props = {
   origins: OriginStat[]
   read: string
+  maturity: MaturityState
+  ratingCount: number
 }
 
-export function Origins({ origins, read }: Props) {
+export function Origins({ origins, read, maturity, ratingCount }: Props) {
+  if (maturity === 'locked') {
+    return (
+      <ModuleCard title="Origins">
+        <LockedTeaser
+          remaining={remainingForModule(ratingCount, 'origins')}
+          description="Find out which coffee origins you prefer"
+        />
+      </ModuleCard>
+    )
+  }
   return (
     <ModuleCard title="Origins">
       {origins.map((o) => {

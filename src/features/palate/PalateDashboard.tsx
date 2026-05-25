@@ -1,6 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { usePalateProfile } from './data/usePalateProfile'
 import { getPalateProfile } from './data/getPalateProfile'
-import { fingerprintMaturity } from './data/maturity'
+import {
+  fingerprintMaturity,
+  sweetSpotMaturity,
+  originsMaturity,
+  evolutionMaturity,
+  recommendationMaturity,
+} from './data/maturity'
 import { theme } from './palateTheme'
 import { parseEmphasis } from './components/EditorialRead'
 import { PalateFingerprint } from './components/PalateFingerprint'
@@ -50,34 +57,88 @@ const styles = {
     padding: '22px 30px 6px',
     lineHeight: 1.4,
   } as const,
+  previewToggle: {
+    display: 'block',
+    margin: '24px auto 0',
+    padding: '8px 16px',
+    background: 'none',
+    border: `1px solid ${theme.ink15}`,
+    borderRadius: '100px',
+    fontFamily: theme.bodyFont,
+    fontSize: '12px',
+    color: theme.ink50,
+    cursor: 'pointer',
+  } as const,
+  previewBanner: {
+    textAlign: 'center' as const,
+    fontFamily: theme.bodyFont,
+    fontSize: '11px',
+    letterSpacing: '0.8px',
+    textTransform: 'uppercase' as const,
+    color: theme.ochre,
+    border: `1px solid ${theme.ochre}`,
+    borderRadius: '8px',
+    padding: '8px 12px',
+    marginBottom: '16px',
+  } as const,
 }
 
 export function PalateDashboard() {
-  // TODO(jesse): remove variant param when real aggregation lands
-  const { profile, reads } = getPalateProfile()
+  const real = usePalateProfile()
+  const [previewMode, setPreviewMode] = useState(false)
 
-  const maturity = fingerprintMaturity(profile)
+  const mock = previewMode ? getPalateProfile('established') : null
+  const profile = previewMode && mock ? mock.profile : real.profile
+  const reads = previewMode && mock ? mock.reads : real.reads
+
+  const fpMaturity = fingerprintMaturity(profile)
+  const ssMaturity = sweetSpotMaturity(profile)
+  const origMaturity = originsMaturity(profile)
+  const evoMaturity = evolutionMaturity(profile)
+  const recMaturity = recommendationMaturity(profile)
 
   useEffect(() => {
     track('palate_viewed', {
-      ratingCount: profile.ratingCount,
-      maturityState: maturity,
+      ratingCount: real.ratingCount,
+      previewMode,
     })
-  }, [profile.ratingCount, maturity])
+  }, [real.ratingCount, previewMode])
+
+  if (real.loading) {
+    return (
+      <div style={styles.container}>
+        <p style={{ opacity: 0.5, fontFamily: theme.bodyFont }}>Loading your palate...</p>
+      </div>
+    )
+  }
 
   return (
     <div style={styles.container}>
-      {/* Header + summary */}
+      {previewMode && (
+        <div style={styles.previewBanner}>
+          Previewing with sample data
+          <button
+            onClick={() => setPreviewMode(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: theme.ochre,
+              fontFamily: theme.bodyFont,
+              fontSize: '11px',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              marginLeft: '8px',
+            }}
+          >
+            Back to your data
+          </button>
+        </div>
+      )}
+
       <div>
         <p style={styles.eyebrow}>your palate</p>
-        {/*
-          The headline comes from the profile summary's first phrase.
-          For mock data we derive a short headline from the profile state.
-          TODO(jesse): when Claude-generated copy lands, summary and headline
-          become two separate fields from the data layer.
-        */}
         <h1 style={styles.headline}>
-          {maturity === 'full' ? (
+          {fpMaturity === 'full' ? (
             <>
               Bright &amp;
               <br />
@@ -94,35 +155,46 @@ export function PalateDashboard() {
         <p style={styles.summary}>{parseEmphasis(profile.summary)}</p>
       </div>
 
-      {/* Stats strip — positioned early so the coffees count carries the number */}
       <PalateStats stats={profile.stats} />
 
-      {/* HERO: Palate fingerprint */}
-      <PalateFingerprint profile={profile} read={reads.fingerprint} />
+      <PalateFingerprint profile={profile} read={reads.fingerprint} maturity={fpMaturity} />
 
-      {/* Sweet spots */}
       <RoastSweetSpot
         buckets={profile.roastSweetSpot}
         read={reads.roast}
+        maturity={ssMaturity}
+        ratingCount={profile.ratingCount}
       />
       <ProcessSweetSpot
         buckets={profile.processSweetSpot}
         read={reads.process}
+        maturity={ssMaturity}
+        ratingCount={profile.ratingCount}
       />
 
-      {/* Origins */}
-      <Origins origins={profile.origins} read={reads.origins} />
+      <Origins
+        origins={profile.origins}
+        read={reads.origins}
+        maturity={origMaturity}
+        ratingCount={profile.ratingCount}
+      />
 
-      {/* Evolution */}
-      <PalateEvolution profile={profile} read={reads.evolution} />
+      <PalateEvolution profile={profile} read={reads.evolution} maturity={evoMaturity} />
 
-      {/* Recommendation */}
-      <WhatsNext profile={profile} />
+      <WhatsNext profile={profile} maturity={recMaturity} />
 
-      {/* Closing line */}
       <p style={styles.footnote}>
         Your fingerprint sharpens with every coffee. Rate to watch it move.
       </p>
+
+      {!previewMode && (
+        <button
+          onClick={() => setPreviewMode(true)}
+          style={styles.previewToggle}
+        >
+          Preview with sample data
+        </button>
+      )}
     </div>
   )
 }

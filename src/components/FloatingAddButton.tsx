@@ -7,6 +7,7 @@ export function FloatingAddButton({ onClick }: Props) {
     <button
       onClick={onClick}
       aria-label="Add a coffee"
+      className="palato-fab"
       style={{
         position: 'fixed',
         bottom: '24px',
