@@ -93,6 +93,17 @@ body {
   .palato-fab {
     bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 12px) !important;
   }
+  .palato-coffee-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+  .palato-coffee-hero .palato-coffee-image {
+    max-width: 280px;
+  }
+  .palato-journal-actions {
+    margin-left: 0 !important;
+  }
 }
 
 @media (min-width: 769px) {

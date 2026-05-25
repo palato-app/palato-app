@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from './lib/supabase'
 import { useCoffee } from './lib/useCoffee'
 import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
 import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
@@ -38,6 +39,11 @@ const styles = {
     gridTemplateColumns: '1fr 1fr',
     gap: '3rem',
     alignItems: 'start',
+  } as const,
+  heroMobile: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '1.5rem',
   } as const,
   imageWrapper: {
     width: '100%',
@@ -186,8 +192,20 @@ type Props = {
 
 export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
   const { coffee, loading, error } = useCoffee(coffeeId)
-  const { rating: userRating } = useUserRatingForCoffee(coffeeId)
+  const { rating: userRating, refetch: refetchRating } = useUserRatingForCoffee(coffeeId)
   const [showBrewDetails, setShowBrewDetails] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    if (!userRating) return
+    setDeleting(true)
+    await supabase.from('rating_flavor_descriptors').delete().eq('rating_id', userRating.id)
+    await supabase.from('ratings').delete().eq('id', userRating.id)
+    setDeleting(false)
+    setConfirmDelete(false)
+    refetchRating()
+  }
 
   if (loading) return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Loading…</p>
   if (error)
@@ -213,8 +231,8 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
     <div style={styles.container}>
       <button onClick={onBack} style={styles.backLink}>← Back to coffees</button>
 
-      <section style={styles.hero}>
-        <div style={styles.imageWrapper}>
+      <section className="palato-coffee-hero" style={styles.hero}>
+        <div className="palato-coffee-image" style={styles.imageWrapper}>
           {coffee.bag_image_url ? (
             <img src={coffee.bag_image_url} alt={`${coffee.coffee_name} bag`} style={styles.image} />
           ) : (
@@ -318,6 +336,80 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                   {showBrewDetails && <BrewDetails data={userRating} />}
                 </div>
               )}
+
+              {/* Actions */}
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                marginTop: '0.75rem',
+                paddingTop: '0.75rem',
+                borderTop: '1px solid rgba(30, 20, 16, 0.1)',
+              }}>
+                {!confirmDelete ? (
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '0.2rem 0',
+                      fontFamily: 'Geist, system-ui, sans-serif',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: '#D94E1F',
+                      opacity: 0.7,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete rating
+                  </button>
+                ) : (
+                  <span style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{
+                      fontFamily: 'Geist, system-ui, sans-serif',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: '#1E1410',
+                      opacity: 0.7,
+                    }}>
+                      Delete this rating?
+                    </span>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      style={{
+                        background: '#D94E1F',
+                        color: '#F4EAD5',
+                        border: 'none',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '100px',
+                        fontFamily: 'Geist, system-ui, sans-serif',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        opacity: deleting ? 0.5 : 1,
+                      }}
+                    >
+                      {deleting ? 'Deleting…' : 'Yes'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '0.2rem 0',
+                        fontFamily: 'Geist, system-ui, sans-serif',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        color: '#1E1410',
+                        opacity: 0.5,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </span>
+                )}
+              </div>
             </div>
           )}
 

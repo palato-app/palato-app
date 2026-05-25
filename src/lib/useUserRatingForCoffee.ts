@@ -30,6 +30,9 @@ export function useUserRatingForCoffee(coffeeId: string | null) {
   const [rating, setRating] = useState<UserRatingForCoffee | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [version, setVersion] = useState(0)
+
+  const refetch = () => setVersion((v) => v + 1)
 
   useEffect(() => {
     if (!user || !coffeeId) {
@@ -124,7 +127,7 @@ export function useUserRatingForCoffee(coffeeId: string | null) {
     return () => {
       cancelled = true
     }
-  }, [user, coffeeId])
+  }, [user, coffeeId, version])
 
-  return { rating, loading, error }
+  return { rating, loading, error, refetch }
 }
