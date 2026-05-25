@@ -1,16 +1,17 @@
 import type { PalateProfile, PalateReads } from './types'
 
 // ---------------------------------------------------------------------------
-// Mock fixtures — values match the branded HTML mock exactly.
+// Mock fixtures — grounded editorial voice (Decision #039).
 // "established" = mature palate (47 coffees), "early" = forming (12 coffees).
 // Emphasis markers use *asterisks* — parsed by EditorialRead into styled spans.
+// Emphasis goes on a number or the actionable phrase, not on a dramatic flourish.
 // ---------------------------------------------------------------------------
 
 export const establishedProfile: PalateProfile = {
   ratingCount: 47,
   firstRatedAt: '2025-11-24T00:00:00Z',
   summary:
-    'Forty-seven coffees in. You’re a bright, fruit-forward drinker who’s quietly been *creeping lighter*.',
+    'Forty-seven coffees rated. You score light, fruit-forward coffees highest, and your picks have *trended lighter* over the past six months.',
   fingerprint: [
     { family: 'fruity', score: 90, confidence: 1 },
     { family: 'floral', score: 74, confidence: 1 },
@@ -55,7 +56,7 @@ export const establishedProfile: PalateProfile = {
     process: 'natural',
     roastLevel: 'light',
     reason:
-      'You love wild Ethiopian naturals. This has the same *blueberry* as your top-rated Hambela, with more body — we think it lands at a five.',
+      'Your highest-rated coffees are fruit-forward Ethiopian naturals like Hambela. Gelgelu is the same origin and process with more body — a close match to what you already score highly.',
   },
   stats: {
     coffees: 47,
@@ -67,21 +68,22 @@ export const establishedProfile: PalateProfile = {
 
 export const establishedReads: PalateReads = {
   fingerprint:
-    'Fruit and florals are your gravity. *Roasty and nutty leave you cold* — you’ve never rated a dark roast above a three.',
-  roast: 'Your fives live in the light end. *Past medium, you check out.*',
+    'Fruity and floral notes appear in most of your top-rated coffees; roasted and nutty notes rarely do. Your highest-rated dark roast so far is a *3*.',
+  roast:
+    'Your average rating rises as the roast gets lighter — light and medium-light sit near *5*, dark closer to *2*.',
   process:
-    'Naturals edge washed by half a star — you like them a little wild.',
+    'Naturals average about half a star higher than washed for you. Natural processing leaves more fruit character in the cup, which lines up with your profile.',
   origins:
-    'Ethiopia is home. You’ve never loved a Brazil — but *every Brazil you tried was a medium-dark*. Might be the roast, not the country.',
+    'Ethiopia and Kenya are your highest-rated origins. Brazil sits lowest — but every Brazil you’ve rated was a medium-dark, your lowest-scoring roast level, so origin and roast are tangled here. *A light-roast Brazil would settle it.*',
   evolution:
-    'Six months ago you drank medium. Now you reach for light. *Your palate’s moving.*',
+    'Over the past six months, your average roast level has moved from medium toward light.',
 }
 
 export const earlyProfile: PalateProfile = {
   ratingCount: 12,
   firstRatedAt: '2026-05-10T00:00:00Z',
   summary:
-    'Twelve in. Early read: you *skew bright and fruity* — but it isn’t locked yet.',
+    'Twelve coffees rated. Early on, you’re scoring fruit-forward, lighter-roast coffees highest — but it’s *too soon to lock the pattern*.',
   fingerprint: [
     { family: 'fruity', score: 70, confidence: 0.6 },
     { family: 'floral', score: 52, confidence: 0.5 },
@@ -122,11 +124,12 @@ export const earlyProfile: PalateProfile = {
 
 export const earlyReads: PalateReads = {
   fingerprint:
-    'Fruit is leading early. *Eight more coffees* and your fingerprint locks in — right now it’s a sketch, not a signature.',
+    'Fruity notes lead your early ratings. Your fingerprint firms up around *20 coffees*; for now it’s a sketch.',
   roast:
-    'Early pattern: light beats dark. You haven’t tried a dark roast yet — worth one, just to be sure.',
-  process: 'Naturals look like your lane. You’ve not logged a honey yet.',
+    'So far your lighter roasts score higher. You haven’t rated a dark roast yet — one would test the pattern.',
+  process:
+    'Naturals are your early favorite. You haven’t logged a honey-processed coffee yet.',
   origins:
-    'Strong early start with Ethiopia. Too few origins to call a favourite — go explore.',
+    'Ethiopia leads your early ratings. Too few origins logged to name a favorite — keep exploring.',
   evolution: '',
 }

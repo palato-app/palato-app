@@ -41,34 +41,6 @@ const styles = {
     color: theme.ink70,
     marginTop: '12px',
   } as const,
-  metaRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '16px 0 8px',
-    gap: '10px',
-    flexWrap: 'wrap' as const,
-  } as const,
-  chip: {
-    fontFamily: theme.bodyFont,
-    fontSize: '11.5px',
-    letterSpacing: '0.4px',
-    color: theme.ink70,
-    border: `1px solid ${theme.ink15}`,
-    borderRadius: '999px',
-    padding: '5px 11px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-  } as const,
-  dot: (color: string) =>
-    ({
-      width: '6px',
-      height: '6px',
-      borderRadius: '50%',
-      background: color,
-      display: 'inline-block',
-    }) as const,
   footnote: {
     textAlign: 'center' as const,
     fontFamily: theme.displayFont,
@@ -85,7 +57,6 @@ export function PalateDashboard() {
   const { profile, reads } = getPalateProfile()
 
   const maturity = fingerprintMaturity(profile)
-  const dotColor = maturity === 'full' ? theme.forest : theme.ochre
 
   useEffect(() => {
     track('palate_viewed', {
@@ -123,13 +94,8 @@ export function PalateDashboard() {
         <p style={styles.summary}>{parseEmphasis(profile.summary)}</p>
       </div>
 
-      {/* Maturity chip */}
-      <div style={styles.metaRow}>
-        <span style={styles.chip}>
-          <span style={styles.dot(dotColor)} />
-          {profile.ratingCount} coffees rated
-        </span>
-      </div>
+      {/* Stats strip — positioned early so the coffees count carries the number */}
+      <PalateStats stats={profile.stats} />
 
       {/* HERO: Palate fingerprint */}
       <PalateFingerprint profile={profile} read={reads.fingerprint} />
@@ -152,9 +118,6 @@ export function PalateDashboard() {
 
       {/* Recommendation */}
       <WhatsNext profile={profile} />
-
-      {/* Stats strip */}
-      <PalateStats stats={profile.stats} />
 
       {/* Closing line */}
       <p style={styles.footnote}>

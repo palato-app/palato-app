@@ -353,7 +353,21 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 
 ---
 
-## #037 — May 24, 2026 — Palate Dashboard: presentation-first build on mock data
+## #037 — May 23, 2026 — Scan endpoint requires authenticated Supabase session
+
+**Decision:** The `/api/scan` Vercel serverless function verifies the caller's Supabase session token before forwarding the image to Claude. Unauthenticated requests are rejected with 401. The function extracts the `Authorization: Bearer <token>` header, calls `supabase.auth.getUser(token)` server-side, and only proceeds if it resolves to a valid user.
+
+**Alternatives considered:** No auth check (rejected — would allow anyone with the endpoint URL to burn Anthropic credits); API-key-based auth (adds a separate credential to manage, misaligned with the existing Supabase auth flow); admin-only gating (too restrictive — Decision #034 opens the catalog to all beta users, so the scan endpoint must serve them too).
+
+**Rationale:** The scan endpoint holds the Anthropic API key (Decision #032). Without auth verification, it's an open relay to a paid API. Supabase session tokens are already present on the client (the user is logged in), so passing them through is zero additional UX cost. Server-side verification via `getUser()` is the Supabase-recommended pattern — it validates the JWT against the auth server rather than trusting a client-decoded token.
+
+**Tradeoffs accepted:** Adds a server-side Supabase client dependency to the Vercel function (the `service_role` key, stored as a non-`VITE_` env var). The auth check adds ~50ms latency per scan request.
+
+**Linked competency:** A (securing the AI pipeline endpoint); D (infrastructure decision documented).
+
+---
+
+## #038 — May 24, 2026 — Palate Dashboard: presentation-first build on mock data
 
 **Decision:** Build the full Palate dashboard — 7 modules (fingerprint radar, roast/process sweet spots, origins, palate evolution, recommendation, stats strip), typed data contract (`PalateProfile`), cold-start/maturity states, editorial reads — on a mock data layer before real ratings exist. The mock adapter (`getPalateProfile`) is the single seam; swapping it for a Supabase aggregation query touches no component code.
 
@@ -367,4 +381,16 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 
 **Linked competency:** A (presentation layer for future Claude-generated copy — `summary` and `recommendation.reason` are the seams); C (instrumentation stubs for dashboard-view → next-rating conversion measurement); D (spec-driven build with typed contract, mock → real swap designed in).
 
-**Note:** CLAUDE.md references a Decision #037 for scan endpoint auth verification (`/api/scan` session token check) that was never logged in this file. That decision predates this one chronologically. Jesse: backfill it or renumber.
+---
+
+## #039 — May 24, 2026 — Dashboard voice: grounded and educational over dramatic; report patterns, never manufacture causation
+
+**Decision:** The palate dashboard's editorial copy states observed patterns in the user's own rating data, plainly and specifically. Where it teaches, it uses only verifiable, sourced coffee facts (e.g., natural processing yields more fruit character) — never model-generated statistics. It does not assert causation the data can't support; instead it surfaces confounds and, where useful, suggests an experiment.
+
+**Alternatives considered:** The original punchy/poetic voice (rejected as performative and, in the Brazil case, factually overreaching — "Ethiopia is home" asserts identity from a sample; "you've never loved a Brazil" manufactures causation when the confound is roast level); fully LLM-generated educational facts (rejected — unsourced model output risks shipping confident-but-false coffee claims, brand-poison for a roaster-built product).
+
+**Rationale:** Palato's edge is that a real roaster built it; accuracy is the brand. Copy that interprets the user's own data is grounded by definition; external facts must come from a verified source or retrieval, not free-form generation. Reporting patterns rather than causes keeps the product honest and more useful — "origin and roast are tangled here; a light-roast Brazil would settle it" is both more accurate and more actionable than "you've never loved a Brazil."
+
+**Tradeoffs accepted:** Less viral-quotable copy; the educational layer needs a verified knowledge source before the v1.1 dynamic-copy feature can generate it safely.
+
+**Linked competency:** A (dynamic-copy generation + grounding eval — the seam for Claude-generated copy now has a quality bar: grounded, sourced, pattern-not-cause); D (artifact — voice principles documented as a product decision, not a style preference). Also amends the Brand Guide voice section: in data/insight surfaces, lead with grounded specificity over performance.
