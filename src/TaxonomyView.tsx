@@ -176,14 +176,14 @@ export function TaxonomyView() {
 
   return (
     <div style={styles.container}>
-      <section style={styles.hero}>
+      <section className="palato-taxonomy-hero" style={styles.hero}>
         <div>
           <p style={styles.heroEyebrow}>Welcome, {firstName}</p>
           <h2 style={styles.heroHeadline}>
             The flavor <em style={styles.heroEm}>vocabulary</em>.
           </h2>
         </div>
-        <div style={styles.heroMeta}>
+        <div className="palato-taxonomy-meta" style={styles.heroMeta}>
           <strong style={{ fontWeight: 600, opacity: 0.95 }}>{totalNonDefect} descriptors</strong>
           <br />
           across nine categories
@@ -251,8 +251,8 @@ function CategoryBlock({
   const subcats = groupBySubcategory(descriptors)
 
   return (
-    <section style={styles.category}>
-      <div style={styles.categoryMeta}>
+    <section className="palato-taxonomy-category" style={styles.category}>
+      <div className="palato-taxonomy-category-meta" style={styles.categoryMeta}>
         {number !== undefined && (
           <div style={styles.categoryNumber}>{String(number).padStart(2, '0')}</div>
         )}

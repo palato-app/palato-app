@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { supabase } from './lib/supabase'
 import { useCoffee } from './lib/useCoffee'
 import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
+import { EditRatingFlow } from './EditRatingFlow'
 import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
+import type { RatedCoffee } from './lib/useUserRatings'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -196,6 +198,7 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
   const [showBrewDetails, setShowBrewDetails] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const handleDelete = async () => {
     if (!userRating) return
@@ -226,6 +229,27 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
     : ''
   const varietyDisplay = coffee.variety?.length ? coffee.variety.join(', ') : null
   const elevationDisplay = coffee.elevation_masl ? `${coffee.elevation_masl} masl` : null
+
+  if (editing && userRating) {
+    const ratedCoffee: RatedCoffee = {
+      ...userRating,
+      coffee: {
+        id: coffee.id,
+        roaster_name: coffee.roaster_name,
+        coffee_name: coffee.coffee_name,
+        origin_country: coffee.origin_country,
+        bag_image_url: coffee.bag_image_url,
+        roaster_stated_roast_level: coffee.roaster_stated_roast_level,
+      },
+    }
+    return (
+      <EditRatingFlow
+        rating={ratedCoffee}
+        onCancel={() => setEditing(false)}
+        onSaved={() => { setEditing(false); refetchRating() }}
+      />
+    )
+  }
 
   return (
     <div style={styles.container}>
@@ -345,6 +369,22 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                 paddingTop: '0.75rem',
                 borderTop: '1px solid rgba(30, 20, 16, 0.1)',
               }}>
+                <button
+                  onClick={() => setEditing(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '0.2rem 0',
+                    fontFamily: 'Geist, system-ui, sans-serif',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    color: '#1E1410',
+                    opacity: 0.5,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Edit
+                </button>
                 {!confirmDelete ? (
                   <button
                     onClick={() => setConfirmDelete(true)}
@@ -360,7 +400,7 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                       cursor: 'pointer',
                     }}
                   >
-                    Delete rating
+                    Delete
                   </button>
                 ) : (
                   <span style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

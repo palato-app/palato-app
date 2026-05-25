@@ -104,6 +104,24 @@ body {
   .palato-journal-actions {
     margin-left: 0 !important;
   }
+  .palato-taxonomy-hero {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    margin-bottom: 3rem !important;
+  }
+  .palato-taxonomy-hero .palato-taxonomy-meta {
+    text-align: left !important;
+  }
+  .palato-taxonomy-category {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+    margin-bottom: 3rem !important;
+  }
+  .palato-taxonomy-category-meta {
+    position: static !important;
+  }
 }
 
 @media (min-width: 769px) {
