@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useCoffee } from './lib/useCoffee'
 import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
+import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -185,6 +187,7 @@ type Props = {
 export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
   const { coffee, loading, error } = useCoffee(coffeeId)
   const { rating: userRating } = useUserRatingForCoffee(coffeeId)
+  const [showBrewDetails, setShowBrewDetails] = useState(false)
 
   if (loading) return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Loading…</p>
   if (error)
@@ -292,6 +295,27 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                       </span>
                     )
                   })}
+                </div>
+              )}
+              {hasBrewDetails(userRating) && (
+                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(30, 20, 16, 0.1)' }}>
+                  <button
+                    onClick={() => setShowBrewDetails(!showBrewDetails)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: '0.2rem 0',
+                      fontFamily: 'Geist, system-ui, sans-serif',
+                      fontSize: '0.75rem',
+                      fontWeight: 500,
+                      color: '#1E1410',
+                      opacity: 0.5,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showBrewDetails ? '− Hide brew details' : '+ Brew details'}
+                  </button>
+                  {showBrewDetails && <BrewDetails data={userRating} />}
                 </div>
               )}
             </div>

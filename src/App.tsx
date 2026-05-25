@@ -5,15 +5,15 @@ import { BrowseCoffees } from './BrowseCoffees'
 import { CoffeeDetail } from './CoffeeDetail'
 import { RateCoffee } from './RateCoffee'
 import { Journal } from './Journal'
-import { AddCoffeeForm } from './AddCoffeeForm'
+import { AddAndRateFlow } from './AddAndRateFlow'
+import { FloatingAddButton } from './components/FloatingAddButton'
 import { PalateDashboard } from './features/palate/PalateDashboard'
-import { useIsAdmin } from './lib/useIsAdmin'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
 const ember = '#D94E1F'
 
-type View = 'browse' | 'journal' | 'palate' | 'flavors' | 'coffee-detail' | 'rating'
+type View = 'browse' | 'journal' | 'palate' | 'flavors' | 'coffee-detail' | 'rating' | 'add-flow'
 
 const pageStyle = {
   padding: '3rem 2.5rem 6rem',
@@ -45,7 +45,6 @@ const headerNavButton = (active: boolean) => ({
 
 function App() {
   const { user, loading, signInWithGoogle, signOut } = useAuth()
-  const isAdmin = useIsAdmin()
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
 
@@ -82,9 +81,9 @@ function App() {
     setView('coffee-detail')
   }
 
-  const goToRateCoffee = (id: string) => {
-    setSelectedCoffeeId(id)
-    setView('rating')
+  const goToAddFlow = () => {
+    setView('add-flow')
+    setSelectedCoffeeId(null)
   }
 
   if (loading) {
@@ -216,8 +215,11 @@ function App() {
           onComplete={goToBrowse}
         />
       )}
+      {view === 'add-flow' && (
+        <AddAndRateFlow onComplete={goToPalate} onCancel={goToBrowse} />
+      )}
 
-      {isAdmin && view === 'browse' && <AddCoffeeForm onRate={goToRateCoffee} />}
+      {view !== 'add-flow' && <FloatingAddButton onClick={goToAddFlow} />}
     </div>
   )
 }
