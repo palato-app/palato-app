@@ -661,30 +661,32 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
       <div style={s.container}>
         <button onClick={onCancel} style={s.backLink}>← Cancel</button>
         <p style={s.stepEyebrow}>Step 1 of 3</p>
-        <h2 style={s.heading}>Snap your bag</h2>
+        <h2 style={s.heading}>Scan the bag</h2>
         <p style={s.subheading}>
-          Take a photo of your coffee bag and we'll read the details for you.
+          Find the side of your coffee bag with the roaster, origin, and tasting notes — then snap a photo. We'll read it and fill in the details.
         </p>
 
         <div
           style={{
             border: '2px dashed rgba(30, 20, 16, 0.2)',
             borderRadius: '16px',
-            padding: '3rem 2rem',
+            padding: '2.5rem 1.5rem',
             textAlign: 'center',
             marginBottom: '1.5rem',
           }}
         >
-          <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }}>📷</div>
+          <div style={{ fontSize: '3rem', marginBottom: '0.75rem', opacity: 0.3 }}>📷</div>
           <label
             style={{
               ...s.primaryButton,
               display: 'inline-block',
               position: 'relative',
               overflow: 'hidden',
+              padding: '1rem 2rem',
+              fontSize: '1.05rem',
             }}
           >
-            Take a photo
+            Snap the bag
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
@@ -733,6 +735,16 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
               />
             </label>
           </div>
+          <p style={{
+            fontFamily: 'Geist, system-ui, sans-serif',
+            fontSize: '0.8rem',
+            color: espresso,
+            opacity: 0.4,
+            marginTop: '1.25rem',
+            lineHeight: 1.4,
+          }}>
+            Look for the label, card, or sticker with the coffee info — that's the best part to capture.
+          </p>
         </div>
 
         <button onClick={handleSkipCapture} style={{ ...s.backLink, opacity: 0.4, textAlign: 'center', width: '100%' }}>
@@ -1096,7 +1108,7 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
         {/* Brew details */}
         {brewMethod && (
           <>
-            <div style={s.brewGrid}>
+            <div className="palato-brew-grid" style={s.brewGrid}>
               <div style={s.fieldGroup}>
                 <label style={s.label}>Coffee (g)</label>
                 <input style={s.input} type="number" value={doseGrams} onChange={(e) => setDoseGrams(e.target.value)} placeholder="e.g. 18" />

@@ -64,6 +64,32 @@
 
 body {
   margin: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Mobile-first: tighter padding, larger touch targets */
+@media (max-width: 600px) {
+  #root {
+    border-inline: none;
+  }
+  .palato-page {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    padding-bottom: 5rem !important;
+  }
+  .palato-nav {
+    gap: 1rem !important;
+  }
+  .palato-brew-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Prevent iOS auto-zoom on input focus (requires 16px minimum) */
+@media (max-width: 600px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }
 
 h1,

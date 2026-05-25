@@ -88,7 +88,7 @@ function App() {
 
   if (loading) {
     return (
-      <div style={pageStyle}>
+      <div className="palato-page" style={pageStyle}>
         <p style={{ opacity: 0.5 }}>Loading…</p>
       </div>
     )
@@ -96,7 +96,7 @@ function App() {
 
   if (!user) {
     return (
-      <div style={pageStyle}>
+      <div className="palato-page" style={pageStyle}>
         <h1
           style={{
             fontFamily: '"Boldonse", system-ui',
@@ -141,7 +141,7 @@ function App() {
   }
 
   return (
-    <div style={pageStyle}>
+    <div className="palato-page" style={pageStyle}>
       <header
         style={{
           display: 'flex',
@@ -161,10 +161,12 @@ function App() {
           PALATO
         </h1>
         <nav
+          className="palato-nav"
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '1.5rem',
+            flexWrap: 'wrap',
           }}
         >
           <button onClick={goToBrowse} style={headerNavButton(view === 'browse')}>

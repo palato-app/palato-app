@@ -10,38 +10,40 @@ export function FloatingAddButton({ onClick }: Props) {
       style={{
         position: 'fixed',
         bottom: '24px',
-        right: '24px',
-        width: '56px',
-        height: '56px',
-        borderRadius: '50%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        height: '52px',
+        paddingLeft: '1.25rem',
+        paddingRight: '1.5rem',
+        borderRadius: '100px',
         backgroundColor: '#D94E1F',
         color: '#F4EAD5',
         border: 'none',
-        fontSize: '2rem',
-        fontWeight: 300,
+        fontSize: '0.95rem',
+        fontFamily: 'Geist, system-ui, sans-serif',
+        fontWeight: 500,
         lineHeight: 1,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: '0.5rem',
         cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(30, 20, 16, 0.25)',
+        boxShadow: '0 4px 16px rgba(30, 20, 16, 0.3)',
         zIndex: 100,
         transition: 'transform 0.15s, box-shadow 0.15s',
+        whiteSpace: 'nowrap',
       }}
       onPointerDown={(e) => {
-        const el = e.currentTarget
-        el.style.transform = 'scale(0.92)'
+        e.currentTarget.style.transform = 'translateX(-50%) scale(0.95)'
       }}
       onPointerUp={(e) => {
-        const el = e.currentTarget
-        el.style.transform = 'scale(1)'
+        e.currentTarget.style.transform = 'translateX(-50%) scale(1)'
       }}
       onPointerLeave={(e) => {
-        const el = e.currentTarget
-        el.style.transform = 'scale(1)'
+        e.currentTarget.style.transform = 'translateX(-50%) scale(1)'
       }}
     >
-      +
+      <span style={{ fontSize: '1.4rem', fontWeight: 300, lineHeight: 1 }}>+</span>
+      Add a coffee
     </button>
   )
 }

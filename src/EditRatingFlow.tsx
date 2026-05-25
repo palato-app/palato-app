@@ -518,7 +518,7 @@ export function EditRatingFlow({ rating: existing, onCancel, onSaved }: Props) {
 
         {brewMethod && (
           <>
-            <div style={s.brewGrid}>
+            <div className="palato-brew-grid" style={s.brewGrid}>
               <div style={s.fieldGroup}>
                 <label style={s.label}>Coffee (g)</label>
                 <input style={s.input} type="number" value={doseGrams} onChange={(e) => setDoseGrams(e.target.value)} placeholder="e.g. 18" />
