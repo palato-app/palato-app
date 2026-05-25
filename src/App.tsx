@@ -28,7 +28,9 @@ const pageStyle = {
   minHeight: '100vh',
   color: espresso,
   maxWidth: '980px',
+  width: '100%',
   margin: '0 auto',
+  boxSizing: 'border-box' as const,
   backgroundImage:
     'radial-gradient(rgba(30,20,16,0.025) 1px, transparent 1px), radial-gradient(rgba(30,20,16,0.02) 1px, transparent 1px)',
   backgroundSize: '3px 3px, 7px 7px',
@@ -154,6 +156,7 @@ function App() {
   return (
     <div className="palato-page" style={pageStyle}>
       <header
+        className="palato-header"
         style={{
           display: 'flex',
           justifyContent: 'space-between',

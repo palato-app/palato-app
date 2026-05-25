@@ -81,6 +81,9 @@ body {
   .palato-nav {
     display: none !important;
   }
+  .palato-header {
+    justify-content: center !important;
+  }
   .bottom-tab-bar {
     display: flex !important;
   }
