@@ -51,12 +51,17 @@ export default async function handler(req, res) {
   if (!token) {
     return res.status(401).json({ error: 'Not authenticated.' });
   }
+  let userScopedClient;
   try {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
       return res.status(401).json({ error: 'Invalid session.' });
     }
+    // Client scoped to the caller's token, used below for the dedupe RPC.
+    userScopedClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
   } catch {
     return res.status(500).json({ error: 'Failed to authenticate.' });
   }
@@ -92,7 +97,34 @@ export default async function handler(req, res) {
       return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, parseError: true, rawText });
     }
 
-    return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, extracted });
+    // 5. Dedupe match: fuzzy-search the catalog using (roaster + name). Per
+    //    Decision #041. Classify the top result into a band the client uses
+    //    to decide whether to route to an existing coffee, ask the user to
+    //    disambiguate, or fall through to the Add form. If the match call
+    //    fails, degrade silently — scan still succeeds, no dedupe surfaced.
+    const queryStr = [extracted?.roaster_name, extracted?.coffee_name]
+      .filter((s) => typeof s === 'string' && s.trim())
+      .join(' ')
+      .trim();
+
+    let match = { kind: 'none', candidates: [] };
+    if (queryStr) {
+      try {
+        const { data: candidates } = await userScopedClient.rpc('match_coffees', {
+          query: queryStr,
+          match_limit: 3,
+          min_similarity: 0.5,
+        });
+        if (candidates && candidates.length > 0) {
+          const top = Number(candidates[0].similarity);
+          match = { kind: top >= 0.8 ? 'strong' : 'ambiguous', candidates };
+        }
+      } catch {
+        // Silent degrade — scan still returns extracted data.
+      }
+    }
+
+    return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, extracted, match });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

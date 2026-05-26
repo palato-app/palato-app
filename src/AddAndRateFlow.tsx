@@ -94,6 +94,21 @@ const initialCoffeeFields: CoffeeFields = {
   roaster_tasting_notes: '',
 }
 
+// Dedupe match types — populated from /api/scan response or a manual-save
+// pre-check via the match_coffees RPC. See Decision #041.
+type MatchCandidate = {
+  id: string
+  roaster_name: string
+  coffee_name: string
+  origin_country: string | null
+  bag_image_url: string | null
+  similarity: number
+}
+type MatchResult = {
+  kind: 'strong' | 'ambiguous'
+  candidates: MatchCandidate[]
+}
+
 type FlowStep = 'capture' | 'details' | 'rate' | 'complete'
 
 type Props = {
@@ -286,6 +301,113 @@ const s = {
     background: 'rgba(30, 20, 16, 0.05)',
     flexShrink: 0,
   } as const,
+  // Match-suggestion card (Decision #041) — shown above the form when the
+  // scan or manual save detects the coffee may already be in the catalog.
+  matchCard: {
+    border: `2px solid ${ember}`,
+    borderRadius: '12px',
+    padding: '1.25rem',
+    marginBottom: '1.5rem',
+    background: 'rgba(217, 78, 31, 0.05)',
+  } as const,
+  matchEyebrow: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.65rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    color: ember,
+    margin: '0 0 0.35rem',
+  } as const,
+  matchTitle: {
+    fontFamily: '"Instrument Serif", serif',
+    fontSize: '1.4rem',
+    fontStyle: 'italic' as const,
+    color: espresso,
+    margin: '0 0 1rem',
+    lineHeight: 1.2,
+  } as const,
+  matchCandidatesList: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.75rem',
+    marginBottom: '1rem',
+  } as const,
+  matchCandidate: {
+    display: 'flex',
+    gap: '0.85rem',
+    alignItems: 'center',
+    padding: '0.75rem',
+    background: cream,
+    borderRadius: '8px',
+    border: '1px solid rgba(30, 20, 16, 0.1)',
+  } as const,
+  matchImages: {
+    display: 'flex',
+    gap: '0.35rem',
+    flexShrink: 0,
+  } as const,
+  matchThumb: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '4px',
+    objectFit: 'cover' as const,
+    border: '1px solid rgba(30, 20, 16, 0.1)',
+    background: 'rgba(30, 20, 16, 0.05)',
+  } as const,
+  matchCandidateMeta: {
+    flex: 1,
+    minWidth: 0,
+  } as const,
+  matchCandidateRoaster: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.1em',
+    color: espresso,
+    opacity: 0.55,
+    margin: '0 0 0.15rem',
+  } as const,
+  matchCandidateName: {
+    fontFamily: '"Instrument Serif", serif',
+    fontSize: '1.05rem',
+    fontStyle: 'italic' as const,
+    color: espresso,
+    margin: 0,
+    lineHeight: 1.2,
+  } as const,
+  matchCandidateOrigin: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.8rem',
+    color: espresso,
+    opacity: 0.6,
+    margin: '0.15rem 0 0',
+  } as const,
+  matchAcceptButton: {
+    padding: '0.5rem 1rem',
+    backgroundColor: ember,
+    color: cream,
+    border: 'none',
+    borderRadius: '100px',
+    fontSize: '0.85rem',
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontWeight: 500,
+    cursor: 'pointer' as const,
+    flexShrink: 0,
+    whiteSpace: 'nowrap' as const,
+  } as const,
+  matchDismissButton: {
+    background: 'none',
+    border: 'none',
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.85rem',
+    color: espresso,
+    opacity: 0.65,
+    cursor: 'pointer' as const,
+    padding: '0.25rem 0',
+    textDecoration: 'underline' as const,
+  } as const,
 }
 
 // ---------------------------------------------------------------------------
@@ -313,6 +435,12 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
   const [savedCoffee, setSavedCoffee] = useState<{ id: string; name: string; roaster: string; imageUrl: string | null } | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+
+  // Dedupe match state (Decision #041). matchResult is the active suggestion
+  // surfaced to the user; seenMatchIds tracks candidates the user has already
+  // dismissed so subsequent re-checks don't re-offer them.
+  const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
+  const [seenMatchIds, setSeenMatchIds] = useState<Set<string>>(new Set())
 
   // Rating state
   const [rating, setRating] = useState<number | null>(null)
@@ -439,6 +567,16 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
         return merged
       })
 
+      // Surface any dedupe candidates the server found (Decision #041). The
+      // server has already classified strong vs. ambiguous and filtered by
+      // the production similarity floor — we just render what's returned.
+      const matchPayload = d.match as { kind?: string; candidates?: MatchCandidate[] } | undefined
+      const matchKind = matchPayload?.kind
+      const matchCandidates = matchPayload?.candidates
+      if ((matchKind === 'strong' || matchKind === 'ambiguous') && Array.isArray(matchCandidates) && matchCandidates.length > 0) {
+        setMatchResult({ kind: matchKind, candidates: matchCandidates })
+      }
+
       setScanStatus(null)
     } catch (err) {
       setScanError(err instanceof Error ? err.message : 'Scan failed.')
@@ -450,6 +588,43 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
 
   const handleSkipCapture = () => {
     setStep('details')
+  }
+
+  // -------------------------------------------------------------------------
+  // Match handlers (Decision #041)
+  // -------------------------------------------------------------------------
+
+  // User accepted a candidate as "the same coffee" — hand off into the rate
+  // step against the existing coffee row instead of inserting a new one.
+  // Records the match on the scan row (if any) so the dedupe pipeline has a
+  // measurable acceptance signal for the eval (Competency A).
+  const acceptMatch = async (candidate: MatchCandidate) => {
+    if (scanId) {
+      await supabase
+        .from('scans')
+        .update({ matched_coffee_id: candidate.id })
+        .eq('id', scanId)
+    }
+    setSavedCoffee({
+      id: candidate.id,
+      name: candidate.coffee_name,
+      roaster: candidate.roaster_name,
+      imageUrl: candidate.bag_image_url,
+    })
+    setMatchResult(null)
+    setStep('rate')
+  }
+
+  // User said "not this one" — remember the dismissed candidate IDs so a
+  // subsequent save-time check doesn't re-surface the same suggestion.
+  const dismissMatch = () => {
+    if (!matchResult) return
+    setSeenMatchIds((prev) => {
+      const next = new Set(prev)
+      matchResult.candidates.forEach((c) => next.add(c.id))
+      return next
+    })
+    setMatchResult(null)
   }
 
   // -------------------------------------------------------------------------
@@ -467,6 +642,28 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
 
     setSaving(true)
     try {
+      // Manual-save dedupe check (Decision #041). If the scan already surfaced
+      // a match the user dismissed, those IDs sit in seenMatchIds and get
+      // filtered out so we don't re-offer them. Otherwise — typically the
+      // skip-scan / manual-entry path — this is the only line of defense.
+      if (!matchResult) {
+        const matchQuery = `${coffee.roaster_name} ${coffee.coffee_name}`.trim()
+        const { data: rpcCandidates } = await supabase.rpc('match_coffees', {
+          query: matchQuery,
+          match_limit: 3,
+          min_similarity: 0.5,
+        })
+        if (Array.isArray(rpcCandidates) && rpcCandidates.length > 0) {
+          const fresh = (rpcCandidates as MatchCandidate[]).filter((c) => !seenMatchIds.has(c.id))
+          if (fresh.length > 0) {
+            const top = Number(fresh[0].similarity)
+            setMatchResult({ kind: top >= 0.8 ? 'strong' : 'ambiguous', candidates: fresh })
+            setSaving(false)
+            return
+          }
+        }
+      }
+
       let imageUrl = bagImageUrl
       // If no image from scan and no captured image, allow proceeding without
       const variety = coffee.variety
@@ -771,13 +968,51 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
             Scan issue: {scanError}. You can still enter details manually.
           </div>
         )}
-        {prefilledSnapshot && !scanning && (
+        {prefilledSnapshot && !scanning && !matchResult && (
           <div style={s.scanBanner}>
             Pre-filled from the bag — check every field before saving.
           </div>
         )}
 
-        {imagePreview && (
+        {matchResult && (
+          <div style={s.matchCard}>
+            <p style={s.matchEyebrow}>
+              {matchResult.kind === 'strong' ? 'Already in Palato' : 'Possible match'}
+            </p>
+            <h3 style={s.matchTitle}>
+              {matchResult.kind === 'strong'
+                ? 'Looks like this coffee is already in your catalog.'
+                : 'Did you mean one of these?'}
+            </h3>
+            <div style={s.matchCandidatesList}>
+              {matchResult.candidates.map((c) => (
+                <div key={c.id} style={s.matchCandidate}>
+                  <div style={s.matchImages}>
+                    {imagePreview && <img src={imagePreview} alt="You scanned" style={s.matchThumb} />}
+                    {c.bag_image_url && <img src={c.bag_image_url} alt={c.coffee_name} style={s.matchThumb} />}
+                  </div>
+                  <div style={s.matchCandidateMeta}>
+                    <p style={s.matchCandidateRoaster}>{c.roaster_name}</p>
+                    <p style={s.matchCandidateName}>{c.coffee_name}</p>
+                    {c.origin_country && <p style={s.matchCandidateOrigin}>{c.origin_country}</p>}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => acceptMatch(c)}
+                    style={s.matchAcceptButton}
+                  >
+                    Rate this →
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={dismissMatch} style={s.matchDismissButton}>
+              {matchResult.kind === 'strong' ? 'Not this one — add as new' : 'None of these — add as new'}
+            </button>
+          </div>
+        )}
+
+        {imagePreview && !matchResult && (
           <img src={imagePreview} alt="Bag preview" style={s.imagePreview} />
         )}
 
@@ -846,10 +1081,10 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
 
           <button
             onClick={handleSaveCoffee}
-            disabled={!canSave || saving || scanning}
+            disabled={!canSave || saving || scanning || matchResult !== null}
             style={{
               ...s.primaryButton,
-              ...(!canSave || saving || scanning ? s.disabledButton : {}),
+              ...(!canSave || saving || scanning || matchResult !== null ? s.disabledButton : {}),
             }}
           >
             {saving ? 'Saving…' : 'Save & Rate →'}
