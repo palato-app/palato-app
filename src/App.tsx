@@ -31,6 +31,7 @@ const pageStyle = {
   width: '100%',
   margin: '0 auto',
   boxSizing: 'border-box' as const,
+  textAlign: 'left' as const,
   backgroundImage:
     'radial-gradient(rgba(30,20,16,0.025) 1px, transparent 1px), radial-gradient(rgba(30,20,16,0.02) 1px, transparent 1px)',
   backgroundSize: '3px 3px, 7px 7px',
@@ -112,7 +113,7 @@ function App() {
 
   if (!user) {
     return (
-      <div className="palato-page" style={pageStyle}>
+      <div className="palato-page" style={{ ...pageStyle, textAlign: 'center' }}>
         <PalatoWordmark
           color={ember}
           style={{
@@ -236,7 +237,7 @@ function App() {
         <AddAndRateFlow onComplete={goToPalate} onCancel={goToBrowse} />
       )}
 
-      {view !== 'add-flow' && <FloatingAddButton onClick={goToAddFlow} />}
+      {view === 'browse' && <FloatingAddButton onClick={goToAddFlow} />}
 
       <BottomTabBar
         activeView={view}

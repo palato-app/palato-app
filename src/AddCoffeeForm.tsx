@@ -313,7 +313,7 @@ export function AddCoffeeForm({ onRate }: AddCoffeeFormProps) {
   return (
     <div style={styles.wrapper}>
       <h2 style={styles.heading}>Add a coffee</h2>
-      <p style={styles.subheading}>Admin only — scan a bag to pre-fill, or enter manually.</p>
+      <p style={styles.subheading}>Scan a bag to pre-fill, or enter manually.</p>
 
       {/* Scan section */}
       <div style={styles.scanWrap}>
