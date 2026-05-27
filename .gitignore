@@ -33,3 +33,9 @@ dist-ssr
 # Supabase CLI local state
 supabase/.temp/
 supabase/.branches/
+
+# Build cache
+*.tsbuildinfo
+
+# Local source assets — not for the repo
+Images/
