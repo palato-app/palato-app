@@ -53,7 +53,11 @@ const headerNavButton = (active: boolean) => ({
 })
 
 function App() {
-  const { user, loading, signInWithGoogle, signOut } = useAuth()
+  const { user, loading, signInWithGoogle, signInWithPassword, signOut } = useAuth()
+  const devUserEmail = import.meta.env.VITE_DEV_USER_EMAIL as string | undefined
+  const devUserPassword = import.meta.env.VITE_DEV_USER_PASSWORD as string | undefined
+  const devSignInAvailable =
+    import.meta.env.DEV && Boolean(devUserEmail) && Boolean(devUserPassword)
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
   const [splashDone, setSplashDone] = useState(false)
@@ -150,6 +154,26 @@ function App() {
         >
           Sign in with Google
         </button>
+        {devSignInAvailable && (
+          <div style={{ marginTop: '1.5rem' }}>
+            <button
+              onClick={() => signInWithPassword(devUserEmail!, devUserPassword!)}
+              style={{
+                padding: '0.55rem 1.25rem',
+                backgroundColor: 'transparent',
+                color: espresso,
+                border: '1px dashed rgba(30, 20, 16, 0.35)',
+                borderRadius: '100px',
+                fontSize: '0.8rem',
+                fontFamily: 'Geist, system-ui, sans-serif',
+                opacity: 0.7,
+                cursor: 'pointer',
+              }}
+            >
+              Dev sign-in (local only)
+            </button>
+          </div>
+        )}
       </div>
     )
   }
