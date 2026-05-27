@@ -237,7 +237,9 @@ function App() {
         <AddAndRateFlow onComplete={goToPalate} onCancel={goToBrowse} />
       )}
 
-      {view === 'browse' && <FloatingAddButton onClick={goToAddFlow} />}
+      {view !== 'rating' && view !== 'add-flow' && (
+        <FloatingAddButton onClick={goToAddFlow} compact={view !== 'browse'} />
+      )}
 
       <BottomTabBar
         activeView={view}
