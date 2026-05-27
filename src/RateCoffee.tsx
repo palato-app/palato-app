@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useCoffee } from './lib/useCoffee'
-import { useFlavorDescriptors, type FlavorDescriptor } from './lib/useFlavorDescriptors'
 import { supabase } from './lib/supabase'
 import { useAuth } from './lib/auth'
-import { RatingDial } from './RatingDial'
+import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -65,103 +64,6 @@ const styles = {
     margin: 0,
     lineHeight: 1.15,
   } as const,
-  section: { marginBottom: '3rem' } as const,
-  ratingSection: { marginBottom: '3rem', textAlign: 'center' as const } as const,
-  label: {
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontSize: '0.7rem',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.15em',
-    color: '#1E1410',
-    opacity: 0.55,
-    margin: '0 0 1.5rem',
-  } as const,
-  textarea: {
-    width: '100%',
-    minHeight: '5rem',
-    padding: '0.85rem 1rem',
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontSize: '1rem',
-    color: '#1E1410',
-    background: 'rgba(255, 255, 255, 0.3)',
-    border: '1px solid rgba(30, 20, 16, 0.2)',
-    borderRadius: '8px',
-    resize: 'vertical' as const,
-    boxSizing: 'border-box' as const,
-    lineHeight: 1.5,
-  } as const,
-  searchInput: {
-    width: '100%',
-    padding: '0.7rem 1rem',
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontSize: '0.95rem',
-    color: '#1E1410',
-    background: 'rgba(255, 255, 255, 0.3)',
-    border: '1px solid rgba(30, 20, 16, 0.2)',
-    borderRadius: '8px',
-    boxSizing: 'border-box' as const,
-    marginBottom: '1.5rem',
-  } as const,
-  categoryGroup: { marginBottom: '1.5rem' } as const,
-  categoryHeader: {
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontSize: '0.65rem',
-    fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.15em',
-    color: '#1E1410',
-    opacity: 0.5,
-    margin: '0 0 0.6rem',
-  } as const,
-  chipsWrap: {
-    display: 'flex',
-    flexWrap: 'wrap' as const,
-    gap: '0.4rem',
-  } as const,
-  chip: {
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontSize: '0.85rem',
-    padding: '0.35rem 0.85rem',
-    borderRadius: '100px',
-    border: '1px solid',
-    cursor: 'pointer' as const,
-    transition: 'all 0.12s',
-    fontWeight: 500,
-  } as const,
-  emptyState: {
-    fontFamily: '"Instrument Serif", serif',
-    fontSize: '1rem',
-    color: '#1E1410',
-    opacity: 0.5,
-    fontStyle: 'italic' as const,
-    margin: '1rem 0',
-  } as const,
-  submitRow: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'flex-start',
-    gap: '0.75rem',
-    paddingTop: '2rem',
-    borderTop: '1px solid rgba(30, 20, 16, 0.15)',
-  } as const,
-  submitButton: {
-    padding: '1rem 2.5rem',
-    backgroundColor: '#D94E1F',
-    color: '#F4EAD5',
-    border: 'none',
-    borderRadius: '100px',
-    fontSize: '1rem',
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontWeight: 500,
-    transition: 'opacity 0.15s',
-  } as const,
-  error: {
-    fontFamily: 'Geist, system-ui, sans-serif',
-    fontSize: '0.85rem',
-    color: '#D94E1F',
-    margin: 0,
-  } as const,
 }
 
 const interstitialStyles = {
@@ -196,15 +98,8 @@ type Props = {
 
 export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
   const { coffee, loading: coffeeLoading } = useCoffee(coffeeId)
-  const { descriptors, loading: descriptorsLoading } = useFlavorDescriptors()
   const { user } = useAuth()
 
-  const [rating, setRating] = useState<number | null>(null)
-  const [tastingNotes, setTastingNotes] = useState('')
-  const [selectedDescriptorIds, setSelectedDescriptorIds] = useState<Set<string>>(new Set())
-  const [searchQuery, setSearchQuery] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
   const [coffeeCount, setCoffeeCount] = useState<number | null>(null)
 
@@ -214,51 +109,44 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
     return () => clearTimeout(timer)
   }, [submitted, onComplete])
 
-  const toggleDescriptor = (id: string) => {
-    setSelectedDescriptorIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  const handleSubmit = async (payload: RatingFormSubmitPayload) => {
+    if (!user) throw new Error('Not signed in.')
 
-  const handleSubmit = async () => {
-    if (rating === null || !user) return
-
-    setSubmitting(true)
-    setSubmitError(null)
+    const ratingRow: Record<string, unknown> = {
+      user_id: user.id,
+      coffee_id: coffeeId,
+      rating: payload.rating,
+      user_tasting_notes: payload.tastingNotes,
+      extraction_quality: payload.extraction,
+      brew_method: payload.brewMethod,
+      dose_grams: payload.doseGrams,
+      yield_grams: payload.yieldGrams,
+      brew_time_seconds: payload.brewTimeSeconds,
+      grind_size: payload.grindSize,
+      water_temp_celsius: payload.waterTempCelsius,
+    }
+    if (payload.body !== null) ratingRow.body = payload.body
+    if (payload.acidity !== null) ratingRow.acidity = payload.acidity
 
     const { data: ratingData, error: ratingError } = await supabase
       .from('ratings')
-      .insert({
-        user_id: user.id,
-        coffee_id: coffeeId,
-        rating,
-        user_tasting_notes: tastingNotes.trim() || null,
-      })
+      .insert(ratingRow)
       .select('id')
       .single()
 
     if (ratingError || !ratingData) {
-      setSubmitting(false)
-      setSubmitError(ratingError?.message ?? 'Something went wrong.')
-      return
+      throw new Error(ratingError?.message ?? 'Something went wrong.')
     }
 
-    if (selectedDescriptorIds.size > 0) {
-      const rows = Array.from(selectedDescriptorIds).map((descriptorId) => ({
+    if (payload.descriptorIds.length > 0) {
+      const rows = payload.descriptorIds.map((descriptorId) => ({
         rating_id: ratingData.id,
         descriptor_id: descriptorId,
       }))
-
       const { error: descError } = await supabase
         .from('rating_flavor_descriptors')
         .insert(rows)
-
-      if (descError) {
-        console.error('Failed to save descriptors:', descError.message)
-      }
+      if (descError) console.error('Failed to save descriptors:', descError.message)
     }
 
     const { count } = await supabase
@@ -267,32 +155,10 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
       .eq('user_id', user.id)
 
     setCoffeeCount(count)
-    setSubmitting(false)
     setSubmitted(true)
   }
 
-  const filteredDescriptors = searchQuery.trim()
-    ? descriptors.filter((d) => {
-        const q = searchQuery.toLowerCase()
-        return (
-          d.descriptor.toLowerCase().includes(q) ||
-          d.category.toLowerCase().includes(q) ||
-          d.subcategory.toLowerCase().includes(q) ||
-          d.aliases?.some((a) => a.toLowerCase().includes(q))
-        )
-      })
-    : descriptors
-
-  const grouped = filteredDescriptors.reduce<Record<string, FlavorDescriptor[]>>(
-    (acc, d) => {
-      if (!acc[d.category]) acc[d.category] = []
-      acc[d.category].push(d)
-      return acc
-    },
-    {}
-  )
-
-  if (coffeeLoading || descriptorsLoading) {
+  if (coffeeLoading) {
     return <p style={{ opacity: 0.5, marginTop: '3rem' }}>Loading…</p>
   }
 
@@ -342,79 +208,7 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
         </div>
       </div>
 
-      <section style={styles.ratingSection}>
-        <p style={styles.label}>How was it?</p>
-        <RatingDial value={rating} onChange={setRating} />
-      </section>
-
-      <section style={styles.section}>
-        <p style={styles.label}>Anything specific?</p>
-        <textarea
-          value={tastingNotes}
-          onChange={(e) => setTastingNotes(e.target.value)}
-          placeholder="What stood out?"
-          style={styles.textarea}
-        />
-      </section>
-
-      <section style={styles.section}>
-        <p style={styles.label}>What did you taste?</p>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search flavors — citrus, chocolate, jasmine…"
-          style={styles.searchInput}
-        />
-
-        {filteredDescriptors.length === 0 ? (
-          <p style={styles.emptyState}>
-            Nothing matches "{searchQuery}". Try a different word.
-          </p>
-        ) : (
-          Object.entries(grouped).map(([category, items]) => (
-            <div key={category} style={styles.categoryGroup}>
-              <p style={styles.categoryHeader}>{category}</p>
-              <div style={styles.chipsWrap}>
-                {items.map((d) => {
-                  const isSelected = selectedDescriptorIds.has(d.id)
-                  const iconColor = d.category_icon_color ?? '#1E1410'
-                  const tintColor = d.category_pill_tint ?? 'rgba(30, 20, 16, 0.06)'
-                  return (
-                    <button
-                      key={d.id}
-                      onClick={() => toggleDescriptor(d.id)}
-                      style={{
-                        ...styles.chip,
-                        background: isSelected ? iconColor : tintColor,
-                        color: isSelected ? '#F4EAD5' : iconColor,
-                        borderColor: isSelected ? iconColor : `${iconColor}40`,
-                      }}
-                    >
-                      {d.descriptor}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))
-        )}
-      </section>
-
-      <div style={styles.submitRow}>
-        {submitError && <p style={styles.error}>Couldn't save: {submitError}</p>}
-        <button
-          onClick={handleSubmit}
-          disabled={rating === null || submitting}
-          style={{
-            ...styles.submitButton,
-            opacity: rating === null || submitting ? 0.4 : 1,
-            cursor: rating === null || submitting ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {submitting ? 'Saving…' : 'Log it'}
-        </button>
-      </div>
+      <RatingForm onSubmit={handleSubmit} submitLabel="Log it" />
     </div>
   )
 }
