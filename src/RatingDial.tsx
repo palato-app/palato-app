@@ -107,14 +107,9 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         width={SIZE}
         height={SIZE}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
         style={{
-          touchAction: 'none',
           userSelect: 'none',
           WebkitUserSelect: 'none',
-          cursor: isDragging ? 'grabbing' : 'pointer',
         }}
       >
         <defs>
@@ -195,7 +190,7 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
           )
         })}
 
-        {/* Handle */}
+        {/* Handle — purely visual; touches pass through to the hit band below */}
         <circle
           cx={handlePos.x}
           cy={handlePos.y}
@@ -206,6 +201,26 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
           style={{
             filter: 'drop-shadow(0 2px 4px rgba(30, 20, 16, 0.2))',
             transition: isDragging ? 'none' : 'fill 0.15s',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* Invisible fat hit target tracing the arc. This is the only element
+            that owns touches, so the center, corners, and bottom gap stay free
+            to scroll the page. Rendered last so it wins over the visible arc. */}
+        <path
+          d={backgroundArc}
+          fill="none"
+          stroke="transparent"
+          strokeWidth={44}
+          strokeLinecap="round"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          style={{
+            touchAction: 'none',
+            pointerEvents: 'stroke',
+            cursor: isDragging ? 'grabbing' : 'pointer',
           }}
         />
       </svg>
