@@ -3,6 +3,8 @@ import { supabase } from './lib/supabase'
 import { useAuth } from './lib/auth'
 import { prepareImage, uploadBagImage } from './lib/bagImage'
 import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
+import { EditCoffeeForm } from './EditCoffeeForm'
+import type { Coffee } from './lib/useCoffees'
 
 // ---------------------------------------------------------------------------
 // Constants ported from AddCoffeeForm
@@ -86,7 +88,7 @@ type MatchResult = {
   candidates: MatchCandidate[]
 }
 
-type FlowStep = 'capture' | 'details' | 'rate' | 'complete'
+type FlowStep = 'capture' | 'details' | 'edit' | 'rate' | 'complete'
 
 type Props = {
   onComplete: () => void
@@ -361,6 +363,13 @@ const s = {
     opacity: 0.6,
     margin: '0.15rem 0 0',
   } as const,
+  matchActions: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.4rem',
+    alignItems: 'flex-end' as const,
+    flexShrink: 0,
+  } as const,
   matchAcceptButton: {
     padding: '0.5rem 1rem',
     backgroundColor: ember,
@@ -372,6 +381,18 @@ const s = {
     fontWeight: 500,
     cursor: 'pointer' as const,
     flexShrink: 0,
+    whiteSpace: 'nowrap' as const,
+  } as const,
+  matchEditButton: {
+    background: 'none',
+    border: 'none',
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.8rem',
+    color: espresso,
+    opacity: 0.6,
+    cursor: 'pointer' as const,
+    padding: '0.1rem 0',
+    textDecoration: 'underline' as const,
     whiteSpace: 'nowrap' as const,
   } as const,
   matchDismissButton: {
@@ -417,6 +438,12 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
   // dismissed so subsequent re-checks don't re-offer them.
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null)
   const [seenMatchIds, setSeenMatchIds] = useState<Set<string>>(new Set())
+
+  // Edit-the-match state (Decision #045 follow-up). When the user recognizes a
+  // dedup candidate as "the same coffee, but its details are wrong," we load the
+  // full row and drop into EditCoffeeForm, then hand off into rating.
+  const [editCoffeeRow, setEditCoffeeRow] = useState<Coffee | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
 
   // Rating-step "complete" interstitial state
   const [coffeeCount, setCoffeeCount] = useState<number | null>(null)
@@ -562,6 +589,49 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
       imageUrl: candidate.bag_image_url,
     })
     setMatchResult(null)
+    setStep('rate')
+  }
+
+  // User recognized a candidate as the same coffee but wants to fix its details
+  // first. Load the full row and switch into the edit step; on save we record
+  // the match on the scan (same eval signal as acceptMatch) and hand off into
+  // rating against the corrected row.
+  const editMatch = async (candidate: MatchCandidate) => {
+    setEditError(null)
+    const { data, error } = await supabase
+      .from('coffees')
+      .select('*')
+      .eq('id', candidate.id)
+      .single()
+    if (error || !data) {
+      setEditError("Couldn't load this coffee to edit. Try again.")
+      return
+    }
+    setEditCoffeeRow(data)
+    setStep('edit')
+  }
+
+  // After the edit saves: re-read the row for fresh display values, mark the
+  // scan as matched to it, and continue into rating.
+  const handleEditSaved = async () => {
+    if (!editCoffeeRow) return
+    const { data } = await supabase
+      .from('coffees')
+      .select('*')
+      .eq('id', editCoffeeRow.id)
+      .single()
+    const fresh = (data as Coffee | null) ?? editCoffeeRow
+    if (scanId) {
+      await supabase.from('scans').update({ matched_coffee_id: fresh.id }).eq('id', scanId)
+    }
+    setSavedCoffee({
+      id: fresh.id,
+      name: fresh.coffee_name,
+      roaster: fresh.roaster_name,
+      imageUrl: fresh.bag_image_url,
+    })
+    setMatchResult(null)
+    setEditCoffeeRow(null)
     setStep('rate')
   }
 
@@ -769,6 +839,16 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
     )
   }
 
+  if (step === 'edit' && editCoffeeRow) {
+    return (
+      <EditCoffeeForm
+        coffee={editCoffeeRow}
+        onCancel={() => { setEditCoffeeRow(null); setStep('details') }}
+        onSaved={handleEditSaved}
+      />
+    )
+  }
+
   if (step === 'capture') {
     return (
       <div style={s.container}>
@@ -912,16 +992,26 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
                     <p style={s.matchCandidateName}>{c.coffee_name}</p>
                     {c.origin_country && <p style={s.matchCandidateOrigin}>{c.origin_country}</p>}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => acceptMatch(c)}
-                    style={s.matchAcceptButton}
-                  >
-                    Rate this →
-                  </button>
+                  <div style={s.matchActions}>
+                    <button
+                      type="button"
+                      onClick={() => acceptMatch(c)}
+                      style={s.matchAcceptButton}
+                    >
+                      Rate this →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => editMatch(c)}
+                      style={s.matchEditButton}
+                    >
+                      Edit details
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
+            {editError && <p style={{ ...s.error, marginBottom: '0.75rem' }}>{editError}</p>}
             <button type="button" onClick={dismissMatch} style={s.matchDismissButton}>
               {matchResult.kind === 'strong' ? 'Not this one — add as new' : 'None of these — add as new'}
             </button>

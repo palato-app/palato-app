@@ -6,6 +6,9 @@ export function useCoffee(coffeeId: string | null) {
   const [coffee, setCoffee] = useState<Coffee | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [version, setVersion] = useState(0)
+
+  const refetch = () => setVersion((v) => v + 1)
 
   useEffect(() => {
     if (!coffeeId) {
@@ -44,7 +47,7 @@ export function useCoffee(coffeeId: string | null) {
     return () => {
       cancelled = true
     }
-  }, [coffeeId])
+  }, [coffeeId, version])
 
-  return { coffee, loading, error }
+  return { coffee, loading, error, refetch }
 }

@@ -6,17 +6,13 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 ## Infrastructure & Admin
 
-### Storage policy hardcodes admin email
-- **What:** The `bag-images` Storage policy in Supabase checks `auth.jwt() ->> 'email' = 'jesse@palato.coffee'` directly.
-- **Why it's debt:** Brittle if email changes, can't easily add admins, lives in the dashboard rather than version control.
-- **Fix:** Add `profiles.is_admin boolean` via migration, set self to true, update policy to check `profiles.is_admin` instead.
-- **Surfaced:** Decision #021, May 4, 2026.
+### Storage policies not fully in version control
+- **What:** Supabase Storage policies live in the dashboard. Migrations `0008` (the `bag-images` authenticated own-folder upload policy) and `0009` (dropping the legacy admin-email INSERT policy) brought the *write* side of `bag-images` into `supabase/migrations/`, but the public-read setup (bucket public flag / any SELECT policy) is still dashboard-only.
+- **Why it's debt:** Violates Decision #014's migration discipline — schema changes should be reproducible from the repo. If the database is recreated, the un-captured Storage config has to be manually reapplied.
+- **Fix:** Capture the remaining `bag-images` read configuration (public-bucket flag and/or SELECT policies) in a migration so the full Storage setup is reproducible from the repo.
+- **Surfaced:** Decision #021, May 4, 2026. Largely addressed by Decisions #046 and the `0009` cleanup, June 15, 2026 — only the read config remains.
 
-### Storage policies not in version control
-- **What:** Supabase Storage policies live in the dashboard only, not in `supabase/migrations/`.
-- **Why it's debt:** Violates Decision #014's migration discipline — schema changes should be reproducible from the repo. If the database is recreated, Storage policies have to be manually reapplied.
-- **Fix:** When Supabase CLI supports Storage policies in migrations (or via raw SQL using `storage.policies`), port the existing policies into a migration file.
-- **Surfaced:** Decision #021, May 4, 2026.
+> **Resolved June 15, 2026** — *"Storage policy hardcodes admin email."* The `bag-images` INSERT policy that checked `auth.jwt() ->> 'email' = 'jesse@palato.coffee'` was dropped in migration `0009` (it became redundant once `0008` opened uploads to all authenticated users). No admin-email reference remains in any `storage.objects` policy. An `is_admin`-based model is no longer needed for bag-image uploads; if admin gating returns for other features, prefer `profiles.is_admin` over a hardcoded email.
 
 ### AddCoffeeForm UI is unstyled
 - **What:** The admin-only AddCoffeeForm has functional but unrefined visual styling — labels are uppercase, inputs are basic, no responsive layout. (Note: HEIC auto-conversion and file-type validation were added May 18; the styling debt is unchanged.)
@@ -36,11 +32,11 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Brand guide v02 update — typography section minimum, ideally also in-product translation section.
 - **Surfaced:** Decision #019, May 4, 2026.
 
-### No edit capability for catalog coffees
-- **What:** The AddCoffeeForm only *creates* coffee records. Once a coffee is saved, no field can be edited through the UI — fixing a typo or a wrong value isn't possible without direct database access.
-- **Why it's debt:** A deferred feature more than a fragile pattern, but it gets more acute with the scan flow: if a bag-scan extraction saves with an error and is only noticed later, there's no recovery path in-app. Edit is *update* logic on an existing record — a distinct operation from *create* — so it's deliberately out of scope for the scan build to keep that build tight.
-- **Fix:** Add an edit mode to the coffee form (or a dedicated edit route) that loads an existing record and updates rather than inserts, admin-gated for now. Natural to build alongside or just after the scan flow.
-- **Surfaced:** May 22, 2026 — scan-flow planning; flagged as adjacent-but-separate scope.
+### Catalog edit permission model — open-edit is a vandalism vector at scale
+- **What:** As of Decision #045, *any authenticated user can edit any coffee* in the global catalog (migration `0007` broadened the `coffees` UPDATE policy from creator-only to `using true`). There is no edit history, no audit trail of who changed what, no moderation, and no optimistic-concurrency guard (concurrent edits are last-write-wins). `with check (true)` also means an update could rewrite `created_by` (the edit form doesn't, but the policy no longer protects it).
+- **Why it's debt:** Correct and intentional for the whitelisted beta (matches the open-catalog trust model of Decision #034), but it's a genuine security/data-integrity concern the moment the user base opens up — a single bad or careless actor can silently overwrite catalog facts everyone else relies on, with no way to see or revert the change. Jesse flagged this explicitly as an "important security issue once we grow to more users."
+- **Fix:** Revisit alongside community ratings + moderation in v1.1. Candidate pieces: (a) an edit-history / audit table (who, when, before→after) — also unblocks revert; (b) a permission tier (trusted-contributor vs. new user) or a propose-edit → approve flow rather than direct write; (c) tighten the policy so `created_by` can't be reassigned; (d) optionally an optimistic-concurrency check on `updated_at`.
+- **Surfaced:** June 15, 2026 — Decision #045, when catalog editing shipped. Supersedes the prior "No edit capability for catalog coffees" item (that feature now exists).
 
 ### Anthropic key is on a temporary test account. 
 - **What:** We'll need to switch from a separate user account and generate API Calls from Palato.coffee directly. 
