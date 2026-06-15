@@ -6,17 +6,13 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 ## Infrastructure & Admin
 
-### Redundant admin-email INSERT policy on bag-images (leftover)
-- **What:** The original `bag-images` Storage INSERT policy checks `auth.jwt() ->> 'email' = 'jesse@palato.coffee'` directly. As of Decision #046 (migration `0008`) it is **no longer the access gate** — a new permissive policy lets any authenticated user upload into their own folder — but the old admin-email policy still exists alongside it. It's harmless (permissive policies are OR'd, and the new policy already covers the admin) but redundant and untidy.
-- **Why it's debt:** Dead policy that hardcodes an email; confusing to anyone reading the live policy list. Couldn't be dropped in the #046 migration because its dashboard-assigned name isn't in version control and couldn't be introspected (`supabase db dump` needs Docker, which wasn't running that session).
-- **Fix:** Introspect the live policy name (`select polname from pg_policies where schemaname='storage' and tablename='objects';` via the dashboard SQL editor or `psql`), then `drop policy "<name>" on storage.objects;` in a migration. If/when an `is_admin` concept lands (see below), no admin-specific Storage policy is needed for uploads at all.
-- **Surfaced:** Decision #021, May 4, 2026. Downgraded from "active gate" to "leftover" by Decision #046, June 15, 2026.
-
 ### Storage policies not fully in version control
-- **What:** Supabase Storage policies live in the dashboard. Migration `0008` (Decision #046) captured the *first* one — the `bag-images` authenticated-upload policy — in `supabase/migrations/`, but the others (the public-read setup, the legacy admin-email INSERT policy) are still dashboard-only.
-- **Why it's debt:** Violates Decision #014's migration discipline — schema changes should be reproducible from the repo. If the database is recreated, the un-captured Storage policies have to be manually reapplied.
-- **Fix:** Introspect the remaining live `storage.objects` policies and port them into a migration file, so the full Storage policy set is reproducible from the repo.
-- **Surfaced:** Decision #021, May 4, 2026. Partially addressed by Decision #046, June 15, 2026.
+- **What:** Supabase Storage policies live in the dashboard. Migrations `0008` (the `bag-images` authenticated own-folder upload policy) and `0009` (dropping the legacy admin-email INSERT policy) brought the *write* side of `bag-images` into `supabase/migrations/`, but the public-read setup (bucket public flag / any SELECT policy) is still dashboard-only.
+- **Why it's debt:** Violates Decision #014's migration discipline — schema changes should be reproducible from the repo. If the database is recreated, the un-captured Storage config has to be manually reapplied.
+- **Fix:** Capture the remaining `bag-images` read configuration (public-bucket flag and/or SELECT policies) in a migration so the full Storage setup is reproducible from the repo.
+- **Surfaced:** Decision #021, May 4, 2026. Largely addressed by Decisions #046 and the `0009` cleanup, June 15, 2026 — only the read config remains.
+
+> **Resolved June 15, 2026** — *"Storage policy hardcodes admin email."* The `bag-images` INSERT policy that checked `auth.jwt() ->> 'email' = 'jesse@palato.coffee'` was dropped in migration `0009` (it became redundant once `0008` opened uploads to all authenticated users). No admin-email reference remains in any `storage.objects` policy. An `is_admin`-based model is no longer needed for bag-image uploads; if admin gating returns for other features, prefer `profiles.is_admin` over a hardcoded email.
 
 ### AddCoffeeForm UI is unstyled
 - **What:** The admin-only AddCoffeeForm has functional but unrefined visual styling — labels are uppercase, inputs are basic, no responsive layout. (Note: HEIC auto-conversion and file-type validation were added May 18; the styling debt is unchanged.)
