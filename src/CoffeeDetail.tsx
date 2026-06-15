@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase'
 import { useCoffee } from './lib/useCoffee'
 import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
 import { EditRatingFlow } from './EditRatingFlow'
+import { EditCoffeeForm } from './EditCoffeeForm'
 import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
 import type { RatedCoffee } from './lib/useUserRatings'
 
@@ -193,12 +194,13 @@ type Props = {
 }
 
 export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
-  const { coffee, loading, error } = useCoffee(coffeeId)
+  const { coffee, loading, error, refetch: refetchCoffee } = useCoffee(coffeeId)
   const { rating: userRating, refetch: refetchRating } = useUserRatingForCoffee(coffeeId)
   const [showBrewDetails, setShowBrewDetails] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [editingCoffee, setEditingCoffee] = useState(false)
 
   const handleDelete = async () => {
     if (!userRating) return
@@ -229,6 +231,16 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
     : ''
   const varietyDisplay = coffee.variety?.length ? coffee.variety.join(', ') : null
   const elevationDisplay = coffee.elevation_masl ? `${coffee.elevation_masl} masl` : null
+
+  if (editingCoffee) {
+    return (
+      <EditCoffeeForm
+        coffee={coffee}
+        onCancel={() => setEditingCoffee(false)}
+        onSaved={() => { setEditingCoffee(false); refetchCoffee() }}
+      />
+    )
+  }
 
   if (editing && userRating) {
     const ratedCoffee: RatedCoffee = {
@@ -306,6 +318,26 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
               </div>
             )}
           </div>
+
+          <button
+            onClick={() => setEditingCoffee(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '0.2rem 0',
+              marginBottom: '2rem',
+              fontFamily: 'Geist, system-ui, sans-serif',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              color: '#1E1410',
+              opacity: 0.5,
+              cursor: 'pointer',
+              alignSelf: 'flex-start',
+              textDecoration: 'underline',
+            }}
+          >
+            Edit details
+          </button>
 
           {userRating && (
             <div style={styles.userRatingBlock}>
