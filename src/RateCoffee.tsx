@@ -3,6 +3,7 @@ import { useCoffee } from './lib/useCoffee'
 import { supabase } from './lib/supabase'
 import { useAuth } from './lib/auth'
 import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
+import { track } from './lib/track'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -156,6 +157,12 @@ export function RateCoffee({ coffeeId, onCancel, onComplete }: Props) {
 
     setCoffeeCount(count)
     setSubmitted(true)
+
+    track('rating_saved', {
+      coffeeId,
+      rating: payload.rating,
+      ratingCount: count, // running total — ratingCount === 1 is the activation moment
+    })
   }
 
   if (coffeeLoading) {
