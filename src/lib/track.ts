@@ -12,6 +12,9 @@
  * PostHog autocaptures pageviews and sessions, which gives retention curves and
  * funnels for free once a user is identified. The domain events below are the
  * ones autocapture can't infer:
+ *   quiz_started                  — palate quiz opened (pre-auth, anonymous)
+ *   quiz_completed                — { experienceLevel, aspiration, originAffinity, flavorUnsure } — reveal reached
+ *   quiz_signin_clicked           — { aspiration } — "Save my palate" tapped (sign-in intent)
  *   rating_saved                  — { coffeeId, rating, ratingCount } (activation)
  *   scan_started                  — bag image submitted for AI extraction
  *   scan_completed                — { success, durationMs, matchKind, ... } (scan funnel)

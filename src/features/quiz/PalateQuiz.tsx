@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { GradientSlider } from '../../components/GradientSlider'
+import { track } from '../../lib/track'
 import { useAuth } from '../../lib/auth'
 import { PalatoWordmark } from '../../components/PalatoWordmark'
 import {
@@ -224,12 +225,31 @@ export function PalateQuiz() {
   const [flavorLean, setFlavorLean] = useState(50)
   const [flavorUnsure, setFlavorUnsure] = useState(false)
 
+  // Activation funnel (Decision #049): quiz_started → quiz_completed →
+  // sign-in → first rating_saved. These two fire pre-auth (anonymous);
+  // PostHog stitches them to the user on identify() at sign-in.
+  useEffect(() => {
+    track('quiz_started')
+  }, [])
+
+  useEffect(() => {
+    if (step >= TOTAL_STEPS) {
+      track('quiz_completed', {
+        experienceLevel: answers.experience_level,
+        aspiration: answers.aspiration,
+        originAffinity: answers.origin_affinity,
+        flavorUnsure: answers.flavor_unsure,
+      })
+    }
+  }, [step, answers])
+
   const goNext = () => setStep((s) => s + 1)
   const goBack = () => setStep((s) => Math.max(0, s - 1))
 
   const update = (patch: Partial<QuizAnswers>) => setAnswers((a) => ({ ...a, ...patch }))
 
   const onSignIn = async () => {
+    track('quiz_signin_clicked', { aspiration: answers.aspiration })
     saveQuizResult(answers)
     await signInWithGoogle()
   }
