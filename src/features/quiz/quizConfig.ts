@@ -231,6 +231,41 @@ export function aspirationCallback(aspiration: string | null): string | null {
   return ASPIRATION_CALLBACK[aspiration] ?? null
 }
 
+// --- Aspiration-driven personalization (§5) -------------------------------
+// The Q2 answer tailors what the app emphasizes post-sign-in. This is the
+// short, persistent reflection surfaced on the Palate tab; the per-surface
+// emphasis (the catalog "Start here" rail, Learn origins, brew tips in the
+// rating flow) is wired where each surface lives.
+export type AspirationFocus = { label: string; nudge: string }
+
+const ASPIRATION_FOCUS: Record<string, AspirationFocus> = {
+  'Where to find the best coffee': {
+    label: 'Finding the best coffee',
+    nudge: 'Your "Start here" rail leads the catalog with picks for your palate.',
+  },
+  'How brew methods change the taste': {
+    label: 'How brewing changes taste',
+    nudge: "We'll surface brew tips as you rate.",
+  },
+  'How to name what I\'m tasting': {
+    label: 'Naming what you taste',
+    nudge: 'Lean on the flavor-note picker each time you rate.',
+  },
+  'The story behind the coffees I drink': {
+    label: 'The stories behind your coffee',
+    nudge: 'Explore where your coffee comes from in Learn.',
+  },
+  'I want to learn what I like': {
+    label: 'Learning what you like',
+    nudge: 'Every coffee you rate sharpens your palate.',
+  },
+}
+
+export function aspirationFocus(aspiration: string | null): AspirationFocus | null {
+  if (!aspiration) return null
+  return ASPIRATION_FOCUS[aspiration] ?? null
+}
+
 // --- Persistence across the OAuth redirect (§3d) --------------------------
 export function saveQuizResult(answers: QuizAnswers): void {
   try {

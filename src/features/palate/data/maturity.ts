@@ -1,6 +1,5 @@
 import type { PalateProfile } from './types'
 
-const SCREEN_ACCESS_THRESHOLD = 3
 const FINGERPRINT_FORMING_THRESHOLD = 3
 const FINGERPRINT_FULL_THRESHOLD = 15
 const SWEET_SPOT_THRESHOLD = 5
@@ -10,10 +9,6 @@ const EVOLUTION_MIN_WEEKS = 2
 const RECOMMENDATION_THRESHOLD = 8
 
 export type MaturityState = 'full' | 'forming' | 'locked'
-
-export function screenAccessMaturity(ratingCount: number): MaturityState {
-  return ratingCount >= SCREEN_ACCESS_THRESHOLD ? 'full' : 'locked'
-}
 
 export function fingerprintMaturity(profile: PalateProfile): MaturityState {
   if (profile.ratingCount >= FINGERPRINT_FULL_THRESHOLD) return 'full'

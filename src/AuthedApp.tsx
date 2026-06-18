@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import { TaxonomyView } from './TaxonomyView'
 import { BrowseCoffees } from './BrowseCoffees'
@@ -7,17 +8,17 @@ import { RateCoffee } from './RateCoffee'
 import { Journal } from './Journal'
 import { AddAndRateFlow } from './AddAndRateFlow'
 import { FloatingAddButton } from './components/FloatingAddButton'
-import { PalateDashboard } from './features/palate/PalateDashboard'
-import { PalateLocked } from './features/palate/components/PalateLocked'
-import { useRatingCount } from './features/palate/data/useRatingCount'
-import { screenAccessMaturity } from './features/palate/data/maturity'
+import { PalateTab } from './features/palate/PalateTab'
+import { Learn } from './features/learn/Learn'
+import { MoreTab } from './features/more/MoreTab'
 import { PalatoWordmark } from './components/PalatoWordmark'
 import { BottomTabBar } from './components/BottomTabBar'
+import { useQuizHydration } from './features/quiz/useQuizHydration'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
 
-type View = 'browse' | 'journal' | 'palate' | 'flavors' | 'coffee-detail' | 'rating' | 'add-flow'
+type View = 'browse' | 'learn' | 'journal' | 'palate' | 'flavors' | 'more' | 'coffee-detail' | 'rating' | 'add-flow'
 
 const pageStyle = {
   padding: '3rem 2.5rem 6rem',
@@ -52,13 +53,27 @@ const headerNavButton = (active: boolean) => ({
 
 export function AuthedApp() {
   const { signOut } = useAuth()
+  const navigate = useNavigate()
+  useQuizHydration()
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
-  const { count: ratingCount } = useRatingCount()
-  const palateUnlocked = screenAccessMaturity(ratingCount) !== 'locked'
+  const [catalogOrigin, setCatalogOrigin] = useState<string | null>(null)
 
   const goToBrowse = () => {
     setView('browse')
+    setSelectedCoffeeId(null)
+    setCatalogOrigin(null)
+  }
+
+  // From Learn: open the catalog pre-filtered to one origin (§6).
+  const goToBrowseWithOrigin = (country: string) => {
+    setCatalogOrigin(country)
+    setSelectedCoffeeId(null)
+    setView('browse')
+  }
+
+  const goToLearn = () => {
+    setView('learn')
     setSelectedCoffeeId(null)
   }
 
@@ -74,6 +89,11 @@ export function AuthedApp() {
 
   const goToFlavors = () => {
     setView('flavors')
+    setSelectedCoffeeId(null)
+  }
+
+  const goToMore = () => {
+    setView('more')
     setSelectedCoffeeId(null)
   }
 
@@ -123,43 +143,47 @@ export function AuthedApp() {
           }}
         >
           <button onClick={goToBrowse} style={headerNavButton(view === 'browse')}>
-            Coffees
+            Catalog
           </button>
-          <button onClick={goToJournal} style={headerNavButton(view === 'journal')}>
-            Journal
+          <button onClick={goToLearn} style={headerNavButton(view === 'learn')}>
+            Learn
           </button>
           <button onClick={goToPalate} style={headerNavButton(view === 'palate')}>
             Palate
           </button>
-          <button onClick={goToFlavors} style={headerNavButton(view === 'flavors')}>
-            Flavors
-          </button>
           <button
-            onClick={signOut}
-            style={{
-              padding: '0.45rem 1rem',
-              backgroundColor: 'transparent',
-              color: espresso,
-              border: '1px solid rgba(30, 20, 16, 0.25)',
-              borderRadius: '100px',
-              fontSize: '0.85rem',
-              fontFamily: 'Geist, system-ui, sans-serif',
-              cursor: 'pointer',
-            }}
+            onClick={goToMore}
+            style={headerNavButton(view === 'more' || view === 'flavors')}
           >
-            Sign out
+            More
           </button>
         </nav>
       </header>
 
-      {view === 'browse' && <BrowseCoffees onSelectCoffee={goToCoffee} />}
+      {view === 'browse' && (
+        <BrowseCoffees
+          key={catalogOrigin ?? 'all'}
+          onSelectCoffee={goToCoffee}
+          initialOrigin={catalogOrigin}
+        />
+      )}
+      {view === 'learn' && <Learn onBrowseOrigin={goToBrowseWithOrigin} />}
       {view === 'journal' && <Journal onSelectCoffee={goToCoffee} />}
       {view === 'palate' && (
-        palateUnlocked
-          ? <PalateDashboard />
-          : <PalateLocked ratingCount={ratingCount} onGoRate={goToBrowse} />
+        <PalateTab
+          onSelectCoffee={goToCoffee}
+          onGoRate={goToBrowse}
+          onSeeAllRatings={goToJournal}
+        />
       )}
       {view === 'flavors' && <TaxonomyView />}
+      {view === 'more' && (
+        <MoreTab
+          onRetakeQuiz={() => navigate('/quiz')}
+          onOpenFlavors={goToFlavors}
+          onSignOut={signOut}
+        />
+      )}
       {view === 'coffee-detail' && selectedCoffeeId && (
         <CoffeeDetail
           coffeeId={selectedCoffeeId}
@@ -178,19 +202,22 @@ export function AuthedApp() {
         <AddAndRateFlow onComplete={goToPalate} onCancel={goToBrowse} />
       )}
 
-      {view !== 'rating' && view !== 'add-flow' && (
-        <FloatingAddButton onClick={goToAddFlow} compact={view !== 'browse'} />
+      {view !== 'rating' && view !== 'add-flow' && view !== 'more' && (
+        <FloatingAddButton
+          onClick={goToAddFlow}
+          compact={view !== 'browse'}
+          label="Rate a coffee"
+        />
       )}
 
       <BottomTabBar
         activeView={view}
         onNavigate={(v) => {
           if (v === 'browse') goToBrowse()
-          else if (v === 'journal') goToJournal()
+          else if (v === 'learn') goToLearn()
           else if (v === 'palate') goToPalate()
+          else if (v === 'more') goToMore()
         }}
-        onGoToFlavors={goToFlavors}
-        onSignOut={signOut}
       />
     </div>
   )

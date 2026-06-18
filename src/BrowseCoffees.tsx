@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCoffees, type Coffee } from './lib/useCoffees'
+import { StartHereRail } from './features/palate/StartHereRail'
+import { ScanHowItWorks } from './components/ScanHowItWorks'
 
 const ROAST_LABELS: Record<string, string> = {
   light: 'Light',
@@ -431,13 +433,19 @@ const styles = {
 
 type Props = {
   onSelectCoffee: (coffeeId: string) => void
+  initialOrigin?: string | null
 }
 
-export function BrowseCoffees({ onSelectCoffee }: Props) {
+export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
   const { coffees, loading, error } = useCoffees()
 
   const [search, setSearch] = useState('')
-  const [selectedOrigins, setSelectedOrigins] = useState<Set<string>>(new Set())
+  // Seeded from `initialOrigin` when arriving via Learn's "See [Origin]
+  // coffees" (§6). The catalog is remounted (keyed) on origin change, so the
+  // initializer is the single source of truth — no syncing effect needed.
+  const [selectedOrigins, setSelectedOrigins] = useState<Set<string>>(
+    initialOrigin ? new Set([initialOrigin]) : new Set()
+  )
   const [selectedRoasts, setSelectedRoasts] = useState<Set<string>>(new Set())
   const [selectedProcesses, setSelectedProcesses] = useState<Set<string>>(new Set())
   const [sortKey, setSortKey] = useState<SortKey>('roaster')
@@ -497,6 +505,10 @@ export function BrowseCoffees({ onSelectCoffee }: Props) {
           <span style={{ opacity: 0.5 }}>v01 · May 2026</span>
         </div>
       </section>
+
+      <StartHereRail coffees={coffees} onSelectCoffee={onSelectCoffee} />
+
+      <ScanHowItWorks />
 
       <div style={styles.filterBar}>
         <div style={styles.searchRow}>

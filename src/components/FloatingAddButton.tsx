@@ -1,12 +1,13 @@
 type Props = {
   onClick: () => void
   compact?: boolean
+  label?: string
 }
 
 const ember = '#D94E1F'
 const cream = '#F4EAD5'
 
-export function FloatingAddButton({ onClick, compact = false }: Props) {
+export function FloatingAddButton({ onClick, compact = false, label = 'Add a coffee' }: Props) {
   if (compact) {
     return (
       <button
@@ -53,7 +54,7 @@ export function FloatingAddButton({ onClick, compact = false }: Props) {
   return (
     <button
       onClick={onClick}
-      aria-label="Add a coffee"
+      aria-label={label}
       className="palato-fab"
       style={{
         position: 'fixed',
@@ -91,7 +92,7 @@ export function FloatingAddButton({ onClick, compact = false }: Props) {
       }}
     >
       <span style={{ fontSize: '1.4rem', fontWeight: 300, lineHeight: 1 }}>+</span>
-      Add a coffee
+      {label}
     </button>
   )
 }
