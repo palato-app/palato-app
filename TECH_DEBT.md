@@ -38,6 +38,18 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Revisit alongside community ratings + moderation in v1.1. Candidate pieces: (a) an edit-history / audit table (who, when, before→after) — also unblocks revert; (b) a permission tier (trusted-contributor vs. new user) or a propose-edit → approve flow rather than direct write; (c) tighten the policy so `created_by` can't be reassigned; (d) optionally an optimistic-concurrency check on `updated_at`.
 - **Surfaced:** June 15, 2026 — Decision #045, when catalog editing shipped. Supersedes the prior "No edit capability for catalog coffees" item (that feature now exists).
 
+### User location not captured — recommendations assume USA-only
+- **What:** `profiles` has no location field (country/city/region). The recommendation engine's "Something You'll Love" strategy needs to filter to coffees a user can actually buy/ship to, but with no user location we assume **USA-only** for now (and price is stored as USD in migration `0010`).
+- **Why it's debt:** Bakes a US bias into recommendations and commerce data. International users get a degraded "you'll love" card (no real purchasability filter), and there's no way for a user to set or change their location.
+- **Fix:** Add a location field to `profiles` (country at minimum — granularity decision deferred, see Decision #047) plus a profile-settings control to set/change it. Then wire it into the "Something You'll Love" purchasability filter and generalize `price_usd` toward multi-currency. Location is PII — handle accordingly.
+- **Surfaced:** June 16, 2026 — Decision #047, recommendation-engine planning.
+
+### Web-augmentation provenance columns are user-writable (should be system-managed)
+- **What:** Migration `0010` added `augmentation_raw`, `source_url`, and `web_augmented_at` to `coffees`. Under the permissive `coffees` UPDATE policy (Decision #045 / migration `0007`, `using true`), any authenticated user can write these — but they're meant to be system-managed (written only by the eventual server-side augmentation pipeline, like `scans.raw_extraction`).
+- **Why it's debt:** A user could forge a provenance trail or inject arbitrary JSON into `augmentation_raw`, undermining the fact-check/eval integrity those columns exist to provide. Same open-edit trust posture as the catalog-edit item below — fine at whitelisted beta, a real concern at scale.
+- **Fix:** When the augmentation pipeline is built (post-research, see `docs/web-augmentation-research.md` + Decision #047), route augmentation writes through a service-role-only endpoint and add column-level protection (a trigger, or split the system-managed fields into a separate table with stricter RLS). Postgres RLS is row-level, so column protection needs one of those.
+- **Surfaced:** June 16, 2026 — Decision #047, when the dormant augmentation columns landed.
+
 ### Anthropic key is on a temporary test account. 
 - **What:** We'll need to switch from a separate user account and generate API Calls from Palato.coffee directly. 
 - **Why it's debt:** Need to research if the API call feature via Anthropic demands having a Pro account or not. 
@@ -192,3 +204,14 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Why it's debt:** Can't run ESLint. Pre-existing issue, not caused by any recent build.
 - **Fix:** Either (a) clean up the orphaned worktrees (`rm -rf .claude/worktrees/*/`), or (b) set `tsconfigRootDir` explicitly in the ESLint config's `parserOptions`, or (c) add `.claude/worktrees` to the ESLint ignore list.
 - **Surfaced:** May 24, 2026 — discovered during Palate Dashboard build verification.
+---
+
+## Privacy & Compliance
+
+### No cookie-consent banner for PostHog analytics + session replay
+- **What:** PostHog (wired June 16, 2026) sets a tracking cookie, builds person profiles on identified users, **and has session replay ON** (decision: keep it on — it's a primary signal source for the Nielsen usability rounds). There is no consent banner or opt-out anywhere in the app.
+- **Why it's debt:** Fine for the current closed cohort (≈15 known friends, OAuth-whitelisted) — *provided testers are told they're being recorded* (see interim measure below). Becomes a real compliance gap the moment the app opens to the public: GDPR/ePrivacy (any EU visitor) and similar US state laws expect notice + opt-in *before* non-essential tracking cookies and especially before session recording starts. Jesse's stance: Palato is a data company, the cookie and replay stay — this is about disclosing them properly, not removing them.
+- **Interim measure (done):** Testers are disclosed-to verbally (Lucy's interview intro) and in writing (tester onboarding) that sessions are recorded. This closes the research-ethics gap for the closed cohort. No code; copy lives with the interview protocol.
+- **Trigger:** Build the banner **before flipping Google OAuth from Testing → In Production** (the moment non-whitelisted public users can sign in). Not before — gating capture now would suppress the testers' own replays and kneecap the usability signal.
+- **Fix:** A single dismissible consent banner wired to PostHog's `opt_out_capturing_by_default: true` + `opt_in_capturing()` on accept (and `opt_out_capturing()` on decline). Disclosure should name session replay explicitly, not just "cookies." A full preferences center is overkill for v1.
+- **Surfaced:** June 16, 2026 — PostHog analytics integration. Updated June 16, 2026 — session replay confirmed staying on; staged consent posture (disclose now, gate at OAuth-production) decided.

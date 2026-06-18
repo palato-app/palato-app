@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
+import { identifyUser, resetAnalytics } from './track'
 import type { Session, User } from '@supabase/supabase-js'
 
 type AuthContextType = {
@@ -27,10 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     // Listen for sign-in / sign-out / token refresh events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        identifyUser(session.user.id, { email: session.user.email })
+      } else if (event === 'SIGNED_OUT') {
+        resetAnalytics()
+      }
     })
 
     return () => {

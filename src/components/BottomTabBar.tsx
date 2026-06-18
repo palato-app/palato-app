@@ -1,17 +1,12 @@
-import { useState } from 'react'
-import { MobileMoreMenu } from './MobileMoreMenu'
-
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
 const ember = '#D94E1F'
 
-type TabView = 'browse' | 'journal' | 'palate'
+type TabView = 'browse' | 'learn' | 'palate' | 'more'
 
 type Props = {
   activeView: string
   onNavigate: (view: TabView) => void
-  onGoToFlavors: () => void
-  onSignOut: () => void
 }
 
 function CoffeesIcon({ active }: { active: boolean }) {
@@ -26,12 +21,12 @@ function CoffeesIcon({ active }: { active: boolean }) {
   )
 }
 
-function JournalIcon({ active }: { active: boolean }) {
+function LearnIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? ember : espresso} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: active ? 1 : 0.5 }}>
-      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-      <line x1="8" y1="7" x2="16" y2="7" />
-      <line x1="8" y1="11" x2="13" y2="11" />
+      <path d="M12 7v13" />
+      <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H10a2 2 0 0 1 2 2v13a1.5 1.5 0 0 0-1.5-1.5H5.5A2.5 2.5 0 0 1 3 16z" />
+      <path d="M21 5.5A2.5 2.5 0 0 0 18.5 3H14a2 2 0 0 0-2 2v13a1.5 1.5 0 0 1 1.5-1.5h5A2.5 2.5 0 0 0 21 16z" />
     </svg>
   )
 }
@@ -57,8 +52,8 @@ function MoreIcon({ active }: { active: boolean }) {
 }
 
 const tabs: { key: TabView | 'more'; label: string }[] = [
-  { key: 'browse', label: 'Coffees' },
-  { key: 'journal', label: 'Journal' },
+  { key: 'browse', label: 'Catalog' },
+  { key: 'learn', label: 'Learn' },
   { key: 'palate', label: 'Palate' },
   { key: 'more', label: 'More' },
 ]
@@ -66,28 +61,18 @@ const tabs: { key: TabView | 'more'; label: string }[] = [
 function TabIcon({ tabKey, active }: { tabKey: string; active: boolean }) {
   switch (tabKey) {
     case 'browse': return <CoffeesIcon active={active} />
-    case 'journal': return <JournalIcon active={active} />
+    case 'learn': return <LearnIcon active={active} />
     case 'palate': return <PalateIcon active={active} />
     case 'more': return <MoreIcon active={active} />
     default: return null
   }
 }
 
-export function BottomTabBar({ activeView, onNavigate, onGoToFlavors, onSignOut }: Props) {
-  const [moreOpen, setMoreOpen] = useState(false)
-
-  const isTabActive = (key: string) => {
-    if (key === 'more') return activeView === 'flavors' || moreOpen
-    return activeView === key
-  }
-
-  const handleTabPress = (key: TabView | 'more') => {
-    if (key === 'more') {
-      setMoreOpen(true)
-    } else {
-      onNavigate(key)
-    }
-  }
+export function BottomTabBar({ activeView, onNavigate }: Props) {
+  // "More" owns the settings shell; Flavors is reached from inside it, so it
+  // keeps More highlighted.
+  const isTabActive = (key: string) =>
+    key === 'more' ? activeView === 'more' || activeView === 'flavors' : activeView === key
 
   return (
     <>
@@ -114,7 +99,7 @@ export function BottomTabBar({ activeView, onNavigate, onGoToFlavors, onSignOut 
           return (
             <button
               key={key}
-              onClick={() => handleTabPress(key)}
+              onClick={() => onNavigate(key)}
               style={{
                 background: 'none',
                 border: 'none',
@@ -144,14 +129,6 @@ export function BottomTabBar({ activeView, onNavigate, onGoToFlavors, onSignOut 
           )
         })}
       </nav>
-
-      <MobileMoreMenu
-        open={moreOpen}
-        onClose={() => setMoreOpen(false)}
-        activeView={activeView}
-        onGoToFlavors={() => { onGoToFlavors(); setMoreOpen(false) }}
-        onSignOut={onSignOut}
-      />
     </>
   )
 }

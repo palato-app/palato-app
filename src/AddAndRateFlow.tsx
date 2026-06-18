@@ -4,6 +4,7 @@ import { useAuth } from './lib/auth'
 import { prepareImage, uploadBagImage } from './lib/bagImage'
 import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
 import { EditCoffeeForm } from './EditCoffeeForm'
+import { track } from './lib/track'
 import type { Coffee } from './lib/useCoffees'
 
 // ---------------------------------------------------------------------------
@@ -467,6 +468,9 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
     if (!user) return
     setScanError(null)
 
+    const scanStartedAt = Date.now()
+    track('scan_started')
+
     try {
       setScanStatus('Preparing image…')
       const ready = await prepareImage(file)
@@ -554,8 +558,21 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
         setMatchResult({ kind: matchKind, candidates: matchCandidates })
       }
 
+      track('scan_completed', {
+        success: true,
+        durationMs: Date.now() - scanStartedAt,
+        model: d.model ?? null,
+        promptVersion: d.promptVersion ?? null,
+        matchKind: matchKind ?? 'none',
+      })
+
       setScanStatus(null)
     } catch (err) {
+      track('scan_completed', {
+        success: false,
+        durationMs: Date.now() - scanStartedAt,
+        error: err instanceof Error ? err.message : 'unknown',
+      })
       setScanError(err instanceof Error ? err.message : 'Scan failed.')
       setScanStatus(null)
     } finally {
@@ -800,6 +817,13 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
 
     setCoffeeCount(count)
     setStep('complete')
+
+    track('rating_saved', {
+      coffeeId: savedCoffee.id,
+      rating: payload.rating,
+      ratingCount: count, // running total — ratingCount === 1 is the activation moment
+      source: 'add_and_rate', // distinguishes scan/add flow from the browse→rate path
+    })
   }
 
   // -------------------------------------------------------------------------
