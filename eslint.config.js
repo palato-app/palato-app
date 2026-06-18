@@ -6,7 +6,10 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // `.claude` holds agent session state and git worktrees (each a full copy of
+  // the repo). Without this ignore, ESLint recurses into those copies and
+  // typescript-eslint can't resolve a single tsconfig root — breaking lint.
+  globalIgnores(['dist', '.claude']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
