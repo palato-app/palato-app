@@ -87,16 +87,20 @@ This direction departs from `palato-brand-guide-v01.md`, which still specifies F
 
 ## Current State
 
-Live at `palato.coffee` (primary) and `palato-app.vercel.app`, talking to Supabase. Auth via Google OAuth (test mode, whitelisted users). The logged-in app is a single-page view router (no router library yet) with these working surfaces:
+Live at `palato.coffee` (primary) and `palato-app.vercel.app`, talking to Supabase. Auth via Google OAuth (test mode, whitelisted users). The app uses **react-router** (Decision #050): two routes are public — `/` (landing) and `/quiz` (the pre-auth palate quiz) — and everything else is gated, redirecting unauthenticated visitors to `/`. The authed experience (`AuthedApp`) is still an internal view-state router holding `selectedCoffeeId`. The onboarding rework (landing → quiz → seeded palate, plus the IA below) shipped per Decision #051. Bottom and desktop nav both read **Catalog · Learn · Palate · More**.
 
-- **Browse** (`BrowseCoffees`) — grid of the global coffee catalog; tap a coffee → detail.
+- **Landing** (`Landing`, public `/`) — promise + a no-account "Unlock your palate" CTA into the quiz; sign-in is demoted to a returning-user link.
+- **Palate quiz** (`PalateQuiz`, public `/quiz`) — 5-question pre-auth quiz (motivation, aspiration, flavor slider, origin, brew) with value-back copy and a reveal. Persists to `sessionStorage` across the OAuth redirect, then hydrates into `palate_profiles` on first authed load (§3d).
+- **Catalog** (`BrowseCoffees`) — grid of the global catalog, plus a quiz-seeded **"Start here"** rail and a scan how-it-works strip; the primary action reads **"Rate a coffee"**. Tap a coffee → detail.
 - **Coffee detail** (`CoffeeDetail`) — bag image + facts; surfaces the user's latest rating; "Rate it" / "Rate it again".
 - **Rating flow** (`RateCoffee` + `RatingDial`) — the atomic action: custom radial dial (decimal 1.0–5.0), prose notes, type-to-filter flavor descriptor chips over the 168-row taxonomy, then a post-submit interstitial.
-- **Journal** (`Journal`) — reverse-chronological feed of the user's own ratings with hero stats.
-- **Flavors** (`TaxonomyView`) — magazine-spread render of the 168-descriptor taxonomy (reference list; the interactive wheel is deferred per #020).
-- **Add a coffee** (`AddCoffeeForm`, admin-only on Browse) — **the bag-scan AI pipeline is live here.** Scan a bag → Claude extracts structured JSON via the `/api/scan` relay → form pre-fills → human corrects → save inserts the coffee AND writes the correction diff + accuracy back to the `scans` table → optional one-tap "Rate it now" handoff into the rating flow. Manual entry is the fallback path.
+- **Palate** (`PalateTab`) — a quiz-seeded **v0 profile** (or the full ratings-driven `PalateDashboard` at 3+ ratings, or a take-the-quiz prompt); an aspiration "what you're here for" card (Decision #051 §5); and the **journal nested** here as "Your most recent ratings" with a real empty state (the full `Journal` is reachable via "See all").
+- **Learn** (`Learn`) — editorial origin cards + short origin pages (static v1, no globe); each links into the catalog filtered by that origin.
+- **Flavors** (`TaxonomyView`) — magazine-spread render of the 168-descriptor taxonomy (reference list; interactive wheel deferred per #020). Reached from inside More.
+- **More** (`MoreTab`) — settings shell: functional Profile (display name, experience level, location), preferred brew methods, aspiration, retake quiz, flavor taxonomy, The story, send-feedback (→ analytics), sign out; plus `Coming Soon` stubs (notifications, units, follows, data export).
+- **Add a coffee** (`AddCoffeeForm` / `AddAndRateFlow`, reached via the "Rate a coffee" FAB) — **the bag-scan AI pipeline is live here.** Scan a bag → Claude extracts structured JSON via the `/api/scan` relay → form pre-fills → human corrects → save inserts the coffee AND writes the correction diff + accuracy back to the `scans` table → optional one-tap "Rate it now" handoff into the rating flow. Manual entry is the fallback path.
 
-**Phase:** Phase 0 — Foundation, build essentially complete. The v1 core loop (browse → rate → journal, plus scan → add → rate) works end to end. **Remaining v1 work is validation, not building:** seed a real catalog, run the long-deferred user interviews (Competency B), and do the first eval pass on the `scans` table (per-field accuracy, correction rate, hallucination rate — see DECISIONS.md #033, #036). v1.1 features (recommender, community ratings, taste/feel split #027, inline descriptor detection #028) come after.
+**Phase:** Phase 0 — Foundation, build essentially complete, plus the onboarding rework (landing → quiz → seeded palate → first rating; Decision #051). The v1 core loop (catalog → rate → palate, plus scan → add → rate) works end to end. **Remaining v1 work is validation, not building:** seed a real catalog, run the long-deferred user interviews (Competency B), and do the first eval pass on the `scans` table (per-field accuracy, correction rate, hallucination rate — see DECISIONS.md #033, #036). v1.1 features (recommender, community ratings, taste/feel split #027, inline descriptor detection #028) come after.
 
 See `git log`, `DECISIONS.md`, and `TECHDEBT.md` for the authoritative detail.
 
@@ -107,20 +111,27 @@ See `git log`, `DECISIONS.md`, and `TECHDEBT.md` for the authoritative detail.
 **Stack:** React 19 + TypeScript, Vite, Supabase (auth/db/storage), Vercel (deployment + serverless functions), Anthropic API (Claude) for AI features.
 
 **Client entry points (`src/`):**
-- `main.tsx` — React root; wraps `<App />` in `<AuthProvider>`.
-- `App.tsx` — app shell; view-state router (`browse | journal | flavors | coffee-detail | rating`) holding `selectedCoffeeId`; logged-out sign-in screen; mounts `AddCoffeeForm` admin-only on Browse.
-- `BrowseCoffees.tsx`, `CoffeeDetail.tsx`, `RateCoffee.tsx`, `RatingDial.tsx`, `Journal.tsx`, `TaxonomyView.tsx`, `AddCoffeeForm.tsx` — the views above.
+- `main.tsx` — React root; wraps `<App />` in `<BrowserRouter>` then `<AuthProvider>`.
+- `App.tsx` — router shell (Decision #050): public routes `/` (`Landing`) and `/quiz` (`Quiz` → `PalateQuiz`), plus a `*` splat behind `RequireAuth` that renders `AuthedApp`. Holds the splash.
+- `AuthedApp.tsx` — the authenticated experience; internal view-state router (`browse | learn | palate | flavors | more | journal | coffee-detail | rating | add-flow`) holding `selectedCoffeeId`; runs quiz hydration; mounts `AddCoffeeForm` admin-only on Browse.
+- `components/RequireAuth.tsx` — gates non-public routes; redirects signed-out visitors to `/`.
+- `Landing.tsx`, `Quiz.tsx`, `BrowseCoffees.tsx`, `CoffeeDetail.tsx`, `RateCoffee.tsx`, `RatingDial.tsx`, `Journal.tsx`, `TaxonomyView.tsx`, `AddCoffeeForm.tsx` — the views above.
+- `features/quiz/` — `PalateQuiz` (the 5-question flow), `quizConfig.ts` (copy, derivations, sessionStorage persistence, aspiration mappings), `palateProfile.ts` (`palate_profiles` read/write), `useQuizHydration.ts` (sessionStorage → DB on first authed load).
+- `features/palate/` — `PalateTab` (decides seeded-v0 / dashboard / prompt), `PalateSeededV0`, `RecentRatings` (nested journal), `StartHereRail` (catalog rail + heuristic matcher), `PalateDashboard` + chart components, `data/` hooks.
+- `features/learn/` — `Learn` (origin cards + pages) and `originData.ts` (static editorial content).
+- `features/more/` — `MoreTab` (settings shell), `TheStory`, `settings.ts` (`profiles` read/write).
 - `lib/supabase.ts` — singleton Supabase client.
 - `lib/auth.tsx` — AuthContext, `useAuth()`, Google OAuth sign-in/out.
 - `lib/useIsAdmin.ts` — client-side admin check (via `VITE_ADMIN_EMAILS`).
-- `lib/useFlavorDescriptors.ts`, `lib/useCoffee.ts` — data hooks.
+- `lib/useFlavorDescriptors.ts`, `lib/useCoffee.ts`, `lib/useCoffees.ts`, `lib/useUserRatings.ts` — data hooks.
 - `lib/bagImage.ts` — shared image helpers: validation, HEIC→JPG conversion, Storage upload to `bag-images`. Used by `AddCoffeeForm`.
 
 **Server (`/api/`):**
 - `scan.js` — Vercel serverless relay (Decision #032). Verifies the caller's Supabase session token (authenticated users only, #037), sends the bag image URL to Claude with the extraction prompt, returns structured JSON `{ model, promptVersion, extracted }`. Holds the Anthropic key server-side; the browser never sees it. Prompt is versioned via `PROMPT_VERSION` for the eval (#033).
 
 **Database (live in Supabase, see `supabase/migrations/`):**
-- `profiles` — 1:1 with `auth.users` (display_name, experience_level, preferred_brew_methods).
+- `profiles` — 1:1 with `auth.users` (display_name, experience_level, preferred_brew_methods, location).
+- `palate_profiles` — 1:1 with `auth.users`; the palate quiz results (motivation, derived experience_level [text], aspiration, flavor_lean + derived roast_preference, origin_affinity, brew_methods, raw_responses). Seeds the Palate v0, the catalog rail, and aspiration personalization (Decision #051).
 - `coffees` — global catalog (roaster, name, origin, producer, farm, process + process_detail, roast level, variety, elevation_masl, roaster_tasting_notes_raw, sca_score, bag_image_url).
 - `ratings` — per-user rating events (decimal 1.0–5.0 per #023) with brew + context fields.
 - `scans` — AI extraction events: `raw_extraction` (immutable), `corrections`, `matched_coffee_id`, `scan_accuracy_score`, `model_version`, `prompt_version`. The Competency A eval dataset.
