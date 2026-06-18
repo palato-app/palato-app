@@ -199,11 +199,27 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Remove the variant check when real Supabase aggregation replaces the mock data layer. Marked with `// TODO(jesse): remove when real aggregation lands`.
 - **Surfaced:** May 24, 2026 — Palate Dashboard build spec §10.
 
-### ESLint broken by orphaned worktrees
-- **What:** `npm run lint` fails on every file with "No tsconfigRootDir was set, and multiple candidate TSConfigRootDirs" because `.claude/worktrees/` contains orphaned worktree directories, each with their own `tsconfig.json`.
+### ESLint broken by orphaned worktrees — RESOLVED (June 18, 2026)
+- **What:** `npm run lint` failed on every file with "No tsconfigRootDir was set, and multiple candidate TSConfigRootDirs" because `.claude/worktrees/` contains orphaned worktree directories, each with their own `tsconfig.json`.
 - **Why it's debt:** Can't run ESLint. Pre-existing issue, not caused by any recent build.
-- **Fix:** Either (a) clean up the orphaned worktrees (`rm -rf .claude/worktrees/*/`), or (b) set `tsconfigRootDir` explicitly in the ESLint config's `parserOptions`, or (c) add `.claude/worktrees` to the ESLint ignore list.
-- **Surfaced:** May 24, 2026 — discovered during Palate Dashboard build verification.
+- **Resolution:** Added `.claude` to ESLint's `globalIgnores` (PR #3), so lint no longer recurses into agent worktrees — durable against future ones too. The three stale worktrees were also pruned. Note: with lint working again, it surfaced ~10 pre-existing `react-hooks/set-state-in-effect` findings that were previously masked — see the new entry below.
+- **Surfaced:** May 24, 2026 — discovered during Palate Dashboard build verification. Resolved June 18, 2026.
+
+### Pre-existing `set-state-in-effect` lint findings (newly visible)
+- **What:** With lint unblocked, ~10 `react-hooks/set-state-in-effect` errors are now reported across existing data hooks (e.g. `useUserRatings.ts`, `usePalateProfile.ts`) and the new onboarding hooks (`usePalateProfileRow.ts`, `useQuizHydration.ts`, the quiz funnel effects). They were always there; the parse failure hid them.
+- **Why it's debt:** The rule flags `setState` called synchronously in an effect body (cascading-render smell). Most are benign loading-state toggles, but a few could be restructured (e.g. derive during render, or move the set into the async callback only).
+- **Fix:** A focused pass: audit each finding, fix the genuine ones, and `// eslint-disable-next-line` the intentional loading toggles with a one-line justification. Don't bulk-suppress.
+- **Surfaced:** June 18, 2026 — became visible once the ESLint worktree issue above was resolved.
+---
+
+## Catalog & Recommendations
+
+### "Start here" rail over-relies on the quiz → low variety
+- **What:** The catalog's "Start here: picked for your palate" rail (onboarding §4, `StartHereRail.tsx` / `pickStartHere`) is a heuristic: origin-affinity bias + roast-preference closeness + an sca_score nudge. In practice it weights the quiz answers so heavily that the picks collapse to a single profile — e.g. a quiz that said "Colombia / fruity" surfaces 4–5 *Colombia Light* coffees with no spread across origin, roaster, or roast.
+- **Why it's debt:** The rail is meant to be an inviting, varied "start here," not five near-duplicates. Over-fitting to the quiz makes discovery feel narrow and undercuts the point of a curated rail. It's also a weak proxy for real recommendations.
+- **Fix:** Add a diversity/variety pass over the ranked candidates before taking the top N — e.g. cap picks per origin and per roaster, interleave a "stretch" pick or two outside the dominant lean, and blend in highest-rated/newest regardless of quiz match. Longer term this is the seam where the real recommender (v1.1, Decision #027/#028 territory) plugs in; keep the heuristic honest until then.
+- **Surfaced:** June 18, 2026 — Jesse flagged the rail showing all Colombia Light roasts on the live catalog.
+
 ---
 
 ## Privacy & Compliance

@@ -35,24 +35,45 @@ function rowFromResult(userId: string, result: QuizResult) {
   }
 }
 
-/** Partial update of editable palate fields (More tab, §9). */
+/**
+ * Create-or-update editable palate fields (More tab, §9). A user who skipped
+ * the quiz (no palate_profiles row yet) can still set these — the row is
+ * created on first edit.
+ *
+ * NOTE: deliberately NOT a single `upsert` — PostgREST upsert resets columns
+ * absent from the payload to their defaults, which would wipe the rest of an
+ * existing palate when editing one field. Instead: partial UPDATE if the row
+ * exists (non-destructive), else INSERT.
+ */
 export async function updatePalateProfile(
   userId: string,
   patch: Partial<
     Pick<PalateProfileRow, 'experience_level' | 'aspiration' | 'brew_methods'>
   >,
 ): Promise<PalateProfileRow | null> {
-  const { data, error } = await supabase
+  const { data: updated, error: updateError } = await supabase
     .from('palate_profiles')
     .update(patch)
     .eq('user_id', userId)
     .select()
-    .single()
-  if (error) {
-    console.error('updatePalateProfile error:', error)
+    .maybeSingle()
+  if (updateError) {
+    console.error('updatePalateProfile update error:', updateError)
     return null
   }
-  return data as PalateProfileRow
+  if (updated) return updated as PalateProfileRow
+
+  // No existing row — create one with just these fields (rest take defaults).
+  const { data: inserted, error: insertError } = await supabase
+    .from('palate_profiles')
+    .insert({ user_id: userId, ...patch })
+    .select()
+    .single()
+  if (insertError) {
+    console.error('updatePalateProfile insert error:', insertError)
+    return null
+  }
+  return inserted as PalateProfileRow
 }
 
 export async function fetchPalateProfile(userId: string): Promise<PalateProfileRow | null> {
