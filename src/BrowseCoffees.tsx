@@ -492,9 +492,9 @@ export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
     <div style={styles.container}>
       <section style={styles.hero}>
         <div>
-          <p style={styles.heroEyebrow}>The catalog</p>
+          <p style={styles.heroEyebrow}>Palato</p>
           <h2 style={styles.heroHeadline}>
-            What's <em style={styles.heroEm}>good</em>.
+            Our Growing <em style={styles.heroEm}>Library</em>
           </h2>
         </div>
         <div style={styles.heroMeta}>

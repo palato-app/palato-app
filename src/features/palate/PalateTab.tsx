@@ -111,7 +111,9 @@ export function PalateTab({ onSelectCoffee, onGoRate, onSeeAllRatings }: Props) 
 
   return (
     <div>
-      {focus && (
+      {/* The aspiration nudge is for the seeded/early state; once the palate has
+          matured (3+ ratings) the dashboard speaks for itself, so hide it. */}
+      {!matured && focus && (
         <div style={styles.focusCard}>
           <p style={styles.focusEyebrow}>What you're here for</p>
           <p style={styles.focusLabel}>{focus.label}</p>

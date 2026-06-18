@@ -267,22 +267,22 @@ export function MoreTab({ onRetakeQuiz, onOpenFlavors, onSignOut }: Props) {
     flash('profile')
   }
 
+  // Upserts, so these work even for a user with no palate_profile yet (e.g.
+  // someone who skipped the quiz) — the row is created on first edit.
   const savePalate = async (
     patch: Partial<Pick<PalateProfileRow, 'experience_level' | 'aspiration' | 'brew_methods'>>,
     key: string,
   ) => {
-    if (!user || !palate) return
+    if (!user) return
     const next = await updatePalateProfile(user.id, patch)
     if (next) setPalate(next)
     flash(key)
   }
 
   const toggleBrew = (method: string) => {
-    if (!palate) return
-    const has = (palate.brew_methods ?? []).includes(method)
-    const brew_methods = has
-      ? (palate.brew_methods ?? []).filter((m) => m !== method)
-      : [...(palate.brew_methods ?? []), method]
+    const current = palate?.brew_methods ?? []
+    const has = current.includes(method)
+    const brew_methods = has ? current.filter((m) => m !== method) : [...current, method]
     savePalate({ brew_methods }, 'brew')
   }
 
@@ -352,7 +352,6 @@ export function MoreTab({ onRetakeQuiz, onOpenFlavors, onSignOut }: Props) {
                   key={lvl}
                   style={s.chip(palate?.experience_level === lvl)}
                   onClick={() => savePalate({ experience_level: lvl }, 'exp')}
-                  disabled={!palate}
                 >
                   {lvl[0].toUpperCase() + lvl.slice(1)}
                 </button>
@@ -385,7 +384,6 @@ export function MoreTab({ onRetakeQuiz, onOpenFlavors, onSignOut }: Props) {
                 key={m}
                 style={s.chip((palate?.brew_methods ?? []).includes(m))}
                 onClick={() => toggleBrew(m)}
-                disabled={!palate}
               >
                 {m}
               </button>
@@ -409,7 +407,6 @@ export function MoreTab({ onRetakeQuiz, onOpenFlavors, onSignOut }: Props) {
                   padding: '0.6rem 0.9rem',
                 }}
                 onClick={() => savePalate({ aspiration: opt }, 'asp')}
-                disabled={!palate}
               >
                 {opt}
               </button>
