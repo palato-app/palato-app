@@ -28,7 +28,7 @@ alter table public.profiles
   add column is_admin boolean not null default false;
 
 comment on column public.profiles.is_admin is
-  'Grants access to the admin dashboard (verify queue + augmentation review). Set manually post-migration for Jesse, Lucy, and the dev-signin user — see the seed snippet in the PR description. Keep in sync with VITE_ADMIN_EMAILS.';
+  'Grants access to the admin dashboard (verify queue + augmentation review). Set ONLY via the email allowlist below (auto-granted on profile creation + backfilled here); never user-settable. is_admin is the single source of truth — no VITE_ADMIN_EMAILS needed.';
 
 -- SECURITY DEFINER so RLS policies can check the caller''s admin flag without
 -- tripping over profiles'' own RLS. STABLE: safe to call many times per query.
@@ -41,6 +41,73 @@ set search_path = public
 as $$
   select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
 $$;
+
+-- Admin allowlist. is_admin must NOT be user-settable: the profiles UPDATE/INSERT
+-- policies (migration 0001) are scoped to your own row with no column guard, so
+-- without this a user could self-grant admin and bypass the whole gate. We lock
+-- it to a fixed email allowlist instead.
+create or replace function public.admin_email_allowlisted(addr text)
+returns boolean
+language sql
+immutable
+as $$
+  select lower(coalesce(addr, '')) in (
+    'jesse@palato.coffee',
+    'lucy.e.eshleman@gmail.com',
+    'support@palato.coffee',
+    'jesse.m.eshleman@gmail.com'
+  );
+$$;
+
+-- On profile creation: grant admin iff the user''s email is allowlisted; force
+-- false otherwise so a hand-crafted insert can''t self-grant.
+create or replace function public.set_is_admin_on_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare addr text;
+begin
+  select u.email into addr from auth.users u where u.id = new.id;
+  new.is_admin := public.admin_email_allowlisted(addr);
+  return new;
+end;
+$$;
+
+create trigger trg_set_is_admin_on_insert
+  before insert on public.profiles
+  for each row execute function public.set_is_admin_on_insert();
+
+-- On update: only an existing admin (or a trusted no-JWT context — migrations,
+-- service role, SQL editor, where auth.uid() is null) may change is_admin.
+create or replace function public.guard_is_admin_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.is_admin is distinct from old.is_admin
+     and auth.uid() is not null
+     and not public.is_admin() then
+    raise exception 'is_admin is not user-settable';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_guard_is_admin_update
+  before update on public.profiles
+  for each row execute function public.guard_is_admin_update();
+
+-- Backfill: grant admin to allowlisted accounts that have ALREADY signed in
+-- (existing profiles). Future sign-ins are handled by the insert trigger above.
+update public.profiles p
+  set is_admin = true
+  from auth.users u
+  where u.id = p.id
+    and public.admin_email_allowlisted(u.email);
 
 
 -- ----------------------------------------------------------------------------
@@ -93,7 +160,7 @@ begin
     or new.source_url         is distinct from old.source_url
     or new.web_augmented_at   is distinct from old.web_augmented_at
     or new.augmentation_raw   is distinct from old.augmentation_raw
-  ) and not public.is_admin() then
+  ) and auth.uid() is not null and not public.is_admin() then
     raise exception 'Only admins can change moderation or augmentation-provenance fields';
   end if;
   return new;
