@@ -44,11 +44,7 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Add a structured **country** field (and optionally normalize the free-text via geocoding) that the purchasability filter can query; generalize `price_usd` toward multi-currency. The existing free-text `location` can stay as a display field. Location is PII — handle accordingly.
 - **Surfaced:** June 16, 2026 — Decision #047, recommendation-engine planning. **Updated June 18, 2026** — migration `0012` added a free-text `location` column, superseding the original "no location field" framing; the structured/queryable gap remains.
 
-### Web-augmentation provenance columns are user-writable (should be system-managed)
-- **What:** Migration `0010` added `augmentation_raw`, `source_url`, and `web_augmented_at` to `coffees`. Under the permissive `coffees` UPDATE policy (Decision #045 / migration `0007`, `using true`), any authenticated user can write these — but they're meant to be system-managed (written only by the eventual server-side augmentation pipeline, like `scans.raw_extraction`).
-- **Why it's debt:** A user could forge a provenance trail or inject arbitrary JSON into `augmentation_raw`, undermining the fact-check/eval integrity those columns exist to provide. Same open-edit trust posture as the catalog-edit item below — fine at whitelisted beta, a real concern at scale.
-- **Fix:** When the augmentation pipeline is built (post-research, see `docs/web-augmentation-research.md` + Decision #047), route augmentation writes through a service-role-only endpoint and add column-level protection (a trigger, or split the system-managed fields into a separate table with stricter RLS). Postgres RLS is row-level, so column protection needs one of those.
-- **Surfaced:** June 16, 2026 — Decision #047, when the dormant augmentation columns landed.
+> **Resolved June 18, 2026** — *"Web-augmentation provenance columns are user-writable."* Migration `0013` adds a `BEFORE UPDATE` trigger (`enforce_admin_only_columns`) on `coffees` that rejects non-admin changes to `source_url`, `web_augmented_at`, and `augmentation_raw` (and `moderation_status` / `verified`). The columns stay on the row, but only admins (or the admin-gated augmentation endpoint acting as an admin) can write them — closing the forge/inject hole while keeping factual fields open-edit (#045). See Decision #049.
 
 ### Anthropic key is on a temporary test account. 
 - **What:** We'll need to switch from a separate user account and generate API Calls from Palato.coffee directly. 

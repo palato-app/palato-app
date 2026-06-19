@@ -19,6 +19,19 @@ export type Coffee = {
   sca_score: number | null
   bag_image_url: string | null
   verified: boolean
+  // Catalog moderation gate (migration 0013). New coffees enter 'pending' and
+  // are invisible in the global catalog until an admin approves them.
+  moderation_status: 'pending' | 'approved' | 'rejected'
+  // Web augmentation (migration 0010). Dormant until the augment pipeline writes
+  // them; the system-managed ones (source_url, web_augmented_at, augmentation_raw)
+  // are admin-only writable via a trigger (migration 0013).
+  purchase_url: string | null
+  retailer_name: string | null
+  price_usd: number | null
+  bag_weight_grams: number | null
+  source_url: string | null
+  web_augmented_at: string | null
+  augmentation_raw: unknown | null
   created_at: string
   updated_at: string
 }
