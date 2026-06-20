@@ -14,11 +14,13 @@ import { MoreTab } from './features/more/MoreTab'
 import { PalatoWordmark } from './components/PalatoWordmark'
 import { BottomTabBar } from './components/BottomTabBar'
 import { useQuizHydration } from './features/quiz/useQuizHydration'
+import { useIsAdmin } from './lib/useIsAdmin'
+import { AdminDashboard } from './features/admin/AdminDashboard'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
 
-type View = 'browse' | 'learn' | 'journal' | 'palate' | 'flavors' | 'more' | 'coffee-detail' | 'rating' | 'add-flow'
+type View = 'browse' | 'learn' | 'journal' | 'palate' | 'flavors' | 'more' | 'coffee-detail' | 'rating' | 'add-flow' | 'admin'
 
 const pageStyle = {
   padding: '3rem 2.5rem 6rem',
@@ -55,6 +57,7 @@ export function AuthedApp() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
   useQuizHydration()
+  const { isAdmin } = useIsAdmin()
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
   const [catalogOrigin, setCatalogOrigin] = useState<string | null>(null)
@@ -115,6 +118,11 @@ export function AuthedApp() {
     setSelectedCoffeeId(null)
   }
 
+  const goToAdmin = () => {
+    setView('admin')
+    setSelectedCoffeeId(null)
+  }
+
   return (
     <div className="palato-page" style={pageStyle}>
       <header
@@ -157,6 +165,11 @@ export function AuthedApp() {
           >
             More
           </button>
+          {isAdmin && (
+            <button onClick={goToAdmin} style={headerNavButton(view === 'admin')}>
+              Admin
+            </button>
+          )}
         </nav>
       </header>
 
@@ -201,8 +214,9 @@ export function AuthedApp() {
       {view === 'add-flow' && (
         <AddAndRateFlow onComplete={goToPalate} onCancel={goToBrowse} />
       )}
+      {view === 'admin' && isAdmin && <AdminDashboard />}
 
-      {view !== 'rating' && view !== 'add-flow' && view !== 'more' && (
+      {view !== 'rating' && view !== 'add-flow' && view !== 'more' && view !== 'admin' && (
         <FloatingAddButton
           onClick={goToAddFlow}
           compact={view !== 'browse'}
