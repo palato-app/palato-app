@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePendingCoffees, approveCoffee, rejectCoffee, type PendingCoffee } from './usePendingCoffees'
+import { AugmentSection } from './AugmentSection'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -192,9 +193,7 @@ export function AdminDashboard() {
       </div>
 
       {section === 'verify' && <VerifyQueue />}
-      {section === 'augment' && (
-        <p style={styles.empty}>Augmentation review lands here in the next update.</p>
-      )}
+      {section === 'augment' && <AugmentSection />}
     </div>
   )
 }
