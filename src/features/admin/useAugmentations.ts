@@ -109,26 +109,38 @@ export async function runAugment(coffeeId: string): Promise<{ error: string | nu
 }
 
 /**
- * Approve a proposal: write the proposed facts onto the coffee, stamp provenance
+ * Approve a proposal — applying ONLY the chosen fields (per-field accept/reject).
+ * Writes the selected proposed facts onto the coffee, stamps provenance
  * (source_url / web_augmented_at / augmentation_raw — admin-only columns, guarded
- * by the 0013 trigger), and mark the augmentation approved. The ONLY place an
+ * by the 0013 trigger), and records exactly what was applied. The ONLY place an
  * augmentation mutates a coffee — the never-overwrite invariant (Decision #048/#049).
  */
-export async function approveAugmentation(aug: Augmentation): Promise<{ error: string | null }> {
+export async function approveAugmentation(
+  aug: Augmentation,
+  fields: (keyof ProposedFields)[],
+): Promise<{ error: string | null }> {
   const { data: { user } } = await supabase.auth.getUser()
-  const patch: Record<string, unknown> = { ...aug.proposed }
-  patch.source_url = aug.source_urls?.[0] ?? null
-  patch.web_augmented_at = new Date().toISOString()
-  patch.augmentation_raw = aug.raw_response
 
-  const { error: coffeeErr } = await supabase.from('coffees').update(patch).eq('id', aug.coffee_id)
-  if (coffeeErr) return { error: coffeeErr.message }
+  const applied: Record<string, unknown> = {}
+  for (const f of fields) {
+    if (f in aug.proposed) applied[f] = aug.proposed[f]
+  }
+
+  // Only touch the coffee (and stamp provenance) if at least one field was kept.
+  if (Object.keys(applied).length > 0) {
+    const patch: Record<string, unknown> = { ...applied }
+    patch.source_url = aug.source_urls?.[0] ?? null
+    patch.web_augmented_at = new Date().toISOString()
+    patch.augmentation_raw = aug.raw_response
+    const { error: coffeeErr } = await supabase.from('coffees').update(patch).eq('id', aug.coffee_id)
+    if (coffeeErr) return { error: coffeeErr.message }
+  }
 
   const { error: augErr } = await supabase
     .from('augmentations')
     .update({
       status: 'approved',
-      applied: aug.proposed,
+      applied,
       reviewed_by: user?.id ?? null,
       reviewed_at: new Date().toISOString(),
     })
