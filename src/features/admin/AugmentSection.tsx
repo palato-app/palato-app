@@ -153,27 +153,39 @@ function ProposalCard({ aug, onDone }: { aug: Augmentation; onDone: () => void }
 
 export function AugmentSection() {
   const { items, loading, error, refetch } = usePendingAugmentations()
-  const { coffees } = useCoffees()
+  const { coffees, refetch: refetchCoffees } = useCoffees()
   const [query, setQuery] = useState('')
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [progress, setProgress] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
 
-  // A coffee with a pending proposal drops out of the run list — don't re-augment
-  // something already awaiting review.
+  // Refresh both the proposal list and the coffee list (the latter so a just-
+  // approved coffee's web_augmented_at lands and it drops from the run list).
+  const refreshAll = () => {
+    refetch()
+    refetchCoffees()
+  }
+
+  // A coffee drops out of the run list once it's been augmented (web_augmented_at
+  // set on approval) or while it has a pending proposal awaiting review.
   const pendingCoffeeIds = useMemo(() => new Set(items.map((i) => i.coffee_id)), [items])
   const approved = useMemo(
-    () => coffees.filter((c) => c.moderation_status === 'approved' && !pendingCoffeeIds.has(c.id)),
-    [coffees, pendingCoffeeIds],
+    () => coffees.filter((c) => c.moderation_status === 'approved'),
+    [coffees],
+  )
+  const augmentedCount = useMemo(() => approved.filter((c) => c.web_augmented_at).length, [approved])
+  const runnable = useMemo(
+    () => approved.filter((c) => !c.web_augmented_at && !pendingCoffeeIds.has(c.id)),
+    [approved, pendingCoffeeIds],
   )
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return approved.slice(0, 30)
-    return approved
+    if (!q) return runnable.slice(0, 30)
+    return runnable
       .filter((c) => `${c.roaster_name} ${c.coffee_name}`.toLowerCase().includes(q))
       .slice(0, 30)
-  }, [approved, query])
+  }, [runnable, query])
 
   const togglePick = (id: string) =>
     setPicked((prev) => {
@@ -215,13 +227,14 @@ export function AugmentSection() {
       ) : items.length === 0 ? (
         <p style={s.empty}>No proposals waiting. Run augmentation on a coffee below.</p>
       ) : (
-        items.map((a) => <ProposalCard key={a.id} aug={a} onDone={refetch} />)
+        items.map((a) => <ProposalCard key={a.id} aug={a} onDone={refreshAll} />)
       )}
 
       <h2 style={s.h2}>Run augmentation</h2>
       <p style={s.sub}>
         Claude searches the web for the roaster’s official data and proposes fact fixes/fills — nothing is
         applied until you approve it above. Tick fields per proposal to accept only some.
+        {augmentedCount > 0 && ` ${augmentedCount} already-augmented coffee${augmentedCount === 1 ? '' : 's'} hidden.`}
       </p>
 
       <input

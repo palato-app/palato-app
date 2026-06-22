@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 
 export type Coffee = {
@@ -41,25 +41,45 @@ export function useCoffees() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const refetch = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('coffees')
+      .select('*')
+      .order('roaster_name', { ascending: true })
+      .order('coffee_name', { ascending: true })
+
+    if (error) {
+      setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    setCoffees(data ?? [])
+    setError(null)
+    setLoading(false)
+  }, [])
+
   useEffect(() => {
-    async function load() {
+    let cancelled = false
+    ;(async () => {
       const { data, error } = await supabase
         .from('coffees')
         .select('*')
         .order('roaster_name', { ascending: true })
         .order('coffee_name', { ascending: true })
-
+      if (cancelled) return
       if (error) {
         setError(error.message)
         setLoading(false)
         return
       }
-
       setCoffees(data ?? [])
       setLoading(false)
+    })()
+    return () => {
+      cancelled = true
     }
-    load()
   }, [])
 
-  return { coffees, loading, error }
+  return { coffees, loading, error, refetch }
 }
