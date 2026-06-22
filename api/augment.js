@@ -125,7 +125,7 @@ export default async function handler(req, res) {
       message = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 4096,
-        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 3 }],
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 2 }],
         messages,
       });
       if (message.stop_reason === 'pause_turn') {

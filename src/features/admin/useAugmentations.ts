@@ -99,8 +99,15 @@ export async function runAugment(coffeeId: string): Promise<{ error: string | nu
       },
       body: JSON.stringify({ coffeeId }),
     })
-    const data = await res.json()
-    if (!res.ok) return { error: data.error || 'Augment failed.' }
+    // A serverless timeout (504) or platform error returns HTML, not JSON —
+    // surface the status so the failure reason is visible, not swallowed.
+    let data: { error?: string; parseError?: boolean; fieldCount?: number } = {}
+    try {
+      data = await res.json()
+    } catch {
+      return { error: `HTTP ${res.status}${res.status === 504 ? ' (timeout — try again or reduce scope)' : ''}` }
+    }
+    if (!res.ok) return { error: data.error || `HTTP ${res.status}` }
     if (data.parseError) return { error: 'Claude returned unparseable output.' }
     return { error: null, fieldCount: data.fieldCount ?? 0 }
   } catch (e) {

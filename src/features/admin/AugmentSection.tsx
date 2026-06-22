@@ -158,10 +158,14 @@ export function AugmentSection() {
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [progress, setProgress] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
+  const [errors, setErrors] = useState<string[]>([])
 
+  // A coffee with a pending proposal drops out of the run list — don't re-augment
+  // something already awaiting review.
+  const pendingCoffeeIds = useMemo(() => new Set(items.map((i) => i.coffee_id)), [items])
   const approved = useMemo(
-    () => coffees.filter((c) => c.moderation_status === 'approved'),
-    [coffees],
+    () => coffees.filter((c) => c.moderation_status === 'approved' && !pendingCoffeeIds.has(c.id)),
+    [coffees, pendingCoffeeIds],
   )
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -183,18 +187,22 @@ export function AugmentSection() {
   // stream into the review list above as each completes.
   const runBatch = async (ids: string[]) => {
     setRunning(true)
+    setErrors([])
+    const errs: string[] = []
     let ok = 0
-    let failed = 0
     for (let i = 0; i < ids.length; i++) {
       setProgress(`Augmenting ${i + 1} of ${ids.length}…`)
       const { error } = await runAugment(ids[i])
-      if (error) failed++
-      else ok++
+      if (error) {
+        const c = coffees.find((x) => x.id === ids[i])
+        errs.push(`${c?.coffee_name ?? 'Coffee'} — ${error}`)
+      } else ok++
       refetch()
     }
     setRunning(false)
     setPicked(new Set())
-    setProgress(`Done — ${ok} proposal${ok === 1 ? '' : 's'} ready${failed ? `, ${failed} failed` : ''}.`)
+    setProgress(`Done — ${ok} proposal${ok === 1 ? '' : 's'} ready${errs.length ? `, ${errs.length} failed` : ''}.`)
+    setErrors(errs)
   }
 
   return (
@@ -233,6 +241,14 @@ export function AugmentSection() {
         </button>
         {progress && <span style={{ ...s.sub, margin: 0, color: ember }}>{progress}</span>}
       </div>
+
+      {errors.length > 0 && (
+        <ul style={{ ...s.sub, paddingLeft: '1.1rem', margin: '0 0 0.75rem' }}>
+          {errors.map((e, i) => (
+            <li key={i}>{e}</li>
+          ))}
+        </ul>
+      )}
 
       <div>
         {filtered.map((c) => (
