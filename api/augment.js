@@ -10,13 +10,16 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
+// Web search makes this a slow call; give the serverless function headroom.
+export const config = { maxDuration: 120 };
+
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 const MODEL = 'claude-sonnet-4-6';
-const PROMPT_VERSION = 'v1';
+const PROMPT_VERSION = 'v2';
 
 // The fact fields we let augmentation propose. Commerce fields are excluded this
 // slice. Roast/process use the DB enum spellings so the client needs no remap.
@@ -28,6 +31,7 @@ RULES:
 - Only propose a value you can support from a source you actually found. If you cannot verify a field, return null for it. Do NOT guess, infer, or fill in plausible values.
 - Normalize/correct obvious typos and casing to match the authoritative source (e.g. fix "Banjo" -> "Banko" if the roaster spells it that way).
 - Prefer the roaster's official product page. Collect the URL(s) you relied on.
+- Search EFFICIENTLY: find the roaster's official page first; one or two searches is usually enough. Do not exhaustively check every retailer — stop once you have the roaster's data.
 - Do NOT propose price, purchase links, or where to buy — facts only.
 - For tasting_notes, return the roaster's listed notes as an array of short strings (not prose).
 
@@ -120,8 +124,8 @@ export default async function handler(req, res) {
     for (let i = 0; i < 4; i++) {
       message = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 2048,
-        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5 }],
+        max_tokens: 4096,
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 3 }],
         messages,
       });
       if (message.stop_reason === 'pause_turn') {
@@ -131,15 +135,30 @@ export default async function handler(req, res) {
       break;
     }
 
-    // Final text block carries the JSON; ignore tool_use/result blocks.
-    const textBlocks = (message.content || []).filter((b) => b.type === 'text');
-    const rawText = textBlocks.length ? textBlocks[textBlocks.length - 1].text : '';
+    // Text blocks carry the JSON; ignore tool_use/result blocks. Concatenate
+    // all text (search reasoning can land in earlier blocks) and extract the
+    // JSON object even if it's wrapped in prose or fences.
+    const fullText = (message.content || [])
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n')
+      .trim();
+    let jsonStr = fullText.replace(/```json|```/g, '');
+    const first = jsonStr.indexOf('{');
+    const last = jsonStr.lastIndexOf('}');
+    if (first !== -1 && last > first) jsonStr = jsonStr.slice(first, last + 1);
 
     let parsed;
     try {
-      parsed = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+      parsed = JSON.parse(jsonStr);
     } catch {
-      return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, parseError: true, rawText });
+      return res.status(200).json({
+        model: MODEL,
+        promptVersion: PROMPT_VERSION,
+        parseError: true,
+        stopReason: message.stop_reason,
+        rawText: fullText.slice(0, 4000),
+      });
     }
 
     // Keep only facts we allow into the catalog; drop null/empty proposals.
