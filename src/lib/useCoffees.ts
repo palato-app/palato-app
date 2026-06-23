@@ -29,6 +29,7 @@ export type Coffee = {
   retailer_name: string | null
   price_usd: number | null
   bag_weight_grams: number | null
+  purchase_availability: 'yes' | 'no' | 'unsure'
   source_url: string | null
   web_augmented_at: string | null
   augmentation_raw: unknown | null
