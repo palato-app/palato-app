@@ -120,7 +120,7 @@ export async function runAugment(coffeeId: string): Promise<{ error: string | nu
  * Writes the selected proposed facts onto the coffee, stamps provenance
  * (source_url / web_augmented_at / augmentation_raw — admin-only columns, guarded
  * by the 0013 trigger), and records exactly what was applied. The ONLY place an
- * augmentation mutates a coffee — the never-overwrite invariant (Decision #048/#049).
+ * augmentation mutates a coffee — the never-overwrite invariant (Decision #048/#052).
  */
 export async function approveAugmentation(
   aug: Augmentation,

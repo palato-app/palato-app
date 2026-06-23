@@ -71,7 +71,7 @@ export async function approveCoffee(id: string): Promise<{ error: string | null 
 
 /**
  * Reject a coffee — it stays OUT of the global catalog but is NEVER deleted
- * (a delete would cascade its ratings). Enrich-only / never-remove (Decision #049).
+ * (a delete would cascade its ratings). Enrich-only / never-remove (Decision #052).
  */
 export async function rejectCoffee(id: string): Promise<{ error: string | null }> {
   const { error } = await supabase

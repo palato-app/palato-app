@@ -2,7 +2,7 @@
 // Web-augmentation relay: takes a coffee id, asks Claude (with hosted web search)
 // to normalize + gap-fill that coffee's FACTS from the roaster's official page,
 // and stores the result as a PENDING proposal in `augmentations`. Never touches
-// the coffee row — an admin approves the proposal in the dashboard (Decision #049,
+// the coffee row — an admin approves the proposal in the dashboard (Decision #052,
 // safety posture in Decision #048 + docs/web-augmentation-research.md).
 //
 // Admin-only. Facts only (no commerce/price/buy-link this slice).
