@@ -122,7 +122,7 @@ export function PalateTab({ onSelectCoffee, onGoRate, onSeeAllRatings }: Props) 
       )}
 
       {matured ? (
-        <PalateDashboard />
+        <PalateDashboard onSelectCoffee={onSelectCoffee} />
       ) : profile ? (
         <PalateSeededV0 profile={profile} ratingCount={ratingCount} />
       ) : (

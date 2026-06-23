@@ -96,7 +96,6 @@ const EMPTY_PROFILE: PalateProfile = {
   processSweetSpot: PROCESS_ORDER.map((k) => ({ key: k, avgRating: null, count: 0 })),
   origins: [],
   evolution: [],
-  recommendation: null,
   stats: { coffees: 0, roasters: 0, origins: 0, topNote: null },
 }
 
@@ -266,7 +265,6 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
     processSweetSpot,
     origins,
     evolution: [],
-    recommendation: null,
     stats: {
       coffees: coffeeIds.size,
       roasters: roasterNames.size,

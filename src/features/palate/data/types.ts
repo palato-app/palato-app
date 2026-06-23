@@ -35,12 +35,23 @@ export interface EvolutionPoint {
   avgRoast: number     // 1 (light) … 5 (dark)
 }
 
+export type RecommendationKind = 'unique' | 'explore' | 'love'
+
 export interface Recommendation {
+  kind: RecommendationKind
+  coffeeId: string           // for tap-through to coffee detail
   coffeeName: string
   roaster: string
-  process: ProcessMethod
-  roastLevel: RoastLevel
-  reason: string       // editorial one-liner (templated for now — Claude-generated later)
+  process: string            // display value straight from the catalog (label-mapped in UI)
+  roastLevel: string
+  reason: string             // grounded one-liner from /api/recommend (Claude or templated fallback)
+}
+
+// The three strategy cards. Any may be null if its shortlist was empty.
+export interface Recommendations {
+  unique: Recommendation | null
+  explore: Recommendation | null
+  love: Recommendation | null
 }
 
 export interface PalateProfile {
@@ -52,7 +63,7 @@ export interface PalateProfile {
   processSweetSpot: RatingBucket<ProcessMethod>[]
   origins: OriginStat[]        // sorted desc by a blend of avgRating & count
   evolution: EvolutionPoint[]  // [] until unlocked
-  recommendation: Recommendation | null // null until unlocked
+  // recommendations are decoupled — see useRecommendations + the recommendations cache
   stats: {
     coffees: number
     roasters: number

@@ -50,14 +50,6 @@ export const establishedProfile: PalateProfile = {
     { period: '2', avgRoast: 2.2 },
     { period: 'now', avgRoast: 2.0 },
   ],
-  recommendation: {
-    coffeeName: 'Ethiopia Gelgelu',
-    roaster: 'Onyx Coffee Lab',
-    process: 'natural',
-    roastLevel: 'light',
-    reason:
-      'Your highest-rated coffees are fruit-forward Ethiopian naturals like Hambela. Gelgelu is the same origin and process with more body — a close match to what you already score highly.',
-  },
   stats: {
     coffees: 47,
     roasters: 19,
@@ -113,7 +105,6 @@ export const earlyProfile: PalateProfile = {
     { country: 'Kenya', avgRating: 4.2, count: 2 },
   ],
   evolution: [],
-  recommendation: null,
   stats: {
     coffees: 12,
     roasters: 7,

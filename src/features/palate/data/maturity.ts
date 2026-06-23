@@ -6,7 +6,7 @@ const SWEET_SPOT_THRESHOLD = 5
 const ORIGINS_THRESHOLD = 5
 const EVOLUTION_THRESHOLD = 10
 const EVOLUTION_MIN_WEEKS = 2
-const RECOMMENDATION_THRESHOLD = 8
+const RECOMMENDATION_THRESHOLD = 3
 
 export type MaturityState = 'full' | 'forming' | 'locked'
 

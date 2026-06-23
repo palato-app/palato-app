@@ -17,6 +17,7 @@ import { Origins } from './components/Origins'
 import { PalateEvolution } from './components/PalateEvolution'
 import { WhatsNext } from './components/WhatsNext'
 import { PalateStats } from './components/PalateStats'
+import { useRecommendations } from './data/useRecommendations'
 import { track } from '../../lib/track'
 
 const styles = {
@@ -83,7 +84,7 @@ const styles = {
   } as const,
 }
 
-export function PalateDashboard() {
+export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId: string) => void }) {
   const real = usePalateProfile()
   const [previewMode, setPreviewMode] = useState(false)
 
@@ -95,7 +96,11 @@ export function PalateDashboard() {
   const ssMaturity = sweetSpotMaturity(profile)
   const origMaturity = originsMaturity(profile)
   const evoMaturity = evolutionMaturity(profile)
-  const recMaturity = recommendationMaturity(profile)
+  const recMaturity = recommendationMaturity(real.profile)
+  const { recommendations, loading: recLoading } = useRecommendations(
+    real.ratingCount,
+    !previewMode && recMaturity === 'full',
+  )
 
   useEffect(() => {
     track('palate_viewed', {
@@ -181,7 +186,13 @@ export function PalateDashboard() {
 
       <PalateEvolution profile={profile} read={reads.evolution} maturity={evoMaturity} />
 
-      <WhatsNext profile={profile} maturity={recMaturity} />
+      <WhatsNext
+        recommendations={previewMode ? null : recommendations}
+        maturity={recMaturity}
+        ratingCount={real.ratingCount}
+        loading={recLoading}
+        onSelectCoffee={onSelectCoffee}
+      />
 
       <p style={styles.footnote}>
         Your fingerprint sharpens with every coffee. Rate to watch it move.
