@@ -1,5 +1,6 @@
 import { usePalateProfileRow } from './data/usePalateProfileRow'
 import { theme, ROAST_LABELS } from './palateTheme'
+import { CoffeePlaceholder } from '../../components/CoffeePlaceholder'
 import type { Coffee } from '../../lib/useCoffees'
 import type { PalateProfileRow } from '../quiz/palateProfile'
 
@@ -166,7 +167,7 @@ export function StartHereRail({ coffees, onSelectCoffee }: Props) {
               {c.bag_image_url ? (
                 <img src={c.bag_image_url} alt={`${c.coffee_name} bag`} style={styles.img} />
               ) : (
-                <div style={styles.imgPlaceholder}>no photo</div>
+                <CoffeePlaceholder coffeeId={c.id} style={styles.imgPlaceholder} />
               )}
               <div style={styles.body}>
                 <p style={styles.roaster}>{c.roaster_name}</p>

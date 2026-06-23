@@ -1,5 +1,6 @@
 import { theme } from '../palateTheme'
 import { useUserRatings, type RatedCoffee } from '../../../lib/useUserRatings'
+import { CoffeePlaceholder } from '../../../components/CoffeePlaceholder'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -173,7 +174,7 @@ function RecentCard({ rating, onClick }: { rating: RatedCoffee; onClick: () => v
       {coffee.bag_image_url ? (
         <img src={coffee.bag_image_url} alt={`${coffee.coffee_name} bag`} style={styles.img} />
       ) : (
-        <div style={styles.img} />
+        <CoffeePlaceholder coffeeId={coffee.id} style={styles.img} />
       )}
       <div style={{ minWidth: 0 }}>
         <p style={styles.cardName}>{coffee.coffee_name}</p>

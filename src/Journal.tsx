@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useUserRatings, type RatedCoffee } from './lib/useUserRatings'
+import { CoffeePlaceholder } from './components/CoffeePlaceholder'
 import { supabase } from './lib/supabase'
 import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
 import { EditRatingFlow } from './EditRatingFlow'
@@ -324,7 +325,7 @@ function RatingCard({
             style={styles.cardImage}
           />
         ) : (
-          <div style={styles.cardImage} />
+          <CoffeePlaceholder coffeeId={coffee.id} style={styles.cardImage} />
         )}
 
         <div style={styles.cardContent}>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from './lib/supabase'
+import { CoffeePlaceholder } from './components/CoffeePlaceholder'
 import { useCoffee } from './lib/useCoffee'
 import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
 import { EditRatingFlow } from './EditRatingFlow'
@@ -301,7 +302,7 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
           {coffee.bag_image_url ? (
             <img src={coffee.bag_image_url} alt={`${coffee.coffee_name} bag`} style={styles.image} />
           ) : (
-            <div style={styles.imagePlaceholder}>no photo</div>
+            <CoffeePlaceholder coffeeId={coffee.id} />
           )}
         </div>
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { usePendingCoffees, approveCoffee, rejectCoffee, type PendingCoffee } from './usePendingCoffees'
+import { CoffeePlaceholder } from '../../components/CoffeePlaceholder'
 import { AugmentSection } from './AugmentSection'
 import { MaintenanceTools } from './MaintenanceTools'
 
@@ -147,7 +148,7 @@ function VerifyQueue() {
           {c.bag_image_url ? (
             <img src={c.bag_image_url} alt={`${c.coffee_name} bag`} style={styles.thumb} />
           ) : (
-            <div style={styles.thumbEmpty}>no image</div>
+            <CoffeePlaceholder coffeeId={c.id} style={{ width: '72px', height: '96px', flexShrink: 0, borderRadius: '6px' }} />
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={styles.name}>{c.coffee_name}</p>

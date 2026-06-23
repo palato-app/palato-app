@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useCoffees, type Coffee } from './lib/useCoffees'
+import { CoffeePlaceholder } from './components/CoffeePlaceholder'
 import { StartHereRail } from './features/palate/StartHereRail'
 import { ScanHowItWorks } from './components/ScanHowItWorks'
 
@@ -619,7 +620,7 @@ function CoffeeCard({ coffee, onClick }: { coffee: Coffee; onClick: () => void }
         {coffee.bag_image_url ? (
           <img src={coffee.bag_image_url} alt={`${coffee.coffee_name} bag`} style={styles.image} />
         ) : (
-          <div style={styles.imagePlaceholder}>no photo</div>
+          <CoffeePlaceholder coffeeId={coffee.id} />
         )}
       </div>
       <div style={styles.cardBody}>
