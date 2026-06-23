@@ -185,6 +185,35 @@ const styles = {
     cursor: 'pointer' as const,
     alignSelf: 'flex-start' as const,
   } as const,
+  commerceBlock: {
+    marginBottom: '1.5rem',
+  } as const,
+  buyButton: {
+    display: 'inline-block',
+    padding: '0.85rem 1.75rem',
+    background: 'none',
+    color: '#1E1410',
+    border: '1.5px solid #1E1410',
+    borderRadius: '100px',
+    fontSize: '0.95rem',
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontWeight: 500,
+    textDecoration: 'none',
+    cursor: 'pointer' as const,
+  } as const,
+  availNote: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.8rem',
+    color: '#D94E1F',
+    margin: '0.6rem 0 0',
+  } as const,
+  freshNote: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.75rem',
+    color: '#1E1410',
+    opacity: 0.45,
+    margin: '0.5rem 0 0',
+  } as const,
 }
 
 type Props = {
@@ -315,6 +344,15 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
               <div>
                 <p style={styles.factLabel}>SCA score</p>
                 <p style={styles.factValue}>{coffee.sca_score}</p>
+              </div>
+            )}
+            {coffee.price_usd !== null && coffee.price_usd !== undefined && (
+              <div>
+                <p style={styles.factLabel}>Price</p>
+                <p style={styles.factValue}>
+                  ${coffee.price_usd}
+                  {coffee.bag_weight_grams ? ` · ${coffee.bag_weight_grams}g` : ''}
+                </p>
               </div>
             )}
           </div>
@@ -482,6 +520,29 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                   </span>
                 )}
               </div>
+            </div>
+          )}
+
+          {(coffee.purchase_url || coffee.price_usd != null) && (
+            <div style={styles.commerceBlock}>
+              {coffee.purchase_url && (
+                <a
+                  href={coffee.purchase_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={styles.buyButton}
+                >
+                  Buy from {coffee.retailer_name || coffee.roaster_name} ↗
+                </a>
+              )}
+              {coffee.purchase_availability === 'no' && (
+                <p style={styles.availNote}>Listed as out of stock when last checked.</p>
+              )}
+              {coffee.web_augmented_at && (
+                <p style={styles.freshNote}>
+                  Checked {formatDate(coffee.web_augmented_at)} — confirm availability on the roaster's site.
+                </p>
+              )}
             </div>
           )}
 
