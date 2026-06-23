@@ -75,6 +75,7 @@ const styles = {
   rail: {
     display: 'flex',
     gap: '1rem',
+    alignItems: 'flex-start' as const, // never let one card stretch its neighbors
     overflowX: 'auto' as const,
     paddingBottom: '0.5rem',
     scrollbarWidth: 'thin' as const,
@@ -167,7 +168,9 @@ export function StartHereRail({ coffees, onSelectCoffee }: Props) {
               {c.bag_image_url ? (
                 <img src={c.bag_image_url} alt={`${c.coffee_name} bag`} style={styles.img} />
               ) : (
-                <CoffeePlaceholder coffeeId={c.id} style={styles.imgPlaceholder} />
+                <div style={styles.imgPlaceholder}>
+                  <CoffeePlaceholder coffeeId={c.id} />
+                </div>
               )}
               <div style={styles.body}>
                 <p style={styles.roaster}>{c.roaster_name}</p>
