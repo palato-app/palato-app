@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         .eq('user_id', user.id),
       userScoped
         .from('coffees')
-        .select(`id, roaster_name, coffee_name, origin_country, process, roaster_stated_roast_level,
+        .select(`id, roaster_name, coffee_name, origin_country, process, roaster_stated_roast_level, bag_image_url,
                  coffee_flavor_descriptors ( descriptor:flavor_descriptors ( descriptor, category ) )`)
         .eq('moderation_status', 'approved'),
     ]);
@@ -217,6 +217,7 @@ Respond with ONLY valid JSON, no markdown:
       return {
         kind,
         coffeeId: chosen.id,
+        imageUrl: chosen.bag_image_url || null,
         coffeeName: chosen.coffee_name,
         roaster: chosen.roaster_name,
         process: PROC[chosen.process] || chosen.process || 'other',

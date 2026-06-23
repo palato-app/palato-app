@@ -5,6 +5,7 @@ import { theme, PROCESS_LABELS, ROAST_LABELS } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { parseEmphasis } from './EditorialRead'
 import { LockedTeaser } from './LockedTeaser'
+import { CoffeePlaceholder } from '../../../components/CoffeePlaceholder'
 import { track } from '../../../lib/track'
 
 const KIND_LABEL: Record<RecommendationKind, string> = {
@@ -23,23 +24,18 @@ const styles = {
     cursor: 'pointer',
   } as const,
   thumb: {
-    width: '50px',
-    height: '72px',
+    width: '54px',
+    height: '78px',
     flexShrink: 0,
     borderRadius: '8px',
-    background: `linear-gradient(160deg, ${theme.ember}, ${theme.emberDark})`,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden' as const,
+    background: theme.ink08,
   } as const,
-  thumbText: {
-    fontFamily: theme.wordmarkFont,
-    fontSize: '8px',
-    color: theme.cream,
-    textTransform: 'lowercase' as const,
-    transform: 'rotate(-90deg)',
-    whiteSpace: 'nowrap' as const,
-    letterSpacing: '0.5px',
+  thumbImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover' as const,
+    display: 'block',
   } as const,
   kind: {
     fontFamily: theme.bodyFont,
@@ -88,7 +84,11 @@ function RecCard({ rec, onSelectCoffee }: { rec: Recommendation; onSelectCoffee:
   return (
     <div style={styles.card} onClick={handleClick}>
       <div style={styles.thumb}>
-        <span style={styles.thumbText}>{rec.roaster.split(' ')[0].toLowerCase()}</span>
+        {rec.imageUrl ? (
+          <img src={rec.imageUrl} alt="" style={styles.thumbImg} />
+        ) : (
+          <CoffeePlaceholder coffeeId={rec.coffeeId} artScale={0.95} />
+        )}
       </div>
       <div>
         <p style={styles.kind}>{KIND_LABEL[rec.kind]}</p>

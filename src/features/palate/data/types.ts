@@ -40,6 +40,7 @@ export type RecommendationKind = 'unique' | 'explore' | 'love'
 export interface Recommendation {
   kind: RecommendationKind
   coffeeId: string           // for tap-through to coffee detail
+  imageUrl: string | null    // bag photo; placeholder used when null
   coffeeName: string
   roaster: string
   process: string            // display value straight from the catalog (label-mapped in UI)
