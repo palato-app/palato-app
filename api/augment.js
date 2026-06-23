@@ -19,7 +19,7 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
 const MODEL = 'claude-sonnet-4-6';
-const PROMPT_VERSION = 'v3';
+const PROMPT_VERSION = 'v4';
 
 // Facts + commerce. Roast/process use the DB enum spellings so the client needs
 // no remap. Commerce (purchase link, price, availability) drives users to the
@@ -33,7 +33,11 @@ RULES:
 - Normalize/correct obvious typos and casing to match the authoritative source (e.g. fix "Banjo" -> "Banko" if the roaster spells it that way).
 - Prefer the roaster's official product page. Collect the URL(s) you relied on.
 - Search EFFICIENTLY: find the roaster's official page first; one or two searches is usually enough. Do not exhaustively check every retailer — stop once you have the roaster's data.
-- COMMERCE: capture purchase_url (the direct product page to buy this coffee, ideally the roaster's own), retailer_name (who sells it there — usually the roaster), price_usd (numeric, in USD, for the standard retail bag), bag_weight_grams (the bag size that price is for, in grams), and purchase_availability — "yes" if it's clearly in stock / for sale, "no" if clearly sold out or discontinued, "unsure" if you can't tell. Prefer the roaster's own store for purchase_url.
+- COMMERCE — be precise, accuracy matters more than completeness:
+  - purchase_url: use ONLY a URL that literally appears in your web search results — copy it exactly, character for character. NEVER construct, guess, pattern-match from the coffee's name, or modify a URL. If you did not find a real product page in your search results, return null. A wrong link is far worse than no link.
+  - price_usd: the EXACT current retail price shown on that page as a number (e.g. 25.00, not 24). Do not round or estimate. If you can't see a clear price, return null.
+  - bag_weight_grams: the bag size that price_usd is for, in grams (convert oz/lb: 12oz≈340, 1lb≈454).
+  - retailer_name: who sells it at purchase_url (usually the roaster). purchase_availability: "yes" only if the page clearly shows it in stock / add-to-cart, "no" if clearly sold out or the page is gone, "unsure" otherwise.
 - For tasting_notes, return the roaster's listed notes as an array of short strings (not prose).
 
 CURRENT CATALOG DATA:
@@ -69,6 +73,32 @@ const PROPOSABLE_FIELDS = [
   'elevation_masl', 'roaster_tasting_notes_raw',
   'purchase_url', 'retailer_name', 'price_usd', 'bag_weight_grams', 'purchase_availability',
 ];
+
+// Drop hallucinated / dead purchase links before they reach review. Only a
+// definitive not-found (404/410) is rejected; inconclusive results (timeout,
+// bot-blocking 403, etc.) are kept to avoid false drops. SSRF guard: https +
+// public host only.
+async function isLivePurchaseUrl(raw) {
+  let u;
+  try { u = new URL(raw); } catch { return false; }
+  if (u.protocol !== 'https:') return false;
+  const h = u.hostname;
+  if (
+    h === 'localhost' || h.endsWith('.local') ||
+    /^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)
+  ) return false;
+  try {
+    const r = await fetch(raw, {
+      method: 'GET',
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PalatoBot/1.0; +https://palato.coffee)' },
+      signal: AbortSignal.timeout(5000),
+    });
+    return !(r.status === 404 || r.status === 410);
+  } catch {
+    return true; // inconclusive — don't false-drop a real link
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -186,6 +216,13 @@ export default async function handler(req, res) {
     for (const f of Object.keys(proposed)) {
       if (fmt(proposed[f]) !== fmt(coffee[f])) changed[f] = proposed[f];
     }
+
+    // Verify a proposed purchase link actually resolves; drop it if it 404s
+    // (Claude sometimes constructs a plausible-but-dead product URL).
+    if (changed.purchase_url && !(await isLivePurchaseUrl(changed.purchase_url))) {
+      delete changed.purchase_url;
+    }
+
     if (Object.keys(changed).length === 0) {
       return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, fieldCount: 0 });
     }
