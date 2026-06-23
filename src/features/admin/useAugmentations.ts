@@ -15,6 +15,11 @@ export type ProposedFields = Partial<{
   variety: string[]
   elevation_masl: number
   roaster_tasting_notes_raw: string[]
+  purchase_url: string
+  retailer_name: string
+  price_usd: number
+  bag_weight_grams: number
+  purchase_availability: string
 }>
 
 export type AugmentationCoffee = {

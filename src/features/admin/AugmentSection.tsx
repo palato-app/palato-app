@@ -28,6 +28,11 @@ const FIELD_LABELS: Record<keyof ProposedFields, string> = {
   variety: 'Variety',
   elevation_masl: 'Elevation',
   roaster_tasting_notes_raw: 'Tasting notes',
+  purchase_url: 'Buy URL',
+  retailer_name: 'Retailer',
+  price_usd: 'Price (USD)',
+  bag_weight_grams: 'Bag size (g)',
+  purchase_availability: 'Availability',
 }
 
 function fmt(v: unknown): string {
@@ -159,6 +164,7 @@ export function AugmentSection() {
   const [progress, setProgress] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+  const [showAugmented, setShowAugmented] = useState(false)
 
   // Refresh both the proposal list and the coffee list (the latter so a just-
   // approved coffee's web_augmented_at lands and it drops from the run list).
@@ -176,8 +182,11 @@ export function AugmentSection() {
   )
   const augmentedCount = useMemo(() => approved.filter((c) => c.web_augmented_at).length, [approved])
   const runnable = useMemo(
-    () => approved.filter((c) => !c.web_augmented_at && !pendingCoffeeIds.has(c.id)),
-    [approved, pendingCoffeeIds],
+    () =>
+      approved.filter(
+        (c) => (showAugmented || !c.web_augmented_at) && !pendingCoffeeIds.has(c.id),
+      ),
+    [approved, pendingCoffeeIds, showAugmented],
   )
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -232,9 +241,21 @@ export function AugmentSection() {
 
       <h2 style={s.h2}>Run augmentation</h2>
       <p style={s.sub}>
-        Claude searches the web for the roaster’s official data and proposes fact fixes/fills — nothing is
-        applied until you approve it above. Tick fields per proposal to accept only some.
-        {augmentedCount > 0 && ` ${augmentedCount} already-augmented coffee${augmentedCount === 1 ? '' : 's'} hidden.`}
+        Claude searches the web for the roaster’s official data + where to buy it, and proposes
+        fixes/fills — nothing is applied until you approve it above. Tick fields per proposal to
+        accept only some.
+        {augmentedCount > 0 && (
+          <>
+            {' '}
+            {showAugmented ? `${augmentedCount} already augmented. ` : `${augmentedCount} already-augmented hidden. `}
+            <button
+              onClick={() => setShowAugmented((v) => !v)}
+              style={{ background: 'none', border: 'none', padding: 0, color: ember, cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit', textDecoration: 'underline' }}
+            >
+              {showAugmented ? 'Hide them' : 'Show them (to re-augment)'}
+            </button>
+          </>
+        )}
       </p>
 
       <input
@@ -276,13 +297,16 @@ export function AugmentSection() {
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontWeight: 600 }}>{c.coffee_name}</span>
               <span style={{ color: ink50 }}> · {c.roaster_name}</span>
+              {c.web_augmented_at && (
+                <span style={{ color: ember, fontSize: '0.7rem', marginLeft: '0.4rem' }}>✓ augmented</span>
+              )}
             </span>
             <button
               style={s.augBtn}
               disabled={running}
               onClick={() => runBatch([c.id])}
             >
-              Augment
+              {c.web_augmented_at ? 'Re-augment' : 'Augment'}
             </button>
           </div>
         ))}
