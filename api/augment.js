@@ -116,7 +116,7 @@ export default async function handler(req, res) {
   // Load the current coffee fields to give Claude context.
   const { data: coffee, error: coffeeErr } = await userScopedClient
     .from('coffees')
-    .select('roaster_name, coffee_name, origin_country, origin_region, producer, farm, process, process_detail, roaster_stated_roast_level, variety, elevation_masl, roaster_tasting_notes_raw')
+    .select('roaster_name, coffee_name, origin_country, origin_region, producer, farm, process, process_detail, roaster_stated_roast_level, variety, elevation_masl, roaster_tasting_notes_raw, purchase_url, retailer_name, price_usd, bag_weight_grams, purchase_availability')
     .eq('id', coffeeId)
     .single();
   if (coffeeErr || !coffee) {
@@ -179,13 +179,24 @@ export default async function handler(req, res) {
     }
     const sourceUrls = Array.isArray(parsed.source_urls) ? parsed.source_urls : [];
 
+    // Keep only fields that genuinely DIFFER from what we already have, so a
+    // coffee that's found with nothing new doesn't create an empty proposal.
+    const fmt = (v) => (v === null || v === undefined ? '' : Array.isArray(v) ? v.join(', ') : String(v));
+    const changed = {};
+    for (const f of Object.keys(proposed)) {
+      if (fmt(proposed[f]) !== fmt(coffee[f])) changed[f] = proposed[f];
+    }
+    if (Object.keys(changed).length === 0) {
+      return res.status(200).json({ model: MODEL, promptVersion: PROMPT_VERSION, fieldCount: 0 });
+    }
+
     // Log a PENDING proposal. RLS allows admins only. Does not touch the coffee.
     const { data: row, error: insErr } = await userScopedClient
       .from('augmentations')
       .insert({
         coffee_id: coffeeId,
         status: 'pending',
-        proposed,
+        proposed: changed,
         raw_response: { content: message.content, stop_reason: message.stop_reason, notes_for_reviewer: parsed.notes_for_reviewer ?? null },
         source_urls: sourceUrls,
         model_version: MODEL,
@@ -201,9 +212,9 @@ export default async function handler(req, res) {
       model: MODEL,
       promptVersion: PROMPT_VERSION,
       augmentationId: row.id,
-      proposed,
+      proposed: changed,
       sourceUrls,
-      fieldCount: Object.keys(proposed).length,
+      fieldCount: Object.keys(changed).length,
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });

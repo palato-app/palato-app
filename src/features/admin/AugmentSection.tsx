@@ -210,19 +210,24 @@ export function AugmentSection() {
     setRunning(true)
     setErrors([])
     const errs: string[] = []
-    let ok = 0
+    let ready = 0
+    let nothing = 0
     for (let i = 0; i < ids.length; i++) {
-      setProgress(`Augmenting ${i + 1} of ${ids.length}…`)
-      const { error } = await runAugment(ids[i])
-      if (error) {
-        const c = coffees.find((x) => x.id === ids[i])
-        errs.push(`${c?.coffee_name ?? 'Coffee'} — ${error}`)
-      } else ok++
+      const c = coffees.find((x) => x.id === ids[i])
+      setProgress(`Augmenting ${i + 1} of ${ids.length}: ${c?.coffee_name ?? '…'}…`)
+      const { error, fieldCount } = await runAugment(ids[i])
+      if (error) errs.push(`${c?.coffee_name ?? 'Coffee'} — ${error}`)
+      else if (fieldCount && fieldCount > 0) ready++
+      else nothing++
       refetch()
     }
     setRunning(false)
     setPicked(new Set())
-    setProgress(`Done — ${ok} proposal${ok === 1 ? '' : 's'} ready${errs.length ? `, ${errs.length} failed` : ''}.`)
+    setProgress(
+      `Done — ${ready} proposal${ready === 1 ? '' : 's'} ready` +
+        `${nothing ? `, ${nothing} had nothing to add` : ''}` +
+        `${errs.length ? `, ${errs.length} failed` : ''}.`,
+    )
     setErrors(errs)
   }
 
