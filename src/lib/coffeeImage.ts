@@ -1,9 +1,9 @@
-// Deterministic placeholder for coffees with no bag photo: one of three
-// "Imagine a nice coffee bag" art pieces on one of four non-white backgrounds
+// Deterministic placeholder for coffees with no bag photo: the animated
+// "Imagine a nice coffee bag" tile on one of four non-white backgrounds
 // (cream / orange / dark / color — white is deliberately excluded). Stable per
-// coffee id so a given coffee always gets the same playful tile.
+// coffee id so a given coffee always gets the same background.
 
-const ART = ['/placeholders/bag-1.png', '/placeholders/bag-2.png', '/placeholders/bag-3.png']
+const ART = ['/placeholders/imagine-coffee-bag.webp']
 const BACKGROUNDS = [
   '#EFE7D6', // cream
   '#E8521F', // orange
