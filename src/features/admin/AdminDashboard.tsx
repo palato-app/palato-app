@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { usePendingCoffees, approveCoffee, rejectCoffee, type PendingCoffee } from './usePendingCoffees'
 import { AugmentSection } from './AugmentSection'
+import { MaintenanceTools } from './MaintenanceTools'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -194,6 +195,8 @@ export function AdminDashboard() {
 
       {section === 'verify' && <VerifyQueue />}
       {section === 'augment' && <AugmentSection />}
+
+      <MaintenanceTools />
     </div>
   )
 }
