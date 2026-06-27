@@ -351,7 +351,8 @@ export function parseOrigins(md: string): ParsedOrigins {
 
     if (mode === 'secondary') {
       // Bold-named secondary entry: "- **Name** *(marker)* prose" or "**Name** *(...)* prose"
-      const sm = line.match(/^[-*]?\s*\*\*([^*]+?)\*\*\s*(?:\*\(([^)]*)\)\*)?\s*(.*)$/)
+      // The marker may carry a trailing period inside the italics (e.g. "*(…Liberica).*").
+      const sm = line.match(/^[-*]?\s*\*\*([^*]+?)\*\*\s*(?:\*\(([^)]*)\)\.?\*)?\s*(.*)$/)
       if (sm && stripMd(sm[1])) {
         const name = stripMd(sm[1]).replace(/[:.]$/, '')
         // Skip labeled editorial paragraphs (e.g. "**Curiosity.**") — not a country.
@@ -372,7 +373,10 @@ export function parseOrigins(md: string): ParsedOrigins {
           varietals: '',
           altitude: { min: null, max: null, raw: '' },
           regions: [],
-          robusta: species === 'robusta' ? capFirst(prose) || 'Produces Robusta' : null,
+          // Robusta-dominant secondary origins don't get a separate "Robusta zones"
+          // section (the whole country is robusta) — the story lives in the Note instead,
+          // so the two no longer duplicate.
+          robusta: null,
           blurbs: prose ? [{ label: 'Note', text: prose }] : [],
           hasFullData: false,
         })

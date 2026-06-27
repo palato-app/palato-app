@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { theme } from '../../palate/palateTheme'
+import { useCoffees } from '../../../lib/useCoffees'
+import { normalizeRegionText } from '../lib/matchRegion'
 import { sectionTint } from '../lib/originStyle'
 import { STATUS_COLOR, STATUS_LABELS } from '../data/countryStatus'
 import { flagUrl } from '../data/countryIso'
@@ -279,6 +281,23 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
     return provinces.map((f) => ({ name: f.properties.name, d: featurePath(f.geometry, proj) }))
   }, [provinces])
 
+  // Live country-level catalog count for By the Numbers (hidden when 0 so we never show
+  // an empty stat).
+  const { coffees } = useCoffees()
+  const catalogCount = useMemo(
+    () =>
+      coffees.filter(
+        (c) => normalizeRegionText(c.origin_country) === normalizeRegionText(origin.country),
+      ).length,
+    [coffees, origin.country],
+  )
+
+  const { min, max, raw: altRaw } = origin.altitude
+  const altitude =
+    min !== null
+      ? `${min.toLocaleString()}${max !== null && max !== min ? '-' + max.toLocaleString() : ''} m`
+      : altRaw
+
   return (
     <div style={styles.container}>
       <button style={styles.back} onClick={onBack}>
@@ -315,10 +334,24 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
             <p style={styles.statValue}>{origin.marker}</p>
           </div>
         )}
+        {altitude && (
+          <div style={styles.statRow}>
+            <span style={styles.statLabel}>Grown at</span>
+            <p style={styles.statValue}>{altitude}</p>
+          </div>
+        )}
         {origin.regions.length > 0 && (
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Growing regions</span>
             <p style={styles.statValue}>{origin.regions.length}</p>
+          </div>
+        )}
+        {catalogCount > 0 && (
+          <div style={styles.statRow}>
+            <span style={styles.statLabel}>In our catalog</span>
+            <p style={styles.statValue}>
+              {catalogCount} {catalogCount === 1 ? 'coffee' : 'coffees'}
+            </p>
           </div>
         )}
       </div>
@@ -327,13 +360,6 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
         <>
           <p style={styles.fieldLabel}>Common varieties</p>
           <p style={styles.prose}>{origin.varietals}</p>
-        </>
-      )}
-
-      {origin.altitude.raw && (
-        <>
-          <p style={styles.fieldLabel}>Coffee-growing altitude</p>
-          <p style={styles.prose}>{origin.altitude.raw}</p>
         </>
       )}
 
