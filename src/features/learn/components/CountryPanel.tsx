@@ -5,6 +5,7 @@ import { normalizeRegionText } from '../lib/matchRegion'
 import { sectionTint } from '../lib/originStyle'
 import { STATUS_COLOR, STATUS_LABELS } from '../data/countryStatus'
 import { flagUrl } from '../data/countryIso'
+import { productionFor, productionLabel } from '../data/countryProduction'
 import {
   buildProjector,
   featurePath,
@@ -292,6 +293,8 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
     [coffees, origin.country],
   )
 
+  const production = productionFor(origin.country)
+
   const { min, max, raw: altRaw } = origin.altitude
   const altitude =
     min !== null
@@ -333,6 +336,18 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
             <span style={styles.statLabel}>Species</span>
             <p style={styles.statValue}>{origin.marker}</p>
           </div>
+        )}
+        {production && (
+          <>
+            <div style={styles.statRow}>
+              <span style={styles.statLabel}>World rank</span>
+              <p style={styles.statValue}>#{production.rank} producer</p>
+            </div>
+            <div style={styles.statRow}>
+              <span style={styles.statLabel}>Annual production</span>
+              <p style={styles.statValue}>{productionLabel(production)}</p>
+            </div>
+          </>
         )}
         {altitude && (
           <div style={styles.statRow}>
