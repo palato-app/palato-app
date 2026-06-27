@@ -6,6 +6,8 @@ import { sectionTint } from '../lib/originStyle'
 import { STATUS_COLOR, STATUS_LABELS } from '../data/countryStatus'
 import { flagUrl } from '../data/countryIso'
 import { productionFor, productionLabel } from '../data/countryProduction'
+import { foundingFor } from '../data/countryFounding'
+import { harvestFor } from '../data/countryHarvest'
 import {
   buildProjector,
   featurePath,
@@ -294,6 +296,8 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
   )
 
   const production = productionFor(origin.country)
+  const coffeeSince = foundingFor(origin.country)
+  const harvest = harvestFor(origin.country)
 
   const { min, max, raw: altRaw } = origin.altitude
   const altitude =
@@ -355,10 +359,22 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
             <p style={styles.statValue}>{altitude}</p>
           </div>
         )}
+        {harvest && (
+          <div style={styles.statRow}>
+            <span style={styles.statLabel}>Harvest</span>
+            <p style={styles.statValue}>{harvest}</p>
+          </div>
+        )}
         {origin.regions.length > 0 && (
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Growing regions</span>
             <p style={styles.statValue}>{origin.regions.length}</p>
+          </div>
+        )}
+        {coffeeSince && (
+          <div style={styles.statRow}>
+            <span style={styles.statLabel}>Coffee since</span>
+            <p style={styles.statValue}>{coffeeSince}</p>
           </div>
         )}
         {catalogCount > 0 && (

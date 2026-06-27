@@ -276,11 +276,11 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 > **Resolved June 25, 2026** — *"Non-Colombia region coverage is thinner."* The Origins Data Standard v1 (Decision #056) replaced the hand-authored 6-country seed with verified global coverage (every major producing country across all sections), parsed from the canonical markdown. Region-level depth is now uniform by standard (country-level varietals, growing-band elevation with basis), so the parity gap is closed; what remains is the per-entry source backfill tracked above.
 
-### "By the Numbers" needs sourced figures (export, farms, producers)
-- **What:** The fuller "By the Numbers" — annual export, # farms, # producers — needs sourced, verifiable figures we don't have. The block is structured to drop them in. Region count and species split are live now because those are derivable / already in the data.
-- **Why it's debt:** The country page promises a stats block but currently only shows what's derivable; the high-value production figures are missing until sourced (verifiably, per the data standard).
-- **Fix:** Source per-country annual export/production (kg or bags), farm/producer counts, and harvest window from national boards / ICO / WCR; add them to the data and render in the block.
-- **Surfaced:** June 25, 2026.
+### "By the Numbers" figures are verify-seeds (and farm/producer counts still missing)
+- **What:** The block now shows status, species, world rank + annual production (`countryProduction.ts`, USDA FAS/ICO 2024/25, top 20), altitude band, growing-region count, harvest window (`countryHarvest.ts`), "coffee since" founding year (`countryFounding.ts`), and a live catalog count. The production/harvest/founding tables are **curated SEEDS to verify against primary sources before launch** — production tail ranks were omitted as noisy, harvest windows are a representative main-crop window (regional/fly crops vary), and founding years are grounded in our markdown but not exhaustively cross-checked. Still missing: # farms / # producers (no clean verifiable source yet).
+- **Why it's debt:** Seeded figures are presented as fact on a trust surface; they need a verification pass, and a couple of edge cases are imperfect (e.g. Vietnam's altitude band parses to the Robusta elevation 500-800 m rather than its high-grown Arabica).
+- **Fix:** Verify the production/harvest/founding seeds against USDA/ICO/national-board primaries; add # farms/producers if a citable source exists; consider sourcing per-entry citations (the standard's deferred "Sources" disclosure).
+- **Surfaced:** June 25, 2026; expanded June 26, 2026.
 
 ### Region locator maps: coverage gaps + admin-1 file sizes
 - **What:** Region locator maps draw from vendored Natural Earth admin-1 boundaries (`public/geo/admin1/<country>.geojson`, one per country, lazy-loaded). They render only when a growing region matches an official province by name. Growing zones that aren't admin-1 units (Ethiopia's Yirgacheffe, Panama's Boquete, El Salvador's DO regions, Colombia's Sierra Nevada, the Eje Cafetero, etc.) show no map yet. Some per-country files are large (China ~764KB, Brazil ~513KB, India ~444KB) even after coordinate rounding to 2 decimals; total ~5.6MB across 47 countries.
