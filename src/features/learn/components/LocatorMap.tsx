@@ -3,13 +3,14 @@ import { theme } from '../../palate/palateTheme'
 import {
   buildProjector,
   featurePath,
-  matchProvince,
+  resolveHighlight,
+  useCountryAdmin2,
   useCountryProvinces,
 } from '../lib/provinceMap'
 
-// The big region locator: the country's provinces drawn faintly with the matched growing
-// region highlighted. Renders nothing when the region has no province match (those zones
-// are a later hand-sourcing task) — it never fakes a boundary.
+// The big region locator: the country's provinces drawn faintly with the growing region
+// highlighted — an admin-1 province, a vendored admin-2 district, or the curated parent
+// province. Renders nothing when the region resolves to no boundary (we never fake one).
 
 type Props = {
   country: string
@@ -22,14 +23,18 @@ const H = 320
 
 export function LocatorMap({ country, regionName, matchTerms }: Props) {
   const provinces = useCountryProvinces(country)
+  const admin2 = useCountryAdmin2(country)
 
   const built = useMemo(() => {
     if (!provinces) return null
-    const match = matchProvince(provinces, regionName, matchTerms)
-    if (!match) return null
+    const hl = resolveHighlight(provinces, admin2, country, regionName, matchTerms)
+    if (!hl) return null
     const proj = buildProjector(provinces, W, H, 14)
-    return provinces.map((f) => ({ d: featurePath(f.geometry, proj), isMatch: f === match }))
-  }, [provinces, regionName, matchTerms])
+    return {
+      outline: provinces.map((f) => featurePath(f.geometry, proj)),
+      highlightD: featurePath(hl.geometry, proj),
+    }
+  }, [provinces, admin2, country, regionName, matchTerms])
 
   if (!built) return null
 
@@ -54,16 +59,10 @@ export function LocatorMap({ country, regionName, matchTerms }: Props) {
         role="img"
         aria-label={`Map showing ${regionName} within ${country}`}
       >
-        {built
-          .filter((p) => !p.isMatch)
-          .map((p, i) => (
-            <path key={i} d={p.d} fill="rgba(30,20,16,0.05)" stroke={theme.ink15} strokeWidth={0.5} />
-          ))}
-        {built
-          .filter((p) => p.isMatch)
-          .map((p, i) => (
-            <path key={`m${i}`} d={p.d} fill={theme.ember} stroke={theme.espresso} strokeWidth={0.75} />
-          ))}
+        {built.outline.map((d, i) => (
+          <path key={i} d={d} fill="rgba(30,20,16,0.05)" stroke={theme.ink15} strokeWidth={0.5} />
+        ))}
+        <path d={built.highlightD} fill={theme.ember} stroke={theme.espresso} strokeWidth={0.75} />
       </svg>
     </div>
   )

@@ -13,7 +13,8 @@ import { ElevationBar } from './ElevationBar'
 import {
   buildProjector,
   featurePath,
-  matchProvince,
+  resolveHighlight,
+  useCountryAdmin2,
   useCountryProvinces,
 } from '../lib/provinceMap'
 import type { Origin } from '../data/originsData'
@@ -252,16 +253,10 @@ const styles = {
   } as const,
 }
 
-// A tiny country silhouette with the region's province highlighted, for a region card.
-// Renders nothing if there's no province match (we never fake a location).
-function MiniMap({
-  paths,
-  matchedName,
-}: {
-  paths: { name: string; d: string }[]
-  matchedName: string | undefined
-}) {
-  if (!matchedName) return null
+// A tiny country silhouette with the region's location highlighted, for a region card.
+// Renders nothing if the region resolves to no boundary (we never fake a location).
+function MiniMap({ outline, highlightD }: { outline: string[]; highlightD: string | null }) {
+  if (!highlightD) return null
   return (
     <svg
       viewBox={`0 0 ${MINI} ${MINI}`}
@@ -270,28 +265,22 @@ function MiniMap({
       style={{ flexShrink: 0 }}
       aria-hidden="true"
     >
-      {paths
-        .filter((p) => p.name !== matchedName)
-        .map((p, i) => (
-          <path key={i} d={p.d} fill="rgba(30,20,16,0.06)" stroke="rgba(30,20,16,0.12)" strokeWidth={0.4} />
-        ))}
-      {paths
-        .filter((p) => p.name === matchedName)
-        .map((p, i) => (
-          <path key={`m${i}`} d={p.d} fill={theme.ember} stroke={theme.espresso} strokeWidth={0.5} />
-        ))}
+      {outline.map((d, i) => (
+        <path key={i} d={d} fill="rgba(30,20,16,0.06)" stroke="rgba(30,20,16,0.12)" strokeWidth={0.4} />
+      ))}
+      <path d={highlightD} fill={theme.ember} stroke={theme.espresso} strokeWidth={0.5} />
     </svg>
   )
 }
 
 export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }: Props) {
-  const provinces = useCountryProvinces(
-    SKIP_CARD_MAP.has(origin.country) ? null : origin.country,
-  )
-  const miniPaths = useMemo(() => {
+  const skipMap = SKIP_CARD_MAP.has(origin.country)
+  const provinces = useCountryProvinces(skipMap ? null : origin.country)
+  const admin2 = useCountryAdmin2(skipMap ? null : origin.country)
+  const mini = useMemo(() => {
     if (!provinces) return null
     const proj = buildProjector(provinces, MINI, MINI, 4)
-    return provinces.map((f) => ({ name: f.properties.name, d: featurePath(f.geometry, proj) }))
+    return { proj, outline: provinces.map((f) => featurePath(f.geometry, proj)) }
   }, [provinces])
 
   // Live country-level catalog count for By the Numbers (hidden when 0 so we never show
@@ -428,9 +417,11 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
           </p>
           <div style={styles.regionGrid}>
             {origin.regions.map((r) => {
-              const matched = provinces
-                ? matchProvince(provinces, r.name, r.matchTerms)?.properties.name
-                : undefined
+              let highlightD: string | null = null
+              if (provinces && mini) {
+                const hl = resolveHighlight(provinces, admin2, origin.country, r.name, r.matchTerms)
+                if (hl) highlightD = featurePath(hl.geometry, mini.proj)
+              }
               return (
                 <button
                   key={r.slug}
@@ -441,7 +432,7 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
                     <h3 style={styles.regionName}>{r.name}</h3>
                     {r.detail && <p style={styles.regionDetail}>{r.detail}</p>}
                   </div>
-                  {miniPaths && <MiniMap paths={miniPaths} matchedName={matched} />}
+                  {mini && <MiniMap outline={mini.outline} highlightD={highlightD} />}
                 </button>
               )
             })}

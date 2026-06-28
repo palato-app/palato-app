@@ -20,12 +20,12 @@ export function provinceFileSlug(country: string): string {
 }
 
 const cache = new Map<string, Promise<ProvinceFeature[] | null>>()
-function loadProvinces(country: string): Promise<ProvinceFeature[] | null> {
-  const key = provinceFileSlug(country)
+function loadGeo(folder: string, country: string): Promise<ProvinceFeature[] | null> {
+  const key = `${folder}/${provinceFileSlug(country)}`
   if (!cache.has(key)) {
     cache.set(
       key,
-      fetch(`/geo/admin1/${key}.geojson`)
+      fetch(`/geo/${folder}/${provinceFileSlug(country)}.geojson`)
         .then((r) => (r.ok ? r.json() : null))
         .then((g) => (g ? (g.features as ProvinceFeature[]) : null))
         .catch(() => null),
@@ -34,9 +34,7 @@ function loadProvinces(country: string): Promise<ProvinceFeature[] | null> {
   return cache.get(key)!
 }
 
-/** Province features for a country (or null while loading / when unavailable). Pass null
- *  to skip (e.g. for massive countries where a card-size map is just a dot). */
-export function useCountryProvinces(country: string | null): ProvinceFeature[] | null {
+function useCountryGeo(folder: string, country: string | null): ProvinceFeature[] | null {
   const [data, setData] = useState<{ country: string; features: ProvinceFeature[] | null }>({
     country: '',
     features: null,
@@ -44,14 +42,82 @@ export function useCountryProvinces(country: string | null): ProvinceFeature[] |
   useEffect(() => {
     if (!country) return
     let cancelled = false
-    loadProvinces(country).then((features) => {
+    loadGeo(folder, country).then((features) => {
       if (!cancelled) setData({ country, features })
     })
     return () => {
       cancelled = true
     }
-  }, [country])
+  }, [folder, country])
   return country && data.country === country ? data.features : null
+}
+
+/** Admin-1 province features (the country outline). Pass null to skip (e.g. massive
+ *  countries where a card-size map is just a dot). */
+export function useCountryProvinces(country: string | null): ProvinceFeature[] | null {
+  return useCountryGeo('admin1', country)
+}
+
+/** Vendored admin-2 units for the handful of coffee regions that aren't provinces
+ *  (geoBoundaries; only the matched districts are kept). Null when none for the country. */
+export function useCountryAdmin2(country: string | null): ProvinceFeature[] | null {
+  return useCountryGeo('admin2', country)
+}
+
+// Curated parent admin-1 province for regions that aren't an admin unit at all (coffee
+// boards' zones, mountain ranges, multi-province zones) — we highlight the parent
+// province instead of faking a boundary. Keyed by "country|region name" (exact).
+const PARENT_PROVINCE: Record<string, string> = {
+  "China|Pu'er": 'Yunnan',
+  'China|Lincang': 'Yunnan',
+  'Costa Rica|Central Valley': 'San José',
+  'Costa Rica|West Valley': 'Alajuela',
+  'Costa Rica|Tres Ríos': 'Cartago',
+  'Costa Rica|Orosi': 'Cartago',
+  'Costa Rica|Brunca': 'Puntarenas',
+  'Bolivia|Coroico': 'La Paz',
+  'Panama|Volcán / Tierras Altas': 'Chiriquí',
+  'Guatemala|Atitlán': 'Sololá',
+  "Yemen|Haraz": "Sana'a",
+  'Yemen|Bani Ismail': "Sana'a",
+  'Honduras|Agalta': 'Olancho',
+  'El Salvador|Cacahuatique': 'Morazán',
+  'Nicaragua|Dipilto-Jalapa': 'Nueva Segovia',
+  'Sri Lanka|Kotmale': 'Nuvara Ĕliya',
+  'Uganda|Mount Elgon / Bugisu': 'Mbale',
+  'Uganda|Rwenzori': 'Kasese',
+  'Uganda|South-Western Highlands': 'Kabale',
+  'DR Congo|North Kivu': 'Nord-Kivu',
+  'DR Congo|South Kivu': 'Sud-Kivu',
+  'Haiti|Beaumont': "Grand'Anse",
+  'Haiti|Cornillon': 'Ouest',
+  'Haiti|Belle-Anse / Dondon': 'Sud-Est',
+}
+
+/**
+ * The polygon to highlight for a region: an admin-1 province if it matches, else a
+ * vendored admin-2 unit, else the curated parent province, else null (no map).
+ */
+export function resolveHighlight(
+  admin1: ProvinceFeature[],
+  admin2: ProvinceFeature[] | null,
+  country: string,
+  name: string,
+  matchTerms: string[],
+): ProvinceFeature | null {
+  const province = matchProvince(admin1, name, matchTerms)
+  if (province) return province
+  if (admin2 && admin2.length) {
+    const district = matchProvince(admin2, name, matchTerms)
+    if (district) return district
+  }
+  const parent = PARENT_PROVINCE[`${country}|${name}`]
+  if (parent) {
+    const t = normalizeRegionText(parent)
+    const pf = admin1.find((f) => normalizeRegionText(f.properties.name) === t)
+    if (pf) return pf
+  }
+  return null
 }
 
 // Pick the province matching the region: prefer an exact normalized-name hit, else a

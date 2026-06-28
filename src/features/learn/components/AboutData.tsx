@@ -61,6 +61,12 @@ export function AboutData() {
           <p style={styles.prose}>{METHODOLOGY.sourcing}</p>
           <p style={styles.label}>Altitude</p>
           <p style={styles.prose}>{METHODOLOGY.altitude}</p>
+          <p style={styles.label}>Maps</p>
+          <p style={styles.prose}>
+            Region maps use boundaries from Natural Earth (public domain) and geoBoundaries
+            (CC BY 4.0). Production and harvest figures are from USDA FAS / ICO and published
+            harvest calendars.
+          </p>
         </div>
       )}
     </div>
