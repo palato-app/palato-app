@@ -27,7 +27,7 @@ type Props = {
 
 /** The Learn globe, dropped onto the Palate dashboard with an external highlight set. */
 export function PalateGlobe(props: Props) {
-  const canWebGL = useMemo(webglAvailable, [])
+  const canWebGL = useMemo(() => webglAvailable(), [])
   if (!canWebGL) return null
   return (
     <Suspense fallback={<GlobeFallback />}>
