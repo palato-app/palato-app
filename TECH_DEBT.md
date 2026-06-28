@@ -227,3 +227,69 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Trigger:** Build the banner **before flipping Google OAuth from Testing → In Production** (the moment non-whitelisted public users can sign in). Not before — gating capture now would suppress the testers' own replays and kneecap the usability signal.
 - **Fix:** A single dismissible consent banner wired to PostHog's `opt_out_capturing_by_default: true` + `opt_in_capturing()` on accept (and `opt_out_capturing()` on decline). Disclosure should name session replay explicitly, not just "cookies." A full preferences center is overkill for v1.
 - **Surfaced:** June 16, 2026 — PostHog analytics integration. Updated June 16, 2026 — session replay confirmed staying on; staged consent posture (disclose now, gate at OAuth-production) decided.
+
+---
+
+## Learn & Globe
+
+### Globe is web-only WebGL — won't port to the native iOS app
+- **What:** The Learn globe uses `react-globe.gl` + `three` (Decision #055). When Palato moves to a native iOS app, this rendering layer does not port — it needs a SceneKit/MapKit (or RN equivalent) reimplementation.
+- **Why it's debt:** A known, accepted limitation of the v1 web bet, surfaced so the iOS migration estimate accounts for it rather than being surprised. The *region data* (`data/regionData.ts`, plain structs) and the *matcher* (`lib/matchRegion.ts`) port cleanly; only the globe component (`components/LearnGlobe.tsx`) is throwaway. The WebGL-unavailable fallback path (country grid) is a permanent maintenance requirement.
+- **Fix:** On the iOS track, reimplement the globe natively; reuse the region data + matcher as-is.
+- **Surfaced:** Decision #055, June 24, 2026.
+
+### Region→coffee link is fuzzy string matching, not a structured FK
+- **What:** A region surfaces its catalog coffees by normalized fuzzy matching (`coffeeMatchesRegion` in `lib/matchRegion.ts`): exact `origin_country` + any diacritic-normalized `matchTerm` contained in free-text `coffees.origin_region`. There is no `region_id` foreign key.
+- **Why it's debt:** Breaks silently when catalog `origin_region` spellings drift outside a region's `matchTerms` (e.g. a new municipality), and a coffee can only ever map to regions whose aliases someone remembered to author. Fine at current catalog scale; fragile as the catalog grows.
+- **Fix:** A structured region catalog + `region_id` FK on `coffees` (with a backfill), later branch. Until then, keep `matchTerms` current as new regions/spellings appear.
+- **Surfaced:** Decision #055, June 24, 2026.
+
+### Catalog has no region filter
+- **What:** `BrowseCoffees` filters by `origin_country` only. The region detail page's "Browse all {country} coffees" CTA therefore deep-links to the *country* filter, not the region — so a user can't see a region-filtered catalog view.
+- **Why it's debt:** Minor UX gap; the region page shows the matched list inline, so the information is reachable, just not as a catalog filter.
+- **Fix:** Add an `initialRegion` / region filter to `BrowseCoffees` and wire the region-page CTA to it.
+- **Surfaced:** Decision #055, June 24, 2026.
+
+### Globe dependency weight + single maintainer
+- **What:** `react-globe.gl` + `three` add ~509 KB gzip, isolated to a lazy `LearnGlobe` chunk (only loaded on Learn). `react-globe.gl` is effectively a single-maintainer project.
+- **Why it's debt:** Bundle/maintenance risk to monitor; acceptable given the lazy boundary keeps it off every other surface.
+- **Fix:** Watch chunk size and upstream health; revisit if the dependency stalls.
+- **Surfaced:** Decision #055, June 24, 2026.
+
+### Non-Colombia region coverage is thinner
+- **What:** Colombia ships with 5 regions (Huila deep); Ethiopia/Kenya/Guatemala/Brazil/Panama ship with ~2 representative regions each, authored from general coffee knowledge rather than Jesse's editorial voice.
+- **Why it's debt:** Uneven depth across origins; the lighter entries should be reviewed/expanded to parity (and against Jesse's authored markdown).
+- **Fix:** Backfill region content per country in `data/regionData.ts` as the markdown source lands.
+- **Surfaced:** Decision #055, June 24, 2026.
+
+### Origins data: deferred backfills and parser fragility (Standard v1)
+- **What:** The Learn origins now parse from `palato-coffee-origins-verified.md` (Decision #056). Outstanding: (a) per-entry `sources[]` backfill (primary sources first) is not yet populated; (b) a few general-reference figures (e.g. Venezuela's altitude band) should be re-verified against a national-board or importer source before being treated as load-bearing; (c) the markdown parser (`originsParser.ts`) is tolerant but prose-based, so a formatting drift can drop a country, caught only by the dev-time parse-warning; (d) secondary parsing collapses some grouped roster lines into a single chip (e.g. "Gabon, Republic of the Congo, Benin").
+- **Why it's debt:** Sources behind a disclosure are part of the standard but not yet wired; unverified figures violate the "verify before load-bearing" principle; silent parser breakage is only visible in dev.
+- **Fix:** Backfill `sources[]` in the markdown; re-verify flagged figures; consider a CI check that fails the build if any primary origin parses with zero regions (promote the dev warning to an error in CI).
+- **Surfaced:** Decision #056, June 25, 2026.
+
+### Globe has no region (or country) coordinates from the verified data
+- **What:** The verified origins markdown carries no lat/lng (correctly, per the no-invented-data / no-DEM-as-altitude rule). So the globe highlights countries by polygon name and flies to click coordinates, but cannot place region pins, and a handful of origins are intentionally not highlighted (US states like Hawaii, small islands like Puerto Rico / Réunion) because there is no faithful 110m polygon.
+- **Why it's debt:** The original vision included drilling into where regions sit on the map; that needs a separately-verified coordinate source, not synthesized points.
+- **Fix:** Source verified region centroids (or a labeled terrain/DEM context layer) as a future enrichment; until then the drill-down stays country to region-as-cards.
+- **Surfaced:** Decision #056, June 25, 2026.
+
+> **Resolved June 25, 2026** — *"Non-Colombia region coverage is thinner."* The Origins Data Standard v1 (Decision #056) replaced the hand-authored 6-country seed with verified global coverage (every major producing country across all sections), parsed from the canonical markdown. Region-level depth is now uniform by standard (country-level varietals, growing-band elevation with basis), so the parity gap is closed; what remains is the per-entry source backfill tracked above.
+
+### "By the Numbers" figures are verify-seeds (and farm/producer counts still missing)
+- **What:** The block now shows status, species, world rank + annual production (`countryProduction.ts`, USDA FAS/ICO 2024/25, top 20), altitude band, growing-region count, harvest window (`countryHarvest.ts`), "coffee since" founding year (`countryFounding.ts`), and a live catalog count. The production/harvest/founding tables are **curated SEEDS to verify against primary sources before launch** — production tail ranks were omitted as noisy, harvest windows are a representative main-crop window (regional/fly crops vary), and founding years are grounded in our markdown but not exhaustively cross-checked. Still missing: # farms / # producers (no clean verifiable source yet).
+- **Why it's debt:** Seeded figures are presented as fact on a trust surface; they need a verification pass, and a couple of edge cases are imperfect (e.g. Vietnam's altitude band parses to the Robusta elevation 500-800 m rather than its high-grown Arabica).
+- **Fix:** Verify the production/harvest/founding seeds against USDA/ICO/national-board primaries; add # farms/producers if a citable source exists; consider sourcing per-entry citations (the standard's deferred "Sources" disclosure).
+- **Surfaced:** June 25, 2026; expanded June 26, 2026.
+
+### Region locator maps: coverage gaps + admin-1 file sizes
+- **What:** Region locator maps draw from vendored Natural Earth admin-1 boundaries (`public/geo/admin1/<country>.geojson`, one per country, lazy-loaded). They render only when a growing region matches an official province by name. After the admin-2 (geoBoundaries) + curated-parent-province pass, coverage is ~92% (229/249). The ~20 still-unmapped are non-administrative: coffee-board zones (Costa Rica's Brunca, Dominican coffee regions), Ethiopian woredas (Yirgacheffe, Kochere, Gedeb), grade tiers (Jamaica Low Mountain/Supreme), and multi-province islands (Indonesia's Java/Flores). Some per-country files are large (China ~764KB, Brazil ~513KB, India ~444KB) even after coordinate rounding to 2 decimals; total ~5.6MB across 47 countries.
+- **Why it's debt:** Partial map coverage (by design for v1 — non-province zones were deferred to a later boundary-sourcing task); and the heavier country files are a chunky (though lazy + cached) fetch for a small locator.
+- **Fix:** Hand-source verified boundaries (or centroids) for the non-province growing zones; run a geometry simplification pass (Douglas-Peucker / topojson) on the admin-1 files to shrink the large ones. Then layer topographic relief (the next maps step).
+- **Surfaced:** June 26, 2026 (maps track).
+
+### Regional card variability (revisit before launch)
+- **What:** Region cards on the country page are uneven. The masl line was removed in favor of a region "output / characteristics" descriptor, but we have no verified data for it yet, so that field is null/absent for now. Card detail text also varies in quality (some regions have rich sub-region notes, some have terse or awkward fragments inherited from the markdown), and the card mini-map is present only where the region matches an admin-1 province (~63% of regions; see REGION_MAP_COVERAGE.md).
+- **Why it's debt:** Inconsistent cards read as unfinished; the missing characteristics descriptor is a real content gap ("every word earns its place"). Acceptable to iterate during the beta, but should be evened out before a wider launch.
+- **Fix:** Source a short per-region characteristics/flavor phrase (verifiable), normalize card detail copy, and close the map-coverage gap (hand-source boundaries for non-province zones). Work through it during beta.
+- **Surfaced:** June 26, 2026.

@@ -180,7 +180,9 @@ export function AuthedApp() {
           initialOrigin={catalogOrigin}
         />
       )}
-      {view === 'learn' && <Learn onBrowseOrigin={goToBrowseWithOrigin} />}
+      {view === 'learn' && (
+        <Learn onBrowseOrigin={goToBrowseWithOrigin} onSelectCoffee={goToCoffee} />
+      )}
       {view === 'journal' && <Journal onSelectCoffee={goToCoffee} />}
       {view === 'palate' && (
         <PalateTab
