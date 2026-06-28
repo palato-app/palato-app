@@ -10,8 +10,7 @@ import {
 import { theme } from './palateTheme'
 import { parseEmphasis } from './components/EditorialRead'
 import { PalateFingerprint } from './components/PalateFingerprint'
-import { RoastSweetSpot } from './components/RoastSweetSpot'
-import { ProcessSweetSpot } from './components/ProcessSweetSpot'
+import { TasteProfile } from './components/TasteProfile'
 import { Origins } from './components/Origins'
 import { WhatsNext } from './components/WhatsNext'
 import { PalateStats } from './components/PalateStats'
@@ -161,15 +160,9 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
 
       <PalateFingerprint profile={profile} read={reads.fingerprint} maturity={fpMaturity} />
 
-      <RoastSweetSpot
-        buckets={profile.roastSweetSpot}
-        read={reads.roast}
-        maturity={ssMaturity}
-        ratingCount={profile.ratingCount}
-      />
-      <ProcessSweetSpot
-        buckets={profile.processSweetSpot}
-        read={reads.process}
+      <TasteProfile
+        profile={profile}
+        reads={reads}
         maturity={ssMaturity}
         ratingCount={profile.ratingCount}
       />
