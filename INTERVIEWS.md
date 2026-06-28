@@ -11,7 +11,7 @@ Names of respondents who explicitly engaged via personal email: first name only.
 
 ## Method
 - **Screener form:** Tally — https://tally.so/r/b52L57
-- **Interview script:** see palato-prd-v01.md §8 (script will be revised after Round 1)
+- **Interview script:** see [docs/interview-guide.md](docs/interview-guide.md) (Round 2 — grounded in the shipped onboarding/quiz flow; supersedes palato-prd-v01.md §8)
 - **Incentive:** one bag of specialty coffee, contingent on selection for an interview
 - **Recruiting (Round 1):** personal DMs to Jesse's network (heavy on coffee professionals)
 - **Target sample size:** 5-10 quality interviews per round

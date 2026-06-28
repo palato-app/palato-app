@@ -668,3 +668,24 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Linked competency (secondary lens):** D (product craft) — a verifiable classification standard + honest-coverage discipline; supports B (Learn as a trust surface).
 
 ---
+
+## #058 — June 28, 2026 — Revenue thesis is B2B (qualified discovery), not B2C subscriptions; ICP held open
+
+**Decision:** Palato is built consumer-first (free, value-packed user experience) and monetized B2B. The leading revenue hypothesis is *qualified discovery* — connecting roasters to palate-matched users who will love their coffee — not B2C subscriptions. The paying ICP (users vs. roasters) is deliberately left unfixed pending interviews. Café owners are paused as a candidate ICP, not killed.
+
+**Alternatives considered:**
+- B2C subscription (~$5/mo), Vivino/BeanGeek-style — rejected as lead model: gut read is it's dead on arrival, BeanGeek already occupies it, chasing paid consumers is high-friction.
+- Roaster inventory/analytics tool ("which coffees sell") — rejected: roasters already have this via Shopify and trust their own gut; no uplift.
+- Pay-for-placement / sponsored roaster slots in recommendations — rejected: corrupts recommendation integrity, which is the product and the moat; fails the homepage test.
+- Anonymized data sales — deprioritized: defensible, not redemptive; fails the homepage test.
+- Café owners as primary ICP — paused: low software willingness-to-pay, tech-resistance, likely mismatch between app-user palate data and a given shop's walk-ins; structural pivot with low founder confidence.
+
+**Rationale:** A roaster-optimized app no one uses has zero value, so consumer love comes first. But "build value, revenue will come" is the ESH failure pattern, and the SWOT already flags "value is strong, monetization isn't." The honest B2B path is qualified discovery — palate-matched introductions — which solves the real roaster pain (marketing / reaching the right buyers) without pay-to-rank, and keeps the roaster's incentive aligned with the user finding coffee they love.
+
+**Tradeoffs accepted:** The B2B-audience model is more user-scale-dependent than subscriptions, so first dollar likely comes later and requires demonstrable engagement. `track.ts` is already a live PostHog pipeline (domain events + identify/reset wired), so the instrumentation exists — the real prerequisite is demonstrable engagement *volume* and confirming events land in prod, not building the pipe.
+
+**Linked competency:** B (Voice of Customer); C (Metrics — engagement proof is the B2B asset).
+
+**Next action:** Discovery interviews — users first, then 3 roaster interviews (Kevin McMullen / Kickback, Lee Lizotte / True Love, Sean McLeish) built to surface willingness-to-pay. Stand up real analytics before any roaster pitch that leans on MAU/CAC.
+
+---
