@@ -17,6 +17,14 @@ export function normalizeRegionText(s: string | null | undefined): string {
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
+    // Special Latin letters NFD doesn't decompose (đ in Lâm Đồng, ø, ł, ı, ß).
+    .replace(/đ/g, 'd')
+    .replace(/ø/g, 'o')
+    .replace(/ł/g, 'l')
+    .replace(/ı/g, 'i')
+    .replace(/ß/g, 'ss')
+    // Treat hyphens/slashes as spaces ("Zamora-Chinchipe" = "Zamora Chinchipe").
+    .replace(/[-_/]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }

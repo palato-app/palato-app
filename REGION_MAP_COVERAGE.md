@@ -1,8 +1,8 @@
-# Region map coverage (snapshot 2026-06-27)
+# Region map coverage (snapshot 2026-06-28)
 
 Locator maps render when a growing region matches a Natural Earth admin-1 province by name. Zones that aren't official provinces show no map yet (deferred to a later boundary-sourcing pass).
 
-**Overall: 158/249 regions mapped (63%).** Fully mapped countries are omitted from the "not mapped" lists below.
+**Overall: 161/249 regions mapped (65%).** Fully mapped countries are omitted from the "not mapped" lists below.
 
 ### Colombia — 14/14 mapped (100%)
 
@@ -13,8 +13,7 @@ Locator maps render when a growing region matches a Natural Earth admin-1 provin
 ### Bolivia — 5/10 mapped (50%)
 - Not mapped: Caranavi, Nor Yungas and Sud Yungas, Coroico, Larecaja, Franz Tamayo
 
-### Ecuador — 7/8 mapped (88%)
-- Not mapped: Zamora-Chinchipe
+### Ecuador — 8/8 mapped (100%)
 
 ### Venezuela — 11/11 mapped (100%)
 
@@ -87,8 +86,7 @@ Locator maps render when a growing region matches a Natural Earth admin-1 provin
 ### Yemen — 2/7 mapped (29%)
 - Not mapped: Haraz, Bani Matar, Bani Ismail, Bura'a, Yafa / Khawlan / Hayma
 
-### Saudi Arabia — 3/4 mapped (75%)
-- Not mapped: Al-Baha
+### Saudi Arabia — 4/4 mapped (100%)
 
 ### India — 4/4 mapped (100%)
 
@@ -101,8 +99,7 @@ Locator maps render when a growing region matches a Natural Earth admin-1 provin
 ### Indonesia — 4/6 mapped (67%)
 - Not mapped: Java, Flores
 
-### Vietnam — 2/3 mapped (67%)
-- Not mapped: Lam Dong
+### Vietnam — 3/3 mapped (100%)
 
 ### China — 1/4 mapped (25%)
 - Not mapped: Pu'er, Baoshan, Lincang
