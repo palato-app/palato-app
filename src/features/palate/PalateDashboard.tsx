@@ -12,6 +12,7 @@ import { parseEmphasis } from './components/EditorialRead'
 import { PalateFingerprint } from './components/PalateFingerprint'
 import { TasteProfile } from './components/TasteProfile'
 import { Origins } from './components/Origins'
+import { TasteTheWorld } from './components/TasteTheWorld'
 import { WhatsNext } from './components/WhatsNext'
 import { PalateStats } from './components/PalateStats'
 import { useRecommendations } from './data/useRecommendations'
@@ -81,7 +82,13 @@ const styles = {
   } as const,
 }
 
-export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId: string) => void }) {
+export function PalateDashboard({
+  onSelectCoffee,
+  onBrowseOrigin,
+}: {
+  onSelectCoffee: (coffeeId: string) => void
+  onBrowseOrigin: (country: string) => void
+}) {
   const real = usePalateProfile()
   const [previewMode, setPreviewMode] = useState(false)
 
@@ -173,6 +180,8 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
         maturity={origMaturity}
         ratingCount={profile.ratingCount}
       />
+
+      <TasteTheWorld origins={profile.origins} onBrowseOrigin={onBrowseOrigin} />
 
       <WhatsNext
         recommendations={previewMode ? null : recommendations}

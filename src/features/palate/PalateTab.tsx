@@ -84,6 +84,7 @@ type Props = {
   onSelectCoffee: (coffeeId: string) => void
   onGoRate: () => void
   onSeeAllRatings: () => void
+  onBrowseOrigin: (country: string) => void
 }
 
 /**
@@ -93,7 +94,7 @@ type Props = {
  *   - no quiz, <3 ratings → a prompt to take the quiz (§3d item 3).
  * The journal is nested below in every case.
  */
-export function PalateTab({ onSelectCoffee, onGoRate, onSeeAllRatings }: Props) {
+export function PalateTab({ onSelectCoffee, onGoRate, onSeeAllRatings, onBrowseOrigin }: Props) {
   const navigate = useNavigate()
   const { count: ratingCount } = useRatingCount()
   const { row: profile, loading } = usePalateProfileRow()
@@ -122,7 +123,7 @@ export function PalateTab({ onSelectCoffee, onGoRate, onSeeAllRatings }: Props) 
       )}
 
       {matured ? (
-        <PalateDashboard onSelectCoffee={onSelectCoffee} />
+        <PalateDashboard onSelectCoffee={onSelectCoffee} onBrowseOrigin={onBrowseOrigin} />
       ) : profile ? (
         <PalateSeededV0 profile={profile} ratingCount={ratingCount} />
       ) : (
