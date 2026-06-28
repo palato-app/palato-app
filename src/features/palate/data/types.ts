@@ -30,11 +30,6 @@ export interface OriginStat {
   count: number
 }
 
-export interface EvolutionPoint {
-  period: string       // e.g. '6 mo', '5', ... 'now' — or ISO month
-  avgRoast: number     // 1 (light) … 5 (dark)
-}
-
 export type RecommendationKind = 'unique' | 'explore' | 'love'
 
 export interface Recommendation {
@@ -57,13 +52,11 @@ export interface Recommendations {
 
 export interface PalateProfile {
   ratingCount: number          // drives maturity states everywhere
-  firstRatedAt: string | null  // ISO; with ratingCount, gates evolution
   summary: string              // the big editorial one-liner at the top
   fingerprint: FingerprintAxis[]        // always 8, in FlavorFamily order
   roastSweetSpot: RatingBucket<RoastLevel>[]
   processSweetSpot: RatingBucket<ProcessMethod>[]
   origins: OriginStat[]        // sorted desc by a blend of avgRating & count
-  evolution: EvolutionPoint[]  // [] until unlocked
   // recommendations are decoupled — see useRecommendations + the recommendations cache
   stats: {
     coffees: number
@@ -81,5 +74,4 @@ export interface PalateReads {
   roast: string
   process: string
   origins: string
-  evolution: string
 }

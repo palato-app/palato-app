@@ -9,7 +9,6 @@ import type { PalateProfile, PalateReads } from './types'
 
 export const establishedProfile: PalateProfile = {
   ratingCount: 47,
-  firstRatedAt: '2025-11-24T00:00:00Z',
   summary:
     'Forty-seven coffees rated. You score light, fruit-forward coffees highest, and your picks have *trended lighter* over the past six months.',
   fingerprint: [
@@ -42,14 +41,6 @@ export const establishedProfile: PalateProfile = {
     { country: 'Guatemala', avgRating: 3.8, count: 4 },
     { country: 'Brazil', avgRating: 2.9, count: 3 },
   ],
-  evolution: [
-    { period: '6 mo', avgRoast: 3.1 },
-    { period: '5', avgRoast: 2.9 },
-    { period: '4', avgRoast: 2.8 },
-    { period: '3', avgRoast: 2.5 },
-    { period: '2', avgRoast: 2.2 },
-    { period: 'now', avgRoast: 2.0 },
-  ],
   stats: {
     coffees: 47,
     roasters: 19,
@@ -67,13 +58,10 @@ export const establishedReads: PalateReads = {
     'Naturals average about half a star higher than washed for you. Natural processing leaves more fruit character in the cup, which lines up with your profile.',
   origins:
     'Ethiopia and Kenya are your highest-rated origins. Brazil sits lowest — but every Brazil you’ve rated was a medium-dark, your lowest-scoring roast level, so origin and roast are tangled here. *A light-roast Brazil would settle it.*',
-  evolution:
-    'Over the past six months, your average roast level has moved from medium toward light.',
 }
 
 export const earlyProfile: PalateProfile = {
   ratingCount: 12,
-  firstRatedAt: '2026-05-10T00:00:00Z',
   summary:
     'Twelve coffees rated. Early on, you’re scoring fruit-forward, lighter-roast coffees highest — but it’s *too soon to lock the pattern*.',
   fingerprint: [
@@ -104,7 +92,6 @@ export const earlyProfile: PalateProfile = {
     { country: 'Colombia', avgRating: 4.0, count: 3 },
     { country: 'Kenya', avgRating: 4.2, count: 2 },
   ],
-  evolution: [],
   stats: {
     coffees: 12,
     roasters: 7,
@@ -122,5 +109,4 @@ export const earlyReads: PalateReads = {
     'Naturals are your early favorite. You haven’t logged a honey-processed coffee yet.',
   origins:
     'Ethiopia leads your early ratings. Too few origins logged to name a favorite — keep exploring.',
-  evolution: '',
 }

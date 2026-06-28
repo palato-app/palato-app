@@ -5,7 +5,6 @@ import {
   fingerprintMaturity,
   sweetSpotMaturity,
   originsMaturity,
-  evolutionMaturity,
   recommendationMaturity,
 } from './data/maturity'
 import { theme } from './palateTheme'
@@ -14,7 +13,6 @@ import { PalateFingerprint } from './components/PalateFingerprint'
 import { RoastSweetSpot } from './components/RoastSweetSpot'
 import { ProcessSweetSpot } from './components/ProcessSweetSpot'
 import { Origins } from './components/Origins'
-import { PalateEvolution } from './components/PalateEvolution'
 import { WhatsNext } from './components/WhatsNext'
 import { PalateStats } from './components/PalateStats'
 import { useRecommendations } from './data/useRecommendations'
@@ -95,7 +93,6 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
   const fpMaturity = fingerprintMaturity(profile)
   const ssMaturity = sweetSpotMaturity(profile)
   const origMaturity = originsMaturity(profile)
-  const evoMaturity = evolutionMaturity(profile)
   const recMaturity = recommendationMaturity(real.profile)
   const { recommendations, loading: recLoading } = useRecommendations(
     real.ratingCount,
@@ -183,8 +180,6 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
         maturity={origMaturity}
         ratingCount={profile.ratingCount}
       />
-
-      <PalateEvolution profile={profile} read={reads.evolution} maturity={evoMaturity} />
 
       <WhatsNext
         recommendations={previewMode ? null : recommendations}

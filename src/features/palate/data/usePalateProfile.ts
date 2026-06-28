@@ -89,13 +89,11 @@ export interface UsePalateProfileResult {
 
 const EMPTY_PROFILE: PalateProfile = {
   ratingCount: 0,
-  firstRatedAt: null,
   summary: '',
   fingerprint: ALL_FAMILIES.map((f) => ({ family: f, score: 0, confidence: 0 })),
   roastSweetSpot: ROAST_ORDER.map((k) => ({ key: k, avgRating: null, count: 0 })),
   processSweetSpot: PROCESS_ORDER.map((k) => ({ key: k, avgRating: null, count: 0 })),
   origins: [],
-  evolution: [],
   stats: { coffees: 0, roasters: 0, origins: 0, topNote: null },
 }
 
@@ -104,17 +102,12 @@ const EMPTY_READS: PalateReads = {
   roast: '',
   process: '',
   origins: '',
-  evolution: '',
 }
 
 function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: PalateReads } {
   if (rows.length === 0) return { profile: EMPTY_PROFILE, reads: EMPTY_READS }
 
   const ratingCount = rows.length
-  const sorted = [...rows].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  )
-  const firstRatedAt = sorted[0].created_at
 
   // --- Stats ---
   const coffeeIds = new Set<string>()
@@ -249,12 +242,10 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
     origins: origins.length > 0
       ? `${origins[0].country} leads with *${origins[0].avgRating.toFixed(1)}* across ${origins[0].count} coffees.${origins.length < 3 ? ' Keep exploring new origins.' : ''}`
       : 'Rate coffees from different origins to see where your palate leans.',
-    evolution: '',
   }
 
   const profile: PalateProfile = {
     ratingCount,
-    firstRatedAt,
     summary,
     fingerprint: ALL_FAMILIES.map((family) => ({
       family,
@@ -264,7 +255,6 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
     roastSweetSpot,
     processSweetSpot,
     origins,
-    evolution: [],
     stats: {
       coffees: coffeeIds.size,
       roasters: roasterNames.size,
