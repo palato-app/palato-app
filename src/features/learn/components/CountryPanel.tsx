@@ -8,6 +8,8 @@ import { flagUrl } from '../data/countryIso'
 import { productionFor, productionLabel } from '../data/countryProduction'
 import { foundingFor } from '../data/countryFounding'
 import { harvestFor } from '../data/countryHarvest'
+import { HarvestCalendar } from './HarvestCalendar'
+import { ElevationBar } from './ElevationBar'
 import {
   buildProjector,
   featurePath,
@@ -132,6 +134,14 @@ const styles = {
     color: theme.espresso,
     margin: 0,
     lineHeight: 1.45,
+  } as const,
+  vizBlock: { padding: '1rem 0 0.4rem', borderTop: `1px solid ${theme.ink10}` } as const,
+  vizLabel: {
+    fontFamily: theme.bodyFont,
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: theme.ink50,
+    margin: '0 0 0.7rem',
   } as const,
   fieldLabel: {
     fontFamily: theme.bodyFont,
@@ -300,10 +310,6 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
   const harvest = harvestFor(origin.country)
 
   const { min, max, raw: altRaw } = origin.altitude
-  const altitude =
-    min !== null
-      ? `${min.toLocaleString()}${max !== null && max !== min ? '-' + max.toLocaleString() : ''} m`
-      : altRaw
 
   return (
     <div style={styles.container}>
@@ -353,18 +359,6 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
             </div>
           </>
         )}
-        {altitude && (
-          <div style={styles.statRow}>
-            <span style={styles.statLabel}>Grown at</span>
-            <p style={styles.statValue}>{altitude}</p>
-          </div>
-        )}
-        {harvest && (
-          <div style={styles.statRow}>
-            <span style={styles.statLabel}>Harvest</span>
-            <p style={styles.statValue}>{harvest}</p>
-          </div>
-        )}
         {origin.regions.length > 0 && (
           <div style={styles.statRow}>
             <span style={styles.statLabel}>Growing regions</span>
@@ -383,6 +377,24 @@ export function CountryPanel({ origin, onBack, onSelectRegion, onBrowseOrigin }:
             <p style={styles.statValue}>
               {catalogCount} {catalogCount === 1 ? 'coffee' : 'coffees'}
             </p>
+          </div>
+        )}
+
+        {(min !== null || altRaw) && (
+          <div style={styles.vizBlock}>
+            <p style={styles.vizLabel}>Grown at</p>
+            {min !== null ? (
+              <ElevationBar min={min} max={max} />
+            ) : (
+              <p style={styles.statValue}>{altRaw}</p>
+            )}
+          </div>
+        )}
+
+        {harvest && (
+          <div style={styles.vizBlock}>
+            <p style={styles.vizLabel}>Harvest</p>
+            <HarvestCalendar harvest={harvest} />
           </div>
         )}
       </div>
