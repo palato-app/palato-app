@@ -73,6 +73,7 @@ type Props = {
   maturity: MaturityState
   ratingCount: number
   loading: boolean
+  previewMode?: boolean
   onSelectCoffee: (coffeeId: string) => void
 }
 
@@ -103,14 +104,16 @@ function RecCard({ rec, onSelectCoffee }: { rec: Recommendation; onSelectCoffee:
   )
 }
 
-export function WhatsNext({ recommendations, maturity, ratingCount, loading, onSelectCoffee }: Props) {
+export function WhatsNext({ recommendations, maturity, ratingCount, loading, previewMode, onSelectCoffee }: Props) {
   const cards = recommendations
     ? ([recommendations.unique, recommendations.explore, recommendations.love].filter(Boolean) as Recommendation[])
     : []
 
   return (
-    <ModuleCard title="What's next" tag="for your palate">
-      {maturity === 'locked' ? (
+    <ModuleCard title="You might like">
+      {previewMode ? (
+        <p style={styles.hint}>Your picks are drawn from the coffees you actually rate — rate a few and they’ll show up here.</p>
+      ) : maturity === 'locked' ? (
         <LockedTeaser
           remaining={remainingForModule(ratingCount, 'recommendation')}
           description="Personalized recommendations based on your palate"

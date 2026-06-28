@@ -191,6 +191,7 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
         maturity={recMaturity}
         ratingCount={real.ratingCount}
         loading={recLoading}
+        previewMode={previewMode}
         onSelectCoffee={onSelectCoffee}
       />
 
