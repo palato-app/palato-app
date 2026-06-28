@@ -104,7 +104,7 @@ Locator maps resolve a region to an admin-1 province (Natural Earth), a vendored
 ### Papua New Guinea — 4/4 (100%)
 
 ### Hawaii — 0/2 (0%)
-- Not mapped: Hawai'i, Maui
+- Not mapped: Hawai'i (Big Island), Maui
 
 ### Australia — 2/3 (67%)
 - Not mapped: The Sunshine Coast

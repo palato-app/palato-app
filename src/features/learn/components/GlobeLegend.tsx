@@ -1,13 +1,14 @@
 import { theme } from '../../palate/palateTheme'
-import { STATUS_COLOR } from '../data/countryStatus'
+import { STATUS_LEGEND_COLOR } from '../data/countryStatus'
 
-// Minimal legend for the globe's availability tiers. Historical origins aren't
-// highlighted, so they're omitted here to keep it to three swatches.
+// Minimal legend for the globe's availability tiers. Uses the colors as they READ on the
+// globe (composited over the dark material), not the raw cap colors. Historical origins
+// aren't highlighted, so they're omitted here to keep it to three swatches.
 
 const ITEMS: { label: string; color: string }[] = [
-  { label: 'Established', color: STATUS_COLOR.established },
-  { label: 'Emerging', color: STATUS_COLOR.emerging },
-  { label: 'Robusta-dominant', color: STATUS_COLOR.robusta },
+  { label: 'Established', color: STATUS_LEGEND_COLOR.established },
+  { label: 'Emerging', color: STATUS_LEGEND_COLOR.emerging },
+  { label: 'Robusta-dominant', color: STATUS_LEGEND_COLOR.robusta },
 ]
 
 const styles = {

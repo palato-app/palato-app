@@ -111,7 +111,10 @@ export function resolveHighlight(
     const district = matchProvince(admin2, name, matchTerms)
     if (district) return district
   }
-  const parent = PARENT_PROVINCE[`${country}|${name}`]
+  // Tolerate a trailing parenthetical in the region name (e.g. "Mount Elgon / Bugisu
+  // (Sebei)") when keying the parent map.
+  const bare = name.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim()
+  const parent = PARENT_PROVINCE[`${country}|${name}`] ?? PARENT_PROVINCE[`${country}|${bare}`]
   if (parent) {
     const t = normalizeRegionText(parent)
     const pf = admin1.find((f) => normalizeRegionText(f.properties.name) === t)

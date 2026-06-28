@@ -31,6 +31,16 @@ export const STATUS_COLOR: Record<OriginStatus, string> = {
   historical: theme.ink35,
 }
 
+// How each tier actually READS on the globe — its (semi-transparent) cap color
+// composited over the dark globe material — so the legend matches what the user sees,
+// not the raw swatch on a cream background.
+export const STATUS_LEGEND_COLOR: Record<OriginStatus, string> = {
+  established: '#d94e1f', // ember, opaque
+  emerging: '#ac7b38', // ochre over espresso
+  robusta: '#82351a', // muted ember over espresso
+  historical: theme.ink35,
+}
+
 // Globe raised height per tier (historical stays flat / effectively unhighlighted).
 export const STATUS_ALTITUDE: Record<OriginStatus, number> = {
   established: 0.06,

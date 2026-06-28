@@ -29,7 +29,7 @@ const ink70 = 'rgba(30,20,16,0.70)'
 const serif = '"Instrument Serif", serif'
 const sans = 'Geist, system-ui, sans-serif'
 
-const INTRO = 'Where your coffee comes from, and why it tastes the way it does.'
+const INTRO = 'Learn about where coffee comes from.'
 
 // Drill-down: world -> country -> region. Held locally (intra-tab nav). A discriminated
 // union keeps invalid states unrepresentable.

@@ -104,6 +104,27 @@ function capFirst(s: string): string {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 }
 
+// Drop unmatched parentheses (a ")" with no opener, or a trailing unclosed "(").
+function balanceParens(s: string): string {
+  let depth = 0
+  let out = ''
+  for (const ch of s) {
+    if (ch === '(') {
+      depth++
+      out += ch
+    } else if (ch === ')') {
+      if (depth > 0) {
+        depth--
+        out += ch
+      }
+    } else {
+      out += ch
+    }
+  }
+  if (depth > 0) out = out.replace(/\s*\([^()]*$/, '')
+  return out.replace(/\s+/g, ' ').replace(/\s+([,;.])/g, '$1').trim()
+}
+
 function kebab(s: string): string {
   return s
     .normalize('NFD')
@@ -150,13 +171,12 @@ function parseRegionBullet(
   countryAltitude: Altitude,
 ): OriginRegion {
   const text = stripMd(bulletRaw)
-  // name = text up to the first ':' or '(' ; detail = the remainder.
-  const splitIdx = (() => {
-    const colon = text.indexOf(':')
-    const paren = text.indexOf('(')
-    const idxs = [colon, paren].filter((i) => i >= 0)
-    return idxs.length ? Math.min(...idxs) : -1
-  })()
+  // Prefer the colon as the name/detail separator (it's the bold-label divider). Only
+  // fall back to the first '(' when there's no colon — otherwise a parenthetical inside
+  // the name (e.g. "Hawai'i (Big Island): Kona, …") would split in the wrong place.
+  const colon = text.indexOf(':')
+  const paren = text.indexOf('(')
+  const splitIdx = colon >= 0 ? colon : paren
   let name = (splitIdx >= 0 ? text.slice(0, splitIdx) : text).trim()
   let detail = (splitIdx >= 0 ? text.slice(splitIdx).replace(/^[:(]/, '').replace(/\)$/, '') : '')
     .trim()
@@ -171,7 +191,10 @@ function parseRegionBullet(
     name = (comma >= 0 ? merged.slice(0, comma) : merged).trim()
     detail = (comma >= 0 ? merged.slice(comma + 1) : '').trim()
   }
-  name = capFirst(name)
+  // Drop a trailing share-note from the name ("Central (~60%)" -> "Central") and remove
+  // unbalanced parentheses left over from comma-list bullets (e.g. "Kula), Kauai (…)").
+  name = capFirst(balanceParens(name.replace(/\s*\([^)]*%[^)]*\)\s*$/, '').trim()))
+  detail = balanceParens(detail)
 
   // Region-specific elevation only if a verified figure sits in THIS bullet.
   const own = parseRange(text)
