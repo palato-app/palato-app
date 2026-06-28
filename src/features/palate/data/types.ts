@@ -12,6 +12,9 @@ export type RoastLevel =
 export type ProcessMethod =
   | 'natural' | 'honey' | 'anaerobic' | 'washed' | 'other'
 
+export type ElevationBand =
+  | 'under-1200' | '1200-1500' | '1500-1800' | 'over-1800'
+
 export interface FingerprintAxis {
   family: FlavorFamily
   score: number        // 0–100, normalized share of weighted descriptor frequency
@@ -56,6 +59,8 @@ export interface PalateProfile {
   fingerprint: FingerprintAxis[]        // always 8, in FlavorFamily order
   roastSweetSpot: RatingBucket<RoastLevel>[]
   processSweetSpot: RatingBucket<ProcessMethod>[]
+  varietalSweetSpot: RatingBucket<string>[]    // top varietals by count; keys are display labels
+  elevationSweetSpot: RatingBucket<ElevationBand>[]
   origins: OriginStat[]        // sorted desc by a blend of avgRating & count
   // recommendations are decoupled — see useRecommendations + the recommendations cache
   stats: {
@@ -73,5 +78,7 @@ export interface PalateReads {
   fingerprint: string
   roast: string
   process: string
+  varietal: string
+  elevation: string
   origins: string
 }

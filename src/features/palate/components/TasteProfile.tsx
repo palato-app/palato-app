@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { PalateProfile, PalateReads } from '../data/types'
 import type { MaturityState } from '../data/maturity'
 import { remainingForModule } from '../data/maturity'
-import { theme, ROAST_LABELS, PROCESS_LABELS } from '../palateTheme'
+import { theme, ROAST_LABELS, PROCESS_LABELS, ELEVATION_LABELS } from '../palateTheme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
 import { LockedTeaser } from './LockedTeaser'
@@ -48,6 +48,28 @@ export function TasteProfile({ profile, reads, maturity, ratingCount }: Props) {
       emptyHint: 'Not enough process data yet.',
       data: profile.processSweetSpot.map((b) => ({
         name: PROCESS_LABELS[b.key] ?? b.key,
+        value: b.avgRating ?? 0,
+        rawRating: b.avgRating,
+      })),
+    },
+    {
+      key: 'varietal',
+      label: 'Varietal',
+      read: reads.varietal,
+      emptyHint: "No variety data yet — many bags don't list it.",
+      data: profile.varietalSweetSpot.map((b) => ({
+        name: b.key,
+        value: b.avgRating ?? 0,
+        rawRating: b.avgRating,
+      })),
+    },
+    {
+      key: 'elevation',
+      label: 'Elevation',
+      read: reads.elevation,
+      emptyHint: 'No elevation data yet.',
+      data: profile.elevationSweetSpot.map((b) => ({
+        name: ELEVATION_LABELS[b.key] ?? b.key,
         value: b.avgRating ?? 0,
         rawRating: b.avgRating,
       })),

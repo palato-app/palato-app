@@ -34,6 +34,20 @@ export const establishedProfile: PalateProfile = {
     { key: 'anaerobic', avgRating: 4.4, count: 8 },
     { key: 'washed', avgRating: 4.0, count: 11 },
   ],
+  varietalSweetSpot: [
+    { key: 'Heirloom', avgRating: 4.5, count: 9 },
+    { key: 'Bourbon', avgRating: 4.0, count: 8 },
+    { key: 'Caturra', avgRating: 3.8, count: 7 },
+    { key: 'Gesha', avgRating: 4.7, count: 6 },
+    { key: 'Castillo', avgRating: 3.6, count: 5 },
+    { key: 'Typica', avgRating: 3.4, count: 4 },
+  ],
+  elevationSweetSpot: [
+    { key: 'under-1200', avgRating: 3.2, count: 5 },
+    { key: '1200-1500', avgRating: 3.8, count: 14 },
+    { key: '1500-1800', avgRating: 4.3, count: 16 },
+    { key: 'over-1800', avgRating: 4.6, count: 9 },
+  ],
   origins: [
     { country: 'Ethiopia', avgRating: 4.6, count: 12 },
     { country: 'Kenya', avgRating: 4.4, count: 8 },
@@ -56,6 +70,10 @@ export const establishedReads: PalateReads = {
     'Your average rating rises as the roast gets lighter — light and medium-light sit near *5*, dark closer to *2*.',
   process:
     'Naturals average about half a star higher than washed for you. Natural processing leaves more fruit character in the cup, which lines up with your profile.',
+  varietal:
+    '*Gesha* and heirloom varieties top your ratings — both lean floral and tea-like, right in your wheelhouse.',
+  elevation:
+    'Higher-grown coffees score best for you — your *1800+* band averages near 4.6. Altitude tracks with the acidity you favor.',
   origins:
     'Ethiopia and Kenya are your highest-rated origins. Brazil sits lowest — but every Brazil you’ve rated was a medium-dark, your lowest-scoring roast level, so origin and roast are tangled here. *A light-roast Brazil would settle it.*',
 }
@@ -87,6 +105,17 @@ export const earlyProfile: PalateProfile = {
     { key: 'anaerobic', avgRating: 4.2, count: 3 },
     { key: 'washed', avgRating: 3.9, count: 4 },
   ],
+  varietalSweetSpot: [
+    { key: 'Heirloom', avgRating: 4.4, count: 5 },
+    { key: 'Caturra', avgRating: 4.0, count: 3 },
+    { key: 'Bourbon', avgRating: 3.8, count: 2 },
+  ],
+  elevationSweetSpot: [
+    { key: 'under-1200', avgRating: null, count: 0 },
+    { key: '1200-1500', avgRating: 4.0, count: 4 },
+    { key: '1500-1800', avgRating: 4.3, count: 5 },
+    { key: 'over-1800', avgRating: null, count: 0 },
+  ],
   origins: [
     { country: 'Ethiopia', avgRating: 4.5, count: 4 },
     { country: 'Colombia', avgRating: 4.0, count: 3 },
@@ -107,6 +136,10 @@ export const earlyReads: PalateReads = {
     'So far your lighter roasts score higher. You haven’t rated a dark roast yet — one would test the pattern.',
   process:
     'Naturals are your early favorite. You haven’t logged a honey-processed coffee yet.',
+  varietal:
+    'Ethiopian heirloom varieties lead early. Variety data is sparse — many bags omit it.',
+  elevation:
+    'Your higher-grown coffees edge out the rest so far. Keep rating to fill in the low and high bands.',
   origins:
     'Ethiopia leads your early ratings. Too few origins logged to name a favorite — keep exploring.',
 }

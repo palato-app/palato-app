@@ -9,8 +9,10 @@ import type {
   RatingBucket,
   RoastLevel,
   ProcessMethod,
+  ElevationBand,
   OriginStat,
 } from './types'
+import { normalizeVarietal, ELEVATION_LABELS } from '../palateTheme'
 
 const CATEGORY_TO_FAMILY: Record<string, FlavorFamily> = {
   'Fruit': 'fruity',
@@ -38,6 +40,20 @@ const ROAST_ORDER: RoastLevel[] = [
 const PROCESS_ORDER: ProcessMethod[] = [
   'natural', 'honey', 'anaerobic', 'washed',
 ]
+
+const ELEVATION_ORDER: ElevationBand[] = [
+  'under-1200', '1200-1500', '1500-1800', 'over-1800',
+]
+
+const MAX_VARIETALS = 6  // open-ended free text; show the most-rated handful
+
+function elevationBand(masl: number | null | undefined): ElevationBand | null {
+  if (masl == null) return null
+  if (masl < 1200) return 'under-1200'
+  if (masl < 1500) return '1200-1500'
+  if (masl < 1800) return '1500-1800'
+  return 'over-1800'
+}
 
 function normalizeRoast(raw: string | null): RoastLevel | null {
   if (!raw) return null
@@ -71,6 +87,8 @@ type RatingRow = {
     origin_country: string | null
     roaster_stated_roast_level: string | null
     process: string | null
+    variety: string[] | null
+    elevation_masl: number | null
   } | null
   rating_flavor_descriptors: Array<{
     descriptor: {
@@ -93,6 +111,8 @@ const EMPTY_PROFILE: PalateProfile = {
   fingerprint: ALL_FAMILIES.map((f) => ({ family: f, score: 0, confidence: 0 })),
   roastSweetSpot: ROAST_ORDER.map((k) => ({ key: k, avgRating: null, count: 0 })),
   processSweetSpot: PROCESS_ORDER.map((k) => ({ key: k, avgRating: null, count: 0 })),
+  varietalSweetSpot: [],
+  elevationSweetSpot: ELEVATION_ORDER.map((k) => ({ key: k, avgRating: null, count: 0 })),
   origins: [],
   stats: { coffees: 0, roasters: 0, origins: 0, topNote: null },
 }
@@ -101,6 +121,8 @@ const EMPTY_READS: PalateReads = {
   fingerprint: '',
   roast: '',
   process: '',
+  varietal: '',
+  elevation: '',
   origins: '',
 }
 
@@ -192,6 +214,50 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
     count: processBuckets[key].count,
   }))
 
+  // --- Varietal sweet spot (open-ended; top MAX_VARIETALS by count) ---
+  const varietalMap: Record<string, { sum: number; count: number }> = {}
+  for (const r of rows) {
+    for (const entry of r.coffee?.variety ?? []) {
+      for (const part of entry.split(',')) {
+        const key = normalizeVarietal(part)
+        if (!key) continue
+        if (!varietalMap[key]) varietalMap[key] = { sum: 0, count: 0 }
+        varietalMap[key].sum += r.rating
+        varietalMap[key].count++
+      }
+    }
+  }
+
+  const varietalSweetSpot: RatingBucket<string>[] = Object.entries(varietalMap)
+    .map(([key, { sum, count }]) => ({
+      key,
+      avgRating: Math.round((sum / count) * 10) / 10,
+      count,
+    }))
+    .sort((a, b) => b.count - a.count || (b.avgRating ?? 0) - (a.avgRating ?? 0))
+    .slice(0, MAX_VARIETALS)
+
+  // --- Elevation sweet spot ---
+  const elevationBuckets: Record<ElevationBand, { sum: number; count: number }> = Object.fromEntries(
+    ELEVATION_ORDER.map((k) => [k, { sum: 0, count: 0 }])
+  ) as Record<ElevationBand, { sum: number; count: number }>
+
+  for (const r of rows) {
+    const band = elevationBand(r.coffee?.elevation_masl)
+    if (band) {
+      elevationBuckets[band].sum += r.rating
+      elevationBuckets[band].count++
+    }
+  }
+
+  const elevationSweetSpot: RatingBucket<ElevationBand>[] = ELEVATION_ORDER.map((key) => ({
+    key,
+    avgRating: elevationBuckets[key].count > 0
+      ? Math.round((elevationBuckets[key].sum / elevationBuckets[key].count) * 10) / 10
+      : null,
+    count: elevationBuckets[key].count,
+  }))
+
   // --- Origins ---
   const originMap: Record<string, { sum: number; count: number }> = {}
   for (const r of rows) {
@@ -239,6 +305,12 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
     process: processSweetSpot.filter((b) => b.count > 0).length > 0
       ? `${processSweetSpot.filter((b) => b.count > 0).sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))[0].key} coffees are your early favorite process.`
       : 'Not enough process data yet.',
+    varietal: varietalSweetSpot.length > 0
+      ? `*${[...varietalSweetSpot].sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))[0].key}* is your highest-scoring variety so far.`
+      : "No variety data yet — many bags don't list it.",
+    elevation: elevationSweetSpot.some((b) => b.count > 0)
+      ? `Your *${ELEVATION_LABELS[[...elevationSweetSpot].filter((b) => b.count > 0).sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))[0].key]}* band scores highest so far.`
+      : 'No elevation data yet.',
     origins: origins.length > 0
       ? `${origins[0].country} leads with *${origins[0].avgRating.toFixed(1)}* across ${origins[0].count} coffees.${origins.length < 3 ? ' Keep exploring new origins.' : ''}`
       : 'Rate coffees from different origins to see where your palate leans.',
@@ -254,6 +326,8 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
     })),
     roastSweetSpot,
     processSweetSpot,
+    varietalSweetSpot,
+    elevationSweetSpot,
     origins,
     stats: {
       coffees: coffeeIds.size,
@@ -292,7 +366,9 @@ export function usePalateProfile(): UsePalateProfileResult {
             roaster_name,
             origin_country,
             roaster_stated_roast_level,
-            process
+            process,
+            variety,
+            elevation_masl
           ),
           rating_flavor_descriptors (
             descriptor:flavor_descriptors (
