@@ -29,11 +29,28 @@ const ISLAND_POINTS: IslandPoint[] = [
 
 type Props = {
   onSelectCountry: (country: string) => void
+  /** Override which countries are highlighted/clickable. Default: any mapped non-historical origin. */
+  isHighlighted?: (adminName: string) => boolean
+  /** Cap color per country; return null to fall back to status coloring / dormant. */
+  capColor?: (adminName: string) => string | null
+  /** Cap altitude per country; return null to fall back to status altitude / flat. */
+  capAltitude?: (adminName: string) => number | null
+  /** Tooltip note suffix for a highlighted country (default: Explore → / View). */
+  noteFor?: (adminName: string) => string
+  /** Spin the globe (respecting reduced-motion). Default true; pass false on a dashboard. */
+  autoRotate?: boolean
 }
 
 const DORMANT = 'rgba(244,234,213,0.05)'
 
-export default function LearnGlobe({ onSelectCountry }: Props) {
+export default function LearnGlobe({
+  onSelectCountry,
+  isHighlighted,
+  capColor,
+  capAltitude,
+  noteFor,
+  autoRotate = true,
+}: Props) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined)
   const wrapRef = useRef<HTMLDivElement>(null)
   const [features, setFeatures] = useState<CountryFeature[]>([])
@@ -79,8 +96,10 @@ export default function LearnGlobe({ onSelectCountry }: Props) {
 
   const adminOf = (f: CountryFeature) => f.properties.ADMIN
   const statusOf = (f: CountryFeature) => originByMapName(adminOf(f))?.status
-  // Highlighted belt = any mapped origin except purely historical (not a buyable source).
+  // Highlighted belt = any mapped origin except purely historical (not a buyable source),
+  // unless the caller supplies its own highlight set (e.g. Palate's tasted/frontier).
   const inBelt = (f: CountryFeature) => {
+    if (isHighlighted) return isHighlighted(adminOf(f))
     const s = statusOf(f)
     return !!s && s !== 'historical'
   }
@@ -89,11 +108,13 @@ export default function LearnGlobe({ onSelectCountry }: Props) {
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
+  const spin = autoRotate && !prefersReducedMotion
+
   const onReady = () => {
     const g = globeRef.current
     if (!g) return
     const controls = g.controls()
-    controls.autoRotate = !prefersReducedMotion
+    controls.autoRotate = spin
     controls.autoRotateSpeed = 0.4
     controls.enableZoom = false
     g.pointOfView({ lat: 6, lng: -40, altitude: 2.3 })
@@ -101,14 +122,14 @@ export default function LearnGlobe({ onSelectCountry }: Props) {
 
   // Pause auto-rotation while the tab is backgrounded (battery).
   useEffect(() => {
-    if (prefersReducedMotion) return
+    if (!spin) return
     const onVisibility = () => {
       const controls = globeRef.current?.controls()
       if (controls) controls.autoRotate = !document.hidden
     }
     document.addEventListener('visibilitychange', onVisibility)
     return () => document.removeEventListener('visibilitychange', onVisibility)
-  }, [prefersReducedMotion])
+  }, [spin])
 
   return (
     <div ref={wrapRef} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -125,12 +146,14 @@ export default function LearnGlobe({ onSelectCountry }: Props) {
         polygonAltitude={(d) => {
           const f = d as CountryFeature
           if (f === hovered && inBelt(f)) return 0.09
+          if (capAltitude) return capAltitude(adminOf(f)) ?? 0.006
           const s = statusOf(f)
           return s ? STATUS_ALTITUDE[s] : 0.006
         }}
         polygonCapColor={(d) => {
           const f = d as CountryFeature
           if (f === hovered && inBelt(f)) return theme.ember
+          if (capColor) return capColor(adminOf(f)) ?? DORMANT
           const s = statusOf(f)
           if (!s || s === 'historical') return DORMANT
           return STATUS_COLOR[s]
@@ -142,7 +165,7 @@ export default function LearnGlobe({ onSelectCountry }: Props) {
           if (!inBelt(f)) return ''
           const origin = originByMapName(adminOf(f))
           const name = origin?.country ?? adminOf(f)
-          const note = origin?.hasFullData ? 'Explore →' : 'View'
+          const note = noteFor ? noteFor(adminOf(f)) : origin?.hasFullData ? 'Explore →' : 'View'
           return `<div style="font-family:Geist,system-ui,sans-serif;font-size:12px;font-weight:600;color:#1E1410;background:#F4EAD5;padding:4px 8px;border-radius:6px;box-shadow:0 4px 12px rgba(30,20,16,0.2)">${name}<span style="opacity:0.55;font-weight:400"> · ${note}</span></div>`
         }}
         pointsData={ISLAND_POINTS}

@@ -64,6 +64,36 @@ export const PROCESS_LABELS: Record<string, string> = {
   other: 'Other',
 }
 
+export const ELEVATION_LABELS: Record<string, string> = {
+  'under-1200': '<1200',
+  '1200-1500': '1200–1500',
+  '1500-1800': '1500–1800',
+  'over-1800': '1800+',
+}
+
+// Light-touch varietal canonicalization: collapse the common spelling variants,
+// title-case the rest. Variety is free text (no canonical list), so this only
+// merges the cases that would obviously split a bucket.
+const VARIETAL_ALIASES: Record<string, string> = {
+  geisha: 'Gesha',
+  gesha: 'Gesha',
+  'sl 28': 'SL28',
+  'sl-28': 'SL28',
+  sl28: 'SL28',
+  'sl 34': 'SL34',
+  'sl-34': 'SL34',
+  sl34: 'SL34',
+}
+
+/** Normalize one raw varietal token to a display label, or null if empty. */
+export function normalizeVarietal(raw: string): string | null {
+  const t = raw.trim()
+  if (!t) return null
+  const lower = t.toLowerCase()
+  if (VARIETAL_ALIASES[lower]) return VARIETAL_ALIASES[lower]
+  return t.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
+}
+
 /** Value-encoded bar color: Ember for highs, Ochre for mid, muted for lows. */
 export function barColor(val: number | null): string {
   if (val === null || val <= 0) return theme.emptyBar

@@ -189,6 +189,7 @@ export function AuthedApp() {
           onSelectCoffee={goToCoffee}
           onGoRate={goToBrowse}
           onSeeAllRatings={goToJournal}
+          onBrowseOrigin={goToBrowseWithOrigin}
         />
       )}
       {view === 'flavors' && <TaxonomyView />}

@@ -5,16 +5,15 @@ import {
   fingerprintMaturity,
   sweetSpotMaturity,
   originsMaturity,
-  evolutionMaturity,
   recommendationMaturity,
 } from './data/maturity'
 import { theme } from './palateTheme'
 import { parseEmphasis } from './components/EditorialRead'
 import { PalateFingerprint } from './components/PalateFingerprint'
-import { RoastSweetSpot } from './components/RoastSweetSpot'
-import { ProcessSweetSpot } from './components/ProcessSweetSpot'
+import { TasteProfile } from './components/TasteProfile'
 import { Origins } from './components/Origins'
-import { PalateEvolution } from './components/PalateEvolution'
+import { TasteTheWorld } from './components/TasteTheWorld'
+import { NewVarietals } from './components/NewVarietals'
 import { WhatsNext } from './components/WhatsNext'
 import { PalateStats } from './components/PalateStats'
 import { useRecommendations } from './data/useRecommendations'
@@ -84,7 +83,13 @@ const styles = {
   } as const,
 }
 
-export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId: string) => void }) {
+export function PalateDashboard({
+  onSelectCoffee,
+  onBrowseOrigin,
+}: {
+  onSelectCoffee: (coffeeId: string) => void
+  onBrowseOrigin: (country: string) => void
+}) {
   const real = usePalateProfile()
   const [previewMode, setPreviewMode] = useState(false)
 
@@ -95,7 +100,6 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
   const fpMaturity = fingerprintMaturity(profile)
   const ssMaturity = sweetSpotMaturity(profile)
   const origMaturity = originsMaturity(profile)
-  const evoMaturity = evolutionMaturity(profile)
   const recMaturity = recommendationMaturity(real.profile)
   const { recommendations, loading: recLoading } = useRecommendations(
     real.ratingCount,
@@ -164,15 +168,9 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
 
       <PalateFingerprint profile={profile} read={reads.fingerprint} maturity={fpMaturity} />
 
-      <RoastSweetSpot
-        buckets={profile.roastSweetSpot}
-        read={reads.roast}
-        maturity={ssMaturity}
-        ratingCount={profile.ratingCount}
-      />
-      <ProcessSweetSpot
-        buckets={profile.processSweetSpot}
-        read={reads.process}
+      <TasteProfile
+        profile={profile}
+        reads={reads}
         maturity={ssMaturity}
         ratingCount={profile.ratingCount}
       />
@@ -184,7 +182,9 @@ export function PalateDashboard({ onSelectCoffee }: { onSelectCoffee: (coffeeId:
         ratingCount={profile.ratingCount}
       />
 
-      <PalateEvolution profile={profile} read={reads.evolution} maturity={evoMaturity} />
+      <TasteTheWorld origins={profile.origins} onBrowseOrigin={onBrowseOrigin} />
+
+      <NewVarietals onSelectCoffee={onSelectCoffee} />
 
       <WhatsNext
         recommendations={previewMode ? null : recommendations}

@@ -12,6 +12,9 @@ export type RoastLevel =
 export type ProcessMethod =
   | 'natural' | 'honey' | 'anaerobic' | 'washed' | 'other'
 
+export type ElevationBand =
+  | 'under-1200' | '1200-1500' | '1500-1800' | 'over-1800'
+
 export interface FingerprintAxis {
   family: FlavorFamily
   score: number        // 0–100, normalized share of weighted descriptor frequency
@@ -28,11 +31,6 @@ export interface OriginStat {
   country: string
   avgRating: number
   count: number
-}
-
-export interface EvolutionPoint {
-  period: string       // e.g. '6 mo', '5', ... 'now' — or ISO month
-  avgRoast: number     // 1 (light) … 5 (dark)
 }
 
 export type RecommendationKind = 'unique' | 'explore' | 'love'
@@ -57,13 +55,13 @@ export interface Recommendations {
 
 export interface PalateProfile {
   ratingCount: number          // drives maturity states everywhere
-  firstRatedAt: string | null  // ISO; with ratingCount, gates evolution
   summary: string              // the big editorial one-liner at the top
   fingerprint: FingerprintAxis[]        // always 8, in FlavorFamily order
   roastSweetSpot: RatingBucket<RoastLevel>[]
   processSweetSpot: RatingBucket<ProcessMethod>[]
+  varietalSweetSpot: RatingBucket<string>[]    // top varietals by count; keys are display labels
+  elevationSweetSpot: RatingBucket<ElevationBand>[]
   origins: OriginStat[]        // sorted desc by a blend of avgRating & count
-  evolution: EvolutionPoint[]  // [] until unlocked
   // recommendations are decoupled — see useRecommendations + the recommendations cache
   stats: {
     coffees: number
@@ -80,6 +78,7 @@ export interface PalateReads {
   fingerprint: string
   roast: string
   process: string
+  varietal: string
+  elevation: string
   origins: string
-  evolution: string
 }
