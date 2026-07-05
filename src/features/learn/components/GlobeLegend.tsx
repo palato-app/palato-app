@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { STATUS_LEGEND_COLOR } from '../data/countryStatus'
 
 // Minimal legend for the globe's availability tiers. Uses the colors as they READ on the

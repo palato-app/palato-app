@@ -4,15 +4,7 @@ import { supabase } from './lib/supabase'
 import { useAuth } from './lib/auth'
 import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
 import { track } from './lib/track'
-
-const ROAST_LABELS: Record<string, string> = {
-  light: 'Light',
-  medium_light: 'Medium-light',
-  medium: 'Medium',
-  medium_dark: 'Medium-dark',
-  dark: 'Dark',
-  unspecified: '',
-}
+import { ROAST_LABELS } from './lib/labels'
 
 const styles = {
   container: { marginTop: '3rem' } as const,

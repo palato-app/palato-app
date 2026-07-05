@@ -6,39 +6,12 @@ import { RatingForm, type RatingFormSubmitPayload } from './components/RatingFor
 import { EditCoffeeForm } from './EditCoffeeForm'
 import { track } from './lib/track'
 import type { Coffee } from './lib/useCoffees'
-
-// ---------------------------------------------------------------------------
-// Constants ported from AddCoffeeForm
-// ---------------------------------------------------------------------------
-
-const PROCESS_OPTIONS = [
-  { value: 'washed', label: 'Washed' },
-  { value: 'natural', label: 'Natural' },
-  { value: 'honey', label: 'Honey' },
-  { value: 'anaerobic', label: 'Anaerobic' },
-  { value: 'carbonic_maceration', label: 'Carbonic maceration' },
-  { value: 'pulped_natural', label: 'Pulped natural' },
-  { value: 'wet_hulled', label: 'Wet-hulled' },
-  { value: 'experimental', label: 'Experimental' },
-  { value: 'other', label: 'Other' },
-]
-const PROCESS_VALUES = PROCESS_OPTIONS.map((o) => o.value)
-
-const ROAST_OPTIONS = [
-  { value: 'light', label: 'Light' },
-  { value: 'medium_light', label: 'Medium-light' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'medium_dark', label: 'Medium-dark' },
-  { value: 'dark', label: 'Dark' },
-]
-
-const ROAST_FROM_SCAN: Record<string, string> = {
-  light: 'light',
-  'medium-light': 'medium_light',
-  medium: 'medium',
-  'medium-dark': 'medium_dark',
-  dark: 'dark',
-}
+import {
+  PROCESS_OPTIONS,
+  PROCESS_VALUES,
+  ROAST_OPTIONS,
+  ROAST_FROM_SCAN,
+} from './lib/labels'
 
 // ---------------------------------------------------------------------------
 // Types

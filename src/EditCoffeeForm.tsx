@@ -1,29 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './lib/supabase'
 import type { Coffee } from './lib/useCoffees'
-
-// Process / roast option sets mirror AddAndRateFlow's add form so the edit and
-// create surfaces stay in lockstep. (Duplication is a known, accepted pattern
-// here — see TECH_DEBT "Date formatting + utility duplication".)
-const PROCESS_OPTIONS = [
-  { value: 'washed', label: 'Washed' },
-  { value: 'natural', label: 'Natural' },
-  { value: 'honey', label: 'Honey' },
-  { value: 'anaerobic', label: 'Anaerobic' },
-  { value: 'carbonic_maceration', label: 'Carbonic maceration' },
-  { value: 'pulped_natural', label: 'Pulped natural' },
-  { value: 'wet_hulled', label: 'Wet-hulled' },
-  { value: 'experimental', label: 'Experimental' },
-  { value: 'other', label: 'Other' },
-]
-
-const ROAST_OPTIONS = [
-  { value: 'light', label: 'Light' },
-  { value: 'medium_light', label: 'Medium-light' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'medium_dark', label: 'Medium-dark' },
-  { value: 'dark', label: 'Dark' },
-]
+import { PROCESS_OPTIONS, ROAST_OPTIONS } from './lib/labels'
 
 type CoffeeFields = {
   roaster_name: string

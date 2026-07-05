@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { ORIGINS, SECONDARY_ORIGINS, type Origin } from '../data/originsData'
 
 // The sectioned list of every coffee origin. Sits below the globe as the reliable,

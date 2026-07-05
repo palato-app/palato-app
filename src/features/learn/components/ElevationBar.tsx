@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 
 // Compact elevation slider for the country By the Numbers: the coffee-growing band drawn
 // against a fixed 0-3,000 masl axis so countries compare at a glance.

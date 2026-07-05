@@ -7,7 +7,8 @@ import {
   Cell,
   ResponsiveContainer,
 } from 'recharts'
-import { theme, barColor } from '../palateTheme'
+import { theme } from '../../../lib/theme'
+import { barColor } from '../palateTheme'
 
 export type SweetSpotDatum = {
   name: string

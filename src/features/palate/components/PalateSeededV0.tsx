@@ -1,4 +1,5 @@
-import { theme, ROAST_LABELS } from '../palateTheme'
+import { theme } from '../../../lib/theme'
+import { ROAST_LABELS_COMPACT } from '../../../lib/labels'
 import type { PalateProfileRow } from '../../quiz/palateProfile'
 
 function flavorLeanLabel(row: PalateProfileRow): string {
@@ -103,7 +104,7 @@ type Props = {
 export function PalateSeededV0({ profile, ratingCount }: Props) {
   const flavor = flavorLeanLabel(profile)
   const flavorUnknown = profile.flavor_unsure || profile.flavor_lean === null
-  const roast = profile.roast_preference ? ROAST_LABELS[profile.roast_preference] : null
+  const roast = profile.roast_preference ? ROAST_LABELS_COMPACT[profile.roast_preference] : null
   const origin = profile.origin_affinity
 
   const remaining = Math.max(0, 3 - ratingCount)

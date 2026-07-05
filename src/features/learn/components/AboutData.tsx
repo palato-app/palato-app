@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { METHODOLOGY } from '../data/originsData'
 
 // The visible methodology note required by the Origins Data Standard (Decision #056):

@@ -1,7 +1,7 @@
 import type { OriginStat } from '../data/types'
 import { useTasteTheWorld } from '../data/useTasteTheWorld'
 import { track } from '../../../lib/track'
-import { theme } from '../palateTheme'
+import { theme } from '../../../lib/theme'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead, parseEmphasis } from './EditorialRead'
 import { PalateGlobe } from './PalateGlobe'

@@ -1,4 +1,4 @@
-import { theme } from '../palateTheme'
+import { theme } from '../../../lib/theme'
 
 const styles = {
   strip: {

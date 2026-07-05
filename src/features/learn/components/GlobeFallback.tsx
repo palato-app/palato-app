@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 
 // Shown while the lazy globe chunk (three.js) loads, and as the standing state when
 // WebGL is unavailable. The reliable country list below the globe (in Learn) is the

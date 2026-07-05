@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import type { SpeciesType } from './originsParser'
 
 // Curated availability/maturity status per origin (Decision: globe legend by status,

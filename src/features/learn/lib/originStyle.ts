@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import type { SpeciesType } from '../data/originsData'
 
 // Presentation helpers shared by the globe and the panels. No data here, just styling.

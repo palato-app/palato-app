@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { monthsInRange, rangeLabel, type HarvestData } from '../data/countryHarvest'
 
 // A 12-month harvest-cycle band: main-crop months in ember, a secondary/fly crop in

@@ -3,25 +3,9 @@ import { useCoffees, type Coffee } from './lib/useCoffees'
 import { CoffeePlaceholder } from './components/CoffeePlaceholder'
 import { StartHereRail } from './features/palate/StartHereRail'
 import { ScanHowItWorks } from './components/ScanHowItWorks'
-
-const ROAST_LABELS: Record<string, string> = {
-  light: 'Light',
-  medium_light: 'Medium-light',
-  medium: 'Medium',
-  medium_dark: 'Medium-dark',
-  dark: 'Dark',
-  unspecified: '',
-}
+import { ROAST_LABELS, PROCESS_LABELS } from './lib/labels'
 
 const ROAST_ORDER = ['light', 'medium_light', 'medium', 'medium_dark', 'dark']
-
-const PROCESS_LABELS: Record<string, string> = {
-  washed: 'Washed',
-  natural: 'Natural',
-  honey: 'Honey',
-  anaerobic: 'Anaerobic',
-  other: 'Other',
-}
 
 type SortKey = 'roaster' | 'newest' | 'origin'
 

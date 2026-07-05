@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { theme } from '../palateTheme'
+import { theme } from '../../../lib/theme'
 
 const styles = {
   card: {

@@ -2,7 +2,9 @@ import { useState } from 'react'
 import type { PalateProfile, PalateReads } from '../data/types'
 import type { MaturityState } from '../data/maturity'
 import { remainingForModule } from '../data/maturity'
-import { theme, ROAST_LABELS, PROCESS_LABELS, ELEVATION_LABELS } from '../palateTheme'
+import { theme } from '../../../lib/theme'
+import { ELEVATION_LABELS } from '../palateTheme'
+import { ROAST_LABELS_COMPACT, PROCESS_LABELS } from '../../../lib/labels'
 import { ModuleCard } from './ModuleCard'
 import { EditorialRead } from './EditorialRead'
 import { LockedTeaser } from './LockedTeaser'
@@ -36,7 +38,7 @@ export function TasteProfile({ profile, reads, maturity, ratingCount }: Props) {
       read: reads.roast,
       emptyHint: 'Not enough roast data yet.',
       data: profile.roastSweetSpot.map((b) => ({
-        name: ROAST_LABELS[b.key] ?? b.key,
+        name: ROAST_LABELS_COMPACT[b.key] ?? b.key,
         value: b.avgRating ?? 0,
         rawRating: b.avgRating,
       })),

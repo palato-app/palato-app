@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { ElevationBand } from './ElevationBand'
 import { LocatorMap } from './LocatorMap'
 import { RegionCoffeesSection } from './RegionCoffeesSection'

@@ -14,11 +14,7 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 > **Resolved June 15, 2026** — *"Storage policy hardcodes admin email."* The `bag-images` INSERT policy that checked `auth.jwt() ->> 'email' = 'jesse@palato.coffee'` was dropped in migration `0009` (it became redundant once `0008` opened uploads to all authenticated users). No admin-email reference remains in any `storage.objects` policy. An `is_admin`-based model is no longer needed for bag-image uploads; if admin gating returns for other features, prefer `profiles.is_admin` over a hardcoded email.
 
-### AddCoffeeForm UI is unstyled
-- **What:** The admin-only AddCoffeeForm has functional but unrefined visual styling — labels are uppercase, inputs are basic, no responsive layout. (Note: HEIC auto-conversion and file-type validation were added May 18; the styling debt is unchanged.)
-- **Why it's debt:** Fine for v0.1 admin tooling, but if non-admin users ever see it (or if Jesse demos screen-sharing the admin flow), it'll look unfinished.
-- **Fix:** Style pass aligning the form with the magazine-spread aesthetic from Decision #019. Low priority unless a demo scenario requires it.
-- **Surfaced:** Session of May 4, 2026.
+> **Resolved July 5, 2026** — *"AddCoffeeForm UI is unstyled."* Moot: `AddCoffeeForm.tsx` was dead code (superseded by `AddAndRateFlow`, imported by nothing) and was deleted. See the resolved dead-code entry under Cross-cutting.
 
 ### Image rights for catalog-sourced coffee photos
 - **What:** Catalog is populated using bag images sourced from roaster websites (copyrighted by roasters).
@@ -59,7 +55,7 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 ### Card image proportions — bags get awkwardly cropped at 1:1
 - **What:** The browse view uses `aspect-ratio: 1/1` with `object-fit: cover` on bag images. Roaster bag photos are mostly portrait, so the crop chops the top and bottom of the bag in many cases.
 - **Why it's debt:** Visual identity of the bag is partly cropped away. At a small enough card size it's fine; at larger sizes it looks bad.
-- **Fix:** Either (a) require square crops at upload time in the AddCoffeeForm (force a crop step), or (b) switch the card image to a portrait aspect ratio (3:4 or 4:5) so most bag photos fit naturally, or (c) let the image be its natural aspect ratio with a fixed max-height and `object-fit: contain` (with a cream fill behind it).
+- **Fix:** Either (a) require square crops at upload time in the add flow (`AddAndRateFlow`) (force a crop step), or (b) switch the card image to a portrait aspect ratio (3:4 or 4:5) so most bag photos fit naturally, or (c) let the image be its natural aspect ratio with a fixed max-height and `object-fit: contain` (with a cream fill behind it).
 - **Surfaced:** May 18, 2026 — visible in first browse view render.
 
 ### Browse view filter functionality
@@ -173,11 +169,9 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 
 ## Cross-cutting
 
-### Date formatting + utility duplication
-- **What:** A `formatDate` helper now lives identically in `CoffeeDetail.tsx` and `Journal.tsx`. Same with `ROAST_LABELS` (now in four places: CoffeeDetail, Journal, BrowseCoffees, and `palateTheme.ts`). Process label maps also duplicated between `AddCoffeeForm` and `palateTheme.ts`.
-- **Why it's debt:** Divergence risk — same constant, multiple places to keep aligned. Easy to forget when adding a new roast level enum value.
-- **Fix:** Extract to `src/lib/format.ts` (formatDate) and `src/lib/labels.ts` (ROAST_LABELS, PROCESS_LABELS, and other enum→display maps). Import everywhere including palateTheme. Cheap refactor, ~10 minutes.
-- **Surfaced:** May 18, 2026 — second copy of formatDate created in CoffeeDetail build. Updated May 24, 2026 — fourth copy of ROAST_LABELS added by Palate Dashboard build.
+> **Resolved July 5, 2026** — *"Date formatting + utility duplication."* `src/lib/labels.ts` and `src/lib/format.ts` are now the single home for enum→display maps (ROAST_LABELS, ROAST_LABELS_COMPACT, ROAST_OPTIONS, ROAST_FROM_SCAN, PROCESS_OPTIONS/VALUES/LABELS) and `formatDate`; all former per-file copies import from there, including the palate surfaces that previously used palateTheme's hyphen-keyed maps. The dual roast vocabulary (DB `medium_light` vs. palate-domain `medium-light`) is **retained by design** — both forms are persisted (`palate_profiles.roast_preference`, cached `/api/recommend` JSON) — but the conversion is now one named helper (`toRoastBucketKey`) documented in `lib/labels.ts`, not scattered inline `.replace()` hacks. (Earlier note claimed WhatsNext likely mislabeled cached roast values — incorrect: `api/recommend.js` converts to hyphen form server-side, so lookups always matched.) See Decision #060.
+
+> **Resolved July 5, 2026** — *"AddCoffeeForm.tsx is dead code."* Deleted (was 450 unreachable lines; `AddAndRateFlow` absorbed the flow). CLAUDE.md references corrected; the stale "unstyled" entry retired. Recoverable from git history if ever needed. See Decision #060.
 
 ---
 

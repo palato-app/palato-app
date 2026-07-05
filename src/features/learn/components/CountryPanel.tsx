@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { useCoffees } from '../../../lib/useCoffees'
 import { normalizeRegionText } from '../lib/matchRegion'
 import { sectionTint } from '../lib/originStyle'

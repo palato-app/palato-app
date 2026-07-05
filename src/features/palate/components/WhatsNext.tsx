@@ -1,7 +1,8 @@
 import type { Recommendations, Recommendation, RecommendationKind } from '../data/types'
 import type { MaturityState } from '../data/maturity'
 import { remainingForModule } from '../data/maturity'
-import { theme, PROCESS_LABELS, ROAST_LABELS } from '../palateTheme'
+import { theme } from '../../../lib/theme'
+import { ROAST_LABELS_COMPACT, PROCESS_LABELS } from '../../../lib/labels'
 import { ModuleCard } from './ModuleCard'
 import { parseEmphasis } from './EditorialRead'
 import { LockedTeaser } from './LockedTeaser'
@@ -95,8 +96,8 @@ function RecCard({ rec, onSelectCoffee }: { rec: Recommendation; onSelectCoffee:
         <p style={styles.kind}>{KIND_LABEL[rec.kind]}</p>
         <p style={styles.name}>{rec.coffeeName}</p>
         <p style={styles.meta}>
-          {rec.roaster} · {PROCESS_LABELS[rec.process as keyof typeof PROCESS_LABELS] ?? rec.process} ·{' '}
-          {ROAST_LABELS[rec.roastLevel as keyof typeof ROAST_LABELS] ?? rec.roastLevel}
+          {rec.roaster} · {PROCESS_LABELS[rec.process] ?? rec.process} ·{' '}
+          {ROAST_LABELS_COMPACT[rec.roastLevel] ?? rec.roastLevel}
         </p>
         <p style={styles.reason}>{parseEmphasis(rec.reason)}</p>
       </div>

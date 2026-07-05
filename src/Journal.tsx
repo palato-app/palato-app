@@ -4,23 +4,8 @@ import { CoffeePlaceholder } from './components/CoffeePlaceholder'
 import { supabase } from './lib/supabase'
 import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
 import { EditRatingFlow } from './EditRatingFlow'
-
-const ROAST_LABELS: Record<string, string> = {
-  light: 'Light',
-  medium_light: 'Medium-light',
-  medium: 'Medium',
-  medium_dark: 'Medium-dark',
-  dark: 'Dark',
-  unspecified: '',
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
+import { ROAST_LABELS } from './lib/labels'
+import { formatDate } from './lib/format'
 
 const styles = {
   container: { marginTop: '4rem' } as const,

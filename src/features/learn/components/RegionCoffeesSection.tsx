@@ -1,7 +1,8 @@
 import { CoffeePlaceholder } from '../../../components/CoffeePlaceholder'
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { useRegionCoffees } from '../hooks/useRegionCoffees'
 import type { OriginRegion } from '../data/originsData'
+import { ROAST_LABELS } from '../../../lib/labels'
 
 // "Coffees from this region" — the connective tissue back to the atomic action
 // (rate a coffee). Read-time matched via useRegionCoffees (no DB query). The
@@ -12,14 +13,6 @@ type Props = {
   region: OriginRegion
   onSelectCoffee: (coffeeId: string) => void
   onBrowseOrigin: (country: string) => void
-}
-
-const ROAST_LABELS: Record<string, string> = {
-  light: 'Light',
-  medium_light: 'Medium-light',
-  medium: 'Medium',
-  medium_dark: 'Medium-dark',
-  dark: 'Dark',
 }
 
 const styles = {

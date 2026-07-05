@@ -1,5 +1,6 @@
 import { usePalateProfileRow } from './data/usePalateProfileRow'
-import { theme, ROAST_LABELS } from './palateTheme'
+import { theme } from '../../lib/theme'
+import { ROAST_LABELS_COMPACT, toRoastBucketKey } from '../../lib/labels'
 import { CoffeePlaceholder } from '../../components/CoffeePlaceholder'
 import type { Coffee } from '../../lib/useCoffees'
 import type { PalateProfileRow } from '../quiz/palateProfile'
@@ -161,7 +162,7 @@ export function StartHereRail({ coffees, onSelectCoffee }: Props) {
       <div style={styles.rail}>
         {picks.map((c) => {
           const roast = c.roaster_stated_roast_level
-            ? ROAST_LABELS[c.roaster_stated_roast_level.replace('_', '-')] ?? ''
+            ? ROAST_LABELS_COMPACT[toRoastBucketKey(c.roaster_stated_roast_level)] ?? ''
             : ''
           return (
             <button key={c.id} style={styles.card} onClick={() => onSelectCoffee(c.id)}>

@@ -1,4 +1,4 @@
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import type { Elevation } from '../data/originsData'
 
 // Editorial 2D elevation diagram. The fixed 0-3,000 masl axis lets regions compare at a

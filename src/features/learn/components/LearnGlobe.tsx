@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Globe, { type GlobeMethods } from 'react-globe.gl'
 import * as THREE from 'three'
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import { originByCountry, originByMapName } from '../data/originsData'
 import { STATUS_ALTITUDE, STATUS_COLOR } from '../data/countryStatus'
 

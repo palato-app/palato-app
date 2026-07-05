@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { theme } from '../../palate/palateTheme'
+import { theme } from '../../../lib/theme'
 import {
   buildProjector,
   featurePath,

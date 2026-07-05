@@ -7,7 +7,7 @@ import {
   originsMaturity,
   recommendationMaturity,
 } from './data/maturity'
-import { theme } from './palateTheme'
+import { theme } from '../../lib/theme'
 import { parseEmphasis } from './components/EditorialRead'
 import { PalateFingerprint } from './components/PalateFingerprint'
 import { TasteProfile } from './components/TasteProfile'

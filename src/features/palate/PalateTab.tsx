@@ -4,7 +4,7 @@ import { usePalateProfileRow } from './data/usePalateProfileRow'
 import { PalateDashboard } from './PalateDashboard'
 import { PalateSeededV0 } from './components/PalateSeededV0'
 import { RecentRatings } from './components/RecentRatings'
-import { theme } from './palateTheme'
+import { theme } from '../../lib/theme'
 import { aspirationFocus } from '../quiz/quizConfig'
 
 const SHARPEN_THRESHOLD = 3

@@ -1,6 +1,6 @@
 import { useNewVarietals, type VarietalPick } from '../data/useNewVarietals'
 import { track } from '../../../lib/track'
-import { theme } from '../palateTheme'
+import { theme } from '../../../lib/theme'
 import { ModuleCard } from './ModuleCard'
 import { CoffeePlaceholder } from '../../../components/CoffeePlaceholder'
 

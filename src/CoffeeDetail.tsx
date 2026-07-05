@@ -7,23 +7,8 @@ import { EditRatingFlow } from './EditRatingFlow'
 import { EditCoffeeForm } from './EditCoffeeForm'
 import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
 import type { RatedCoffee } from './lib/useUserRatings'
-
-const ROAST_LABELS: Record<string, string> = {
-  light: 'Light',
-  medium_light: 'Medium-light',
-  medium: 'Medium',
-  medium_dark: 'Medium-dark',
-  dark: 'Dark',
-  unspecified: '',
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
+import { ROAST_LABELS } from './lib/labels'
+import { formatDate } from './lib/format'
 
 const styles = {
   container: { marginTop: '3rem' } as const,
