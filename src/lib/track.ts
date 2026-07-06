@@ -38,6 +38,12 @@ export function initAnalytics(): void {
     person_profiles: 'identified_only',
     capture_pageview: true,
   })
+  // Segment installed-PWA sessions vs browser sessions on every event.
+  // `navigator.standalone` covers older iOS; display-mode covers the rest.
+  const standalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    ('standalone' in navigator && (navigator as { standalone?: boolean }).standalone === true)
+  posthog.register({ display_mode: standalone ? 'standalone' : 'browser' })
   enabled = true
 }
 

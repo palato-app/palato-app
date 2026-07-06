@@ -721,3 +721,20 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** Slice 3: promote `palateTheme.ts` → `src/lib/theme.ts` (ends learn→palate cross-feature imports). Slice 4: delete dead `AddCoffeeForm.tsx` (confirmed unimported) + correct CLAUDE.md/TECH_DEBT references. Then reassess before the root-level `features/` moves.
 
 ---
+## #061 — July 5, 2026 — PWA Tier 1: installable (manifest + icons), deliberately no service worker
+
+**Decision:** Make Palato installable as a PWA with the minimum durable footprint: a `manifest.webmanifest` (standalone display, cream theme/background per Decision #019), a generated icon set from the cherry mark (192/512 transparent "any" icons, 192/512 maskable icons with the cherry inside the safe zone on cream, and a proper 180px solid-cream apple-touch-icon), plus `theme-color` and manifest links in `index.html`. Registered `display_mode` (`standalone` | `browser`) as a PostHog super property so every event segments installed vs. browser users. **No service worker** — installability no longer requires one (Chrome dropped the offline check; iOS never had it), and Palato has no meaningful offline use case since every surface reads Supabase.
+
+**Alternatives considered:** (1) *Full `vite-plugin-pwa` with Workbox precaching* — rejected for now: adds the stale-cache failure mode (users stuck on old bundles after a deploy) and an update-prompt UX obligation, ongoing maintenance for near-zero user value while the app is online-only. Revisit if/when an offline feature earns it (e.g. draft-a-rating-offline-and-sync). (2) *Defer PWA entirely* — rejected: the atomic action ("rate a coffee") is an in-the-moment, phone-in-hand behavior; a home-screen icon is a cheap retention bet and the analytics seam to measure it costs three lines. (3) *Push notifications* — explicitly out of scope; a real project (subscription storage, send pipeline, permission UX) deferred until retention data justifies it.
+
+**Rationale:** Tier 1 is all static assets — no runtime code paths, no cache layer, nothing that can break a deploy. The measurement hook ships with the feature (per the metrics-on-every-ship rule), so the install bet is falsifiable from day one.
+
+**Tradeoffs accepted:** Without a service worker there is no offline shell and no install-prompt event capture (`beforeinstallprompt` still fires and could be tracked later). Icons are raster exports from the 1668px favicon PNG rather than purpose-drawn app icons — good enough at 512px, revisit if the brand gets a proper icon pass.
+
+**Verification:** `npm run build` green; lint unchanged (13 pre-existing, 0 new). Dev-server check confirmed the manifest parses with all four icons + correct ids/scope, all five icon files serve as `image/png`, and `theme-color`/`apple-touch-icon` resolve. Real-device install test passed on Jesse's iPhone via the Vercel branch preview (July 5, 2026): Add to Home Screen → standalone launch → quiz → Google OAuth → palate hydration, plus a bag scan — all working.
+
+**Metric:** Install adoption (% of active users with `display_mode = standalone`) and whether standalone users show better W1 retention and higher ratings/week than browser users (PostHog breakdown on the existing retention views).
+
+**Next action:** Deploy the branch preview, run the installed-mode OAuth + scan smoke test on a real iPhone, then merge.
+
+---
