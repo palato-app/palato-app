@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useFlavorDescriptors, type FlavorDescriptor } from './lib/useFlavorDescriptors'
-import { useAuth } from './lib/auth'
+import { useFlavorDescriptors, type FlavorDescriptor } from '../../lib/useFlavorDescriptors'
+import { useAuth } from '../../lib/auth'
 
 // Light-to-dark category ordering for the flavor block.
 // Body & Mouthfeel handled separately (rendered after the perceptual divider).

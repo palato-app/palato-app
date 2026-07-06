@@ -1,7 +1,7 @@
-import { supabase } from './lib/supabase'
-import { useAuth } from './lib/auth'
-import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
-import type { RatedCoffee } from './lib/useUserRatings'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/auth'
+import { RatingForm, type RatingFormSubmitPayload } from './RatingForm'
+import type { RatedCoffee } from '../../lib/useUserRatings'
 
 const espresso = '#1E1410'
 

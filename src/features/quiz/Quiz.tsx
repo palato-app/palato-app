@@ -1,4 +1,4 @@
-import { PalateQuiz } from './features/quiz/PalateQuiz'
+import { PalateQuiz } from './PalateQuiz'
 
 /**
  * Public palate quiz route at `/quiz` (§3) — runs entirely pre-auth.

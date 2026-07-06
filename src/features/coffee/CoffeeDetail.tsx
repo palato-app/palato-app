@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { supabase } from './lib/supabase'
-import { CoffeePlaceholder } from './components/CoffeePlaceholder'
-import { useCoffee } from './lib/useCoffee'
-import { useUserRatingForCoffee } from './lib/useUserRatingForCoffee'
-import { EditRatingFlow } from './EditRatingFlow'
+import { supabase } from '../../lib/supabase'
+import { CoffeePlaceholder } from '../../components/CoffeePlaceholder'
+import { useCoffee } from '../../lib/useCoffee'
+import { useUserRatingForCoffee } from '../../lib/useUserRatingForCoffee'
+import { EditRatingFlow } from '../rating/EditRatingFlow'
 import { EditCoffeeForm } from './EditCoffeeForm'
-import { BrewDetails, hasBrewDetails } from './components/BrewDetails'
-import type { RatedCoffee } from './lib/useUserRatings'
-import { ROAST_LABELS } from './lib/labels'
-import { formatDate } from './lib/format'
+import { BrewDetails, hasBrewDetails } from '../../components/BrewDetails'
+import type { RatedCoffee } from '../../lib/useUserRatings'
+import { ROAST_LABELS } from '../../lib/labels'
+import { formatDate } from '../../lib/format'
 
 const styles = {
   container: { marginTop: '3rem' } as const,

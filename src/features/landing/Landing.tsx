@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from './lib/auth'
-import { PalatoWordmark } from './components/PalatoWordmark'
+import { useAuth } from '../../lib/auth'
+import { PalatoWordmark } from '../../components/PalatoWordmark'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'

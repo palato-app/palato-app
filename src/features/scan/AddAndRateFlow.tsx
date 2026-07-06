@@ -1,17 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from './lib/supabase'
-import { useAuth } from './lib/auth'
-import { prepareImage, uploadBagImage } from './lib/bagImage'
-import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
-import { EditCoffeeForm } from './EditCoffeeForm'
-import { track } from './lib/track'
-import type { Coffee } from './lib/useCoffees'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/auth'
+import { prepareImage, uploadBagImage } from '../../lib/bagImage'
+import { RatingForm, type RatingFormSubmitPayload } from '../rating/RatingForm'
+import { EditCoffeeForm } from '../coffee/EditCoffeeForm'
+import { track } from '../../lib/track'
+import type { Coffee } from '../../lib/useCoffees'
 import {
   PROCESS_OPTIONS,
   PROCESS_VALUES,
   ROAST_OPTIONS,
   ROAST_FROM_SCAN,
-} from './lib/labels'
+} from '../../lib/labels'
 
 // ---------------------------------------------------------------------------
 // Types

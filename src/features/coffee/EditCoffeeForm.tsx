@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { supabase } from './lib/supabase'
-import type { Coffee } from './lib/useCoffees'
-import { PROCESS_OPTIONS, ROAST_OPTIONS } from './lib/labels'
+import { supabase } from '../../lib/supabase'
+import type { Coffee } from '../../lib/useCoffees'
+import { PROCESS_OPTIONS, ROAST_OPTIONS } from '../../lib/labels'
 
 type CoffeeFields = {
   roaster_name: string

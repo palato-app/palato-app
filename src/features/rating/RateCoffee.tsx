@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useCoffee } from './lib/useCoffee'
-import { supabase } from './lib/supabase'
-import { useAuth } from './lib/auth'
-import { RatingForm, type RatingFormSubmitPayload } from './components/RatingForm'
-import { track } from './lib/track'
-import { ROAST_LABELS } from './lib/labels'
+import { useCoffee } from '../../lib/useCoffee'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../lib/auth'
+import { RatingForm, type RatingFormSubmitPayload } from './RatingForm'
+import { track } from '../../lib/track'
+import { ROAST_LABELS } from '../../lib/labels'
 
 const styles = {
   container: { marginTop: '3rem' } as const,

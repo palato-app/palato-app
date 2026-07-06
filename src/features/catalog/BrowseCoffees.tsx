@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useCoffees, type Coffee } from './lib/useCoffees'
-import { CoffeePlaceholder } from './components/CoffeePlaceholder'
-import { StartHereRail } from './features/palate/StartHereRail'
-import { ScanHowItWorks } from './components/ScanHowItWorks'
-import { ROAST_LABELS, PROCESS_LABELS } from './lib/labels'
+import { useCoffees, type Coffee } from '../../lib/useCoffees'
+import { CoffeePlaceholder } from '../../components/CoffeePlaceholder'
+import { StartHereRail } from '../palate/StartHereRail'
+import { ScanHowItWorks } from '../../components/ScanHowItWorks'
+import { ROAST_LABELS, PROCESS_LABELS } from '../../lib/labels'
 
 const ROAST_ORDER = ['light', 'medium_light', 'medium', 'medium_dark', 'dark']
 

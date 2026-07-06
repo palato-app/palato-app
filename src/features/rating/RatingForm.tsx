@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
-import { RatingDial } from '../RatingDial'
-import { GradientSlider } from './GradientSlider'
-import { HighlightedTextarea } from './HighlightedTextarea'
-import { useFlavorDescriptors } from '../lib/useFlavorDescriptors'
+import { RatingDial } from './RatingDial'
+import { GradientSlider } from '../../components/GradientSlider'
+import { HighlightedTextarea } from '../../components/HighlightedTextarea'
+import { useFlavorDescriptors } from '../../lib/useFlavorDescriptors'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
