@@ -731,7 +731,7 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 
 **Tradeoffs accepted:** Without a service worker there is no offline shell and no install-prompt event capture (`beforeinstallprompt` still fires and could be tracked later). Icons are raster exports from the 1668px favicon PNG rather than purpose-drawn app icons — good enough at 512px, revisit if the brand gets a proper icon pass.
 
-**Verification:** `npm run build` green; lint unchanged (13 pre-existing, 0 new). Dev-server check confirmed the manifest parses with all four icons + correct ids/scope, all five icon files serve as `image/png`, and `theme-color`/`apple-touch-icon` resolve. Real-device install test (iOS Add to Home Screen → quiz → OAuth → hydration) still pending — Jesse to run on his phone after deploy.
+**Verification:** `npm run build` green; lint unchanged (13 pre-existing, 0 new). Dev-server check confirmed the manifest parses with all four icons + correct ids/scope, all five icon files serve as `image/png`, and `theme-color`/`apple-touch-icon` resolve. Real-device install test passed on Jesse's iPhone via the Vercel branch preview (July 5, 2026): Add to Home Screen → standalone launch → quiz → Google OAuth → palate hydration, plus a bag scan — all working.
 
 **Metric:** Install adoption (% of active users with `display_mode = standalone`) and whether standalone users show better W1 retention and higher ratings/week than browser users (PostHog breakdown on the existing retention views).
 
