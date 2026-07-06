@@ -75,6 +75,19 @@ This direction departs from `palato-brand-guide-v01.md`, which still specifies F
 
 ---
 
+## Code Conventions (Decision #060, July 2026)
+
+These exist because the July 2026 refactor cleaned up exactly these erosions. Hold the line.
+
+- **Every view lives in `features/<domain>/`.** `src/` root is the app shell only (`main.tsx`, `App.tsx`, `AuthedApp.tsx`). Never add a new view or component at root. Current domains: `landing`, `quiz`, `catalog`, `coffee`, `rating`, `scan`, `flavors`, `learn`, `palate`, `more`, `admin` — add a new directory when a view genuinely starts a new domain.
+- **Shared code has exactly three homes:** `lib/` (logic, hooks, tokens, maps), `components/` (cross-feature UI). A feature's own pieces stay inside the feature. **Cross-feature imports are a smell** — if feature B needs something from feature A, move it to `lib/` or `components/` instead of importing across. (Known sanctioned exception: `catalog` renders `palate`'s `StartHereRail` — a deliberate product seam.)
+- **Never redeclare brand constants.** Colors, fonts, and chart fills come from `lib/theme.ts` (`theme.cream`, `theme.bodyFont`, …) — no new hex literals or `'Geist, system-ui, sans-serif'` strings in components. ~2 dozen pre-refactor files still carry local `const cream = '#F4EAD5'`-style constants: migrate them **when touching the file anyway**, never as a mass conversion.
+- **Never redeclare display-label maps.** Roast/process/format helpers come from `lib/labels.ts` and `lib/format.ts`. Before adding any enum→display map or formatter, check those two files first; extend them rather than declaring locally.
+- **The roast key has two persisted vocabularies — respect the seam.** DB enum uses underscores (`medium_light`); the palate domain (profile buckets, `palate_profiles.roast_preference`, cached `/api/recommend` JSON) uses hyphens (`medium-light`). Convert only via `toRoastBucketKey()` from `lib/labels.ts` — never inline `.replace()` — and don't "unify" the vocabularies without a data migration plan (see Decision #060 for why that was deliberately not done).
+- **No speculative abstraction.** The codebase's virtue is that it's boring and traceable. Extract shared code when the second real consumer appears, not before.
+
+---
+
 ## Working Agreement
 
 - **When uncertain about product direction, stop and ask** — don't build toward an assumed answer.
