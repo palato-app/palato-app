@@ -60,6 +60,13 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
   const backgroundArc = describeArc(ARC_START_DEG, ARC_END_DEG, RADIUS)
   const foregroundArc = describeArc(ARC_START_DEG, handleAngle, RADIUS)
 
+  const commitValue = (next: number) => {
+    if (next === value) return
+    // Soft tick per step on devices that support it (Web Vibration API)
+    if ('vibrate' in navigator) navigator.vibrate(10)
+    onChange(next)
+  }
+
   const getAngleFromPointer = (clientX: number, clientY: number) => {
     if (!svgRef.current) return 0
     const rect = svgRef.current.getBoundingClientRect()
@@ -71,17 +78,51 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true)
     e.currentTarget.setPointerCapture(e.pointerId)
-    onChange(angleToValue(getAngleFromPointer(e.clientX, e.clientY), min, max, step))
+    commitValue(angleToValue(getAngleFromPointer(e.clientX, e.clientY), min, max, step))
   }
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging) return
-    onChange(angleToValue(getAngleFromPointer(e.clientX, e.clientY), min, max, step))
+    commitValue(angleToValue(getAngleFromPointer(e.clientX, e.clientY), min, max, step))
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
     setIsDragging(false)
     e.currentTarget.releasePointerCapture(e.pointerId)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // An unset dial starts stepping from the midpoint the handle already rests on
+    const currentStepIndex = Math.round((displayValue - min) / step)
+    const totalSteps = Math.round((max - min) / step)
+    let nextStepIndex: number
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowUp':
+        nextStepIndex = currentStepIndex + 1
+        break
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        nextStepIndex = currentStepIndex - 1
+        break
+      case 'PageUp':
+        nextStepIndex = currentStepIndex + Math.round(1 / step)
+        break
+      case 'PageDown':
+        nextStepIndex = currentStepIndex - Math.round(1 / step)
+        break
+      case 'Home':
+        nextStepIndex = 0
+        break
+      case 'End':
+        nextStepIndex = totalSteps
+        break
+      default:
+        return
+    }
+    e.preventDefault()
+    nextStepIndex = Math.max(0, Math.min(totalSteps, nextStepIndex))
+    commitValue(Number((min + nextStepIndex * step).toFixed(2)))
   }
 
   // Tick generation — integers get labels, half-steps are decorative
@@ -107,6 +148,15 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         width={SIZE}
         height={SIZE}
+        className="palato-rating-dial"
+        role="slider"
+        tabIndex={0}
+        aria-label="Coffee rating"
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={displayValue}
+        aria-valuetext={value !== null ? `${value.toFixed(1)} out of ${max}` : 'Not rated yet'}
+        onKeyDown={handleKeyDown}
         style={{
           userSelect: 'none',
           WebkitUserSelect: 'none',
@@ -190,6 +240,20 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
           )
         })}
 
+        {/* Keyboard-focus halo behind the handle — visibility is driven purely by
+            CSS :focus-visible (see index.css), so pointer users never see it */}
+        <circle
+          className="palato-dial-halo"
+          cx={handlePos.x}
+          cy={handlePos.y}
+          r={26}
+          fill="rgba(217, 78, 31, 0.22)"
+          style={{
+            transition: isDragging ? 'none' : 'opacity 0.15s, cx 150ms ease-out, cy 150ms ease-out',
+            pointerEvents: 'none',
+          }}
+        />
+
         {/* Handle — purely visual; touches pass through to the hit band below */}
         <circle
           cx={handlePos.x}
@@ -200,7 +264,8 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
           strokeWidth={3}
           style={{
             filter: 'drop-shadow(0 2px 4px rgba(30, 20, 16, 0.2))',
-            transition: isDragging ? 'none' : 'fill 0.15s',
+            // Snap the handle for keyboard/tap updates; live-track while dragging
+            transition: isDragging ? 'none' : 'fill 0.15s, cx 150ms ease-out, cy 150ms ease-out',
             pointerEvents: 'none',
           }}
         />
@@ -225,8 +290,10 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
         />
       </svg>
 
-      {/* Center value display */}
+      {/* Center value display — hidden from screen readers; the slider's
+          aria-valuetext already announces the value */}
       <div
+        aria-hidden="true"
         style={{
           position: 'absolute',
           top: '50%',

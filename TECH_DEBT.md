@@ -136,19 +136,13 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Decision #027 (taste/feel split, defects elevated) and Decision #028 (merged prose + inline descriptor auto-detect) define the path. Both are strong next-session candidates.
 - **Surfaced:** May 18, 2026 — first self-test of RateCoffee v0.1.
 
-### RatingDial — accessibility and platform polish
-- **What:** The radial dial component has known gaps:
-  - **No keyboard support.** Can't tab to the dial and arrow-key to set a value. Screen readers won't see it as an interactive control.
-  - **No haptic feedback on mobile.** Real Vivino-style dials have a soft tick on each step. We have nothing.
-  - **Single linear gradient.** Vivino uses a multi-stop gradient that telegraphs intensity more vividly. Ours is functional, not polished.
-  - **No "snap" animation when releasing the handle.** Currently the handle stops wherever it lands.
-- **Why it's debt:** Accessibility is non-negotiable for any rating control that ships to real users. The rest is polish that compounds the brand.
-- **Fix:**
-  - Add `tabIndex={0}`, `role="slider"`, `aria-valuenow/min/max`, and onKeyDown handler for arrow keys (← →, ↑ ↓, PageUp/PageDown).
-  - Add `navigator.vibrate(10)` on each step change on touch devices (Web Vibration API).
-  - Define a multi-stop gradient on the dial path mirroring the Vivino color story (cool → warm → hot).
-  - Add a small CSS transition on the handle position (~150ms ease-out) for non-drag updates.
+### RatingDial — gradient polish (accessibility resolved)
+- **What:** Vivino uses a multi-stop gradient that telegraphs intensity more vividly (cool → warm → hot). Ours is a single linear gradient — functional, not polished.
+- **Why it's debt:** Brand-compounding polish; also a visual/brand decision Jesse should drive, which is why it wasn't bundled into the accessibility fix.
+- **Fix:** Define a multi-stop gradient on the dial path mirroring the Vivino color story.
 - **Surfaced:** May 18, 2026 — Decision #029, dial v0.1.1 ships without these.
+
+> **Resolved July 5, 2026** — *"RatingDial — no keyboard/screen-reader support, no haptics, no snap animation."* The dial is now a WAI-ARIA slider: `role="slider"` + `tabIndex` + `aria-valuemin/max/now/valuetext` on the SVG, arrow keys step ±0.1, PageUp/PageDown ±1.0, Home/End jump to min/max, with a `:focus-visible`-gated soft Ember halo behind the handle as the keyboard-focus indicator (pure CSS, in `index.css`; pointer/touch users never see it — a first-pass outline ring around the whole dial looked bad and was replaced same-day). `navigator.vibrate(10)` ticks each step change on devices that support it, and the handle snaps (~150ms ease-out) on non-drag updates. The center value display is `aria-hidden` so the value isn't double-announced. Only the gradient polish remains (entry above).
 
 ---
 

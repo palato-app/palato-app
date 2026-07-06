@@ -130,6 +130,18 @@ body {
   }
 }
 
+/* Rating dial keyboard-focus indicator: a soft halo behind the handle.
+   :focus-visible means pointer/touch interaction never shows it. */
+.palato-rating-dial:focus {
+  outline: none;
+}
+.palato-rating-dial .palato-dial-halo {
+  opacity: 0;
+}
+.palato-rating-dial:focus-visible .palato-dial-halo {
+  opacity: 1;
+}
+
 /* Prevent iOS auto-zoom on input focus (requires 16px minimum) */
 @media (max-width: 600px) {
   input, select, textarea {
