@@ -12,6 +12,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
     "@supabase/supabase-js": "^2.104.1",
+    "@vercel/analytics": "^2.0.1",
     "heic2any": "^0.0.4",
     "posthog-js": "^1.387.0",
     "react": "^19.2.5",
