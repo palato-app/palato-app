@@ -738,3 +738,18 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** Deploy the branch preview, run the installed-mode OAuth + scan smoke test on a real iPhone, then merge.
 
 ---
+## #062 — July 6, 2026 — Augmentation must speak Learn's region vocabulary (prompt v5, client-supplied vocab)
+
+**Decision:** The web-augmentation pipeline now constrains proposed `origin_region` values to the Learn section's demarcated growing regions. The admin client sends the canonical region names for the coffee's country (parsed from the Origins Data Standard markdown, Decision #056) with each `/api/augment` call; prompt v5 instructs Claude to lead with a canonical region name and append the roaster's finer locality in parentheses — "Imbabura (Intag Valley)" — falling back to the roaster's wording plus a `notes_for_reviewer` explanation when it can't map confidently, or when it's correcting `origin_country` itself (which makes the list inapplicable). The product logic: Learn exists to funnel curiosity into purchasable coffees — globe → region → its coffees → buy. A region page that can't find its own coffees because the roaster wrote "Intag Valley" where the globe says "Imbabura" breaks that chain silently.
+
+**Alternatives considered:** (1) *Structured region catalog + `region_id` FK* (the TECH_DEBT fix) — the right long-term shape, but needs a region table, a migration, and a backfill; deferred, and this prompt guard makes the eventual backfill cleaner since new rows arrive pre-normalized. (2) *Deterministic server-side post-processing* (match the model's output against `matchTerms` after the fact) — can normalize spellings but cannot map knowledge-requiring cases (a roaster's "Pitalito" → Huila); the model can, so the vocabulary belongs in the prompt where that knowledge gets applied. (3) *Build-time export of the vocab into the serverless function* — rejected to avoid a second copy of the origins source of truth; the client already parses the verified markdown (single source, #056), so it supplies the vocabulary per call (bound-checked server-side; the endpoint is admin-gated anyway).
+
+**Tradeoffs accepted:** A second sanctioned cross-feature import (admin → learn's `originsData`), commented at the import site — if a third consumer appears, origins data moves to `lib/`. The vocabulary is only as good as the markdown; a genuinely new growing region still lands as free text, correctly flagged for the reviewer rather than force-mapped. Existing rows are untouched until re-augmented under v5. Region normalization rides on the model following instructions — the admin review diff remains the backstop.
+
+**Verification:** `npm run build` green; lint unchanged (13 pre-existing, 0 new); admin Augment section renders in the browser. The prompt change itself is server-side and only observable on deployed runs (Vite dev doesn't serve `/api`) — the first v5 batch is the real test.
+
+**Metric:** Region-match rate — % of approved coffees whose `origin_region` matches a demarcated Learn region via `coffeeMatchesRegion`. Measurable from the live catalog today (baseline), target ~100% for v5-augmented rows; belongs in the augmentation-accuracy eval alongside per-field accuracy.
+
+**Next action:** Re-augment the catalog under v5 and watch the region-match rate; separately fix the batch 504 timeouts (raise the function ceiling via Fluid Compute + retry) before any large re-augmentation run.
+
+---

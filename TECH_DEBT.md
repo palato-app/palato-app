@@ -230,6 +230,7 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **What:** A region surfaces its catalog coffees by normalized fuzzy matching (`coffeeMatchesRegion` in `lib/matchRegion.ts`): exact `origin_country` + any diacritic-normalized `matchTerm` contained in free-text `coffees.origin_region`. There is no `region_id` foreign key.
 - **Why it's debt:** Breaks silently when catalog `origin_region` spellings drift outside a region's `matchTerms` (e.g. a new municipality), and a coffee can only ever map to regions whose aliases someone remembered to author. Fine at current catalog scale; fragile as the catalog grows.
 - **Fix:** A structured region catalog + `region_id` FK on `coffees` (with a backfill), later branch. Until then, keep `matchTerms` current as new regions/spellings appear.
+- **Mitigated (July 6, 2026, Decision #062):** augmentation prompt v5 now constrains proposed `origin_region` values to the Learn canonical vocabulary ("Canonical (Locality)" format), so web-augmented rows land inside the match net by construction. Scan-sourced free text and pre-v5 rows remain fuzzy-only; the FK is still the real fix.
 - **Surfaced:** Decision #055, June 24, 2026.
 
 ### Catalog has no region filter

@@ -42,8 +42,10 @@ export type Augmentation = {
   coffee: AugmentationCoffee | null
 }
 
+// Must cover every PROPOSABLE_FIELD in api/augment.js — a proposed field missing
+// here renders as "NEW" in the review diff even when it overwrites a current value.
 const COFFEE_COLS =
-  'id, roaster_name, coffee_name, origin_country, origin_region, producer, farm, process, process_detail, roaster_stated_roast_level, variety, elevation_masl, roaster_tasting_notes_raw'
+  'id, roaster_name, coffee_name, origin_country, origin_region, producer, farm, process, process_detail, roaster_stated_roast_level, variety, elevation_masl, roaster_tasting_notes_raw, purchase_url, retailer_name, price_usd, bag_weight_grams, purchase_availability'
 
 /** Pending augmentation proposals (admin RLS), each joined to its coffee's current values. */
 export function usePendingAugmentations() {
@@ -92,8 +94,16 @@ export function usePendingAugmentations() {
   return { items, loading, error, refetch: load }
 }
 
-/** Trigger augmentation for one coffee via the admin-gated serverless endpoint. */
-export async function runAugment(coffeeId: string): Promise<{ error: string | null; fieldCount?: number }> {
+/**
+ * Trigger augmentation for one coffee via the admin-gated serverless endpoint.
+ * `regionVocab` — the canonical Learn region names for the coffee's country —
+ * constrains the proposed origin_region so it stays matchable by the Learn
+ * globe's fuzzy region link (Decision #062).
+ */
+export async function runAugment(
+  coffeeId: string,
+  regionVocab: string[] = [],
+): Promise<{ error: string | null; fieldCount?: number }> {
   const { data: { session } } = await supabase.auth.getSession()
   try {
     const res = await fetch('/api/augment', {
@@ -102,7 +112,7 @@ export async function runAugment(coffeeId: string): Promise<{ error: string | nu
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session?.access_token ?? ''}`,
       },
-      body: JSON.stringify({ coffeeId }),
+      body: JSON.stringify({ coffeeId, regionVocab }),
     })
     // A serverless timeout (504) or platform error returns HTML, not JSON —
     // surface the status so the failure reason is visible, not swallowed.

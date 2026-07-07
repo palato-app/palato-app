@@ -1,5 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useCoffees } from '../../lib/useCoffees'
+// Deliberate cross-feature seam (like catalog→StartHereRail): augmentation must
+// propose regions inside Learn's demarcated vocabulary or the Learn→catalog link
+// breaks (Decision #062). If a third consumer appears, move origins data to lib/.
+import { regionsForCountry } from '../learn/data/originsData'
 import {
   usePendingAugmentations,
   runAugment,
@@ -215,7 +219,8 @@ export function AugmentSection() {
     for (let i = 0; i < ids.length; i++) {
       const c = coffees.find((x) => x.id === ids[i])
       setProgress(`Augmenting ${i + 1} of ${ids.length}: ${c?.coffee_name ?? '…'}…`)
-      const { error, fieldCount } = await runAugment(ids[i])
+      const vocab = c?.origin_country ? regionsForCountry(c.origin_country).map((r) => r.name) : []
+      const { error, fieldCount } = await runAugment(ids[i], vocab)
       if (error) errs.push(`${c?.coffee_name ?? 'Coffee'} — ${error}`)
       else if (fieldCount && fieldCount > 0) ready++
       else nothing++
