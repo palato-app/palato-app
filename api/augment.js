@@ -10,8 +10,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
-// Web search makes this a slow call; give the serverless function headroom.
-export const config = { maxDuration: 120 };
+// Web search makes this a slow call, and obscure coffees can need several
+// search rounds (the pause_turn loop) — some legitimately exceed 120s. Fluid
+// Compute is on, so 300s is honored; a 504'd run has already billed its
+// Anthropic tokens, so finishing once is cheaper than retrying.
+export const config = { maxDuration: 300 };
 
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from the environment
 
