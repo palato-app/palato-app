@@ -98,11 +98,7 @@ A living list of known imperfections, deferred decisions, and known-fragile patt
 - **Fix:** Add a small pill or count above the "your rating" block when there's more than one rating ("3 ratings since May 12 · view all"). Tap expands to a small history list or jumps to a coffee-filtered view of the journal.
 - **Surfaced:** May 18, 2026 — Decision #031, surfaced by allowing multiple ratings per coffee.
 
-### Elevation as a single int can't represent ranges
-- **What:** `coffees.elevation_masl` is an integer, but bags often print elevation as a range (e.g., "1,800–2,100 masl"). The scan prompt captures it as a string, so the range survives extraction — but it can't land in an int column losslessly.
-- **Why it's debt:** Collapsing a range to one int (midpoint or low end) loses real signal that a future recommender could use.
-- **Fix:** Decide at Step 3 (extraction→DB mapping): (a) `elevation` as text, (b) `elevation_min_masl` + `elevation_max_masl` ints, or (c) single int + accept the loss.
-- **Surfaced:** May 23, 2026 — Step 1 prompt review.
+> **Resolved July 8, 2026** — *"Elevation as a single int can't represent ranges."* Option (b), additive: migration `0017` adds nullable `elevation_masl_max`; `elevation_masl` keeps the single value or the low end. Entry (add + edit forms) accepts "1200–1650" via `parseElevationInput` in `lib/format.ts`, display uses `formatElevation`, the scan prefill preserves ranges instead of taking the first number, and the palate elevation chart bands ranges on their midpoint. Confirmed live in the July 8 usability interview (Jono backspaced a range to its low end). See Decision #063. **Residual:** `api/augment.js` still proposes a single `elevation_masl` int — carry the range into the next augmentation prompt rev (v6 candidate); existing rows keep their collapsed values (no backfill).
 
 ---
 

@@ -116,7 +116,15 @@ export default function LearnGlobe({
     const controls = g.controls()
     controls.autoRotate = spin
     controls.autoRotateSpeed = 0.4
-    controls.enableZoom = false
+    // A globe has to spin and zoom (July 8, 2026 interview). Pinch/scroll zoom
+    // stays clamped so you can't fly through the surface or lose the globe.
+    controls.enableZoom = true
+    controls.zoomSpeed = 0.6
+    controls.minDistance = 135 // ~street-of-countries close-up
+    controls.maxDistance = 500 // never smaller than a coin
+    // Flywheel feel: drags coast to a stop instead of dying under the finger.
+    controls.enableDamping = true
+    controls.dampingFactor = 0.08
     g.pointOfView({ lat: 6, lng: -40, altitude: 2.3 })
   }
 

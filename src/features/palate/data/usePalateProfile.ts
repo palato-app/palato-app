@@ -89,6 +89,7 @@ type RatingRow = {
     process: string | null
     variety: string[] | null
     elevation_masl: number | null
+    elevation_masl_max: number | null
   } | null
   rating_flavor_descriptors: Array<{
     descriptor: {
@@ -243,7 +244,12 @@ function buildProfile(rows: RatingRow[]): { profile: PalateProfile; reads: Palat
   ) as Record<ElevationBand, { sum: number; count: number }>
 
   for (const r of rows) {
-    const band = elevationBand(r.coffee?.elevation_masl)
+    // A stated range ("1200–1650") lands in the band of its midpoint
+    const masl =
+      r.coffee?.elevation_masl != null && r.coffee.elevation_masl_max != null
+        ? Math.round((r.coffee.elevation_masl + r.coffee.elevation_masl_max) / 2)
+        : r.coffee?.elevation_masl
+    const band = elevationBand(masl)
     if (band) {
       elevationBuckets[band].sum += r.rating
       elevationBuckets[band].count++
@@ -368,7 +374,8 @@ export function usePalateProfile(): UsePalateProfileResult {
             roaster_stated_roast_level,
             process,
             variety,
-            elevation_masl
+            elevation_masl,
+            elevation_masl_max
           ),
           rating_flavor_descriptors (
             descriptor:flavor_descriptors (

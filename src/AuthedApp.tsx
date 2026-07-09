@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './lib/auth'
 import { TaxonomyView } from './features/flavors/TaxonomyView'
@@ -61,6 +61,12 @@ export function AuthedApp() {
   const [view, setView] = useState<View>('browse')
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
   const [catalogOrigin, setCatalogOrigin] = useState<string | null>(null)
+
+  // View swaps are internal state, not router navigations, so the window scroll
+  // position leaks from one view into the next. Reset it on every view change.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [view, selectedCoffeeId])
 
   const goToBrowse = () => {
     setView('browse')

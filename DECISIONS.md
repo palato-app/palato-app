@@ -753,3 +753,20 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** Re-augment the catalog under v5 and watch the region-match rate; separately fix the batch 504 timeouts (raise the function ceiling via Fluid Compute + retry) before any large re-augmentation run.
 
 ---
+## #063 — July 8, 2026 — Elevation becomes a range (min + max columns); first interview-driven fix batch
+
+**Decision:** Represent elevation ranges with two integer columns: `elevation_masl` keeps the single stated value (or the low end of a range) and a new nullable `elevation_masl_max` (migration `0017`) holds the high end. Entry stays one free-text field that accepts "2000" or "1200–1650" (any separator), parsed by a shared `parseElevationInput` in `lib/format.ts`; display is a shared `formatElevation` ("1,200–1,650 masl"); the palate elevation chart bands ranged coffees on their midpoint. Shipped alongside five other fixes from the July 8 usability interview (Jono): app-wide scroll reset on view changes (AuthedApp + Learn drill-down — the root cause of "loads at the bottom of the page"), land-on-results when the catalog opens pre-filtered to an origin, globe free zoom + drag inertia (`enableZoom` + clamped distances + damping), rating-dial scale anchors ("Bad" / "Incredible"), and a required-fields legend + live "Still needed: …" hint on the add/edit coffee forms.
+
+**Alternatives considered (elevation):** (1) *Text column* — preserves anything but kills numeric querying (palate bands, future recommender features). (2) *Single int + accept the loss* — the status quo; the interview showed real users destroy the data at entry (Jono backspaced "1200–1650" to "1200") rather than average it. (3) *Rename to `elevation_min_masl` + `elevation_max_masl`* — cleaner names but a breaking rename across every consumer (forms, detail, palate, scan mapping, augment prompt) for zero data benefit; keeping `elevation_masl` as min made the change additive.
+
+**Rationale:** TECH_DEBT had flagged the single-int loss since May (scan prompt already preserves ranges as strings); the interview converted it from hypothetical to observed. Additive column + one shared parser/formatter is the smallest change that stops the loss at every entry point at once.
+
+**Tradeoffs accepted:** (a) `api/augment.js` still proposes a single `elevation_masl` int — augmented coffees won't carry ranges until a future prompt rev (deliberately not bundled; prompt changes are their own versioned/eval'd track). (b) Existing rows keep their collapsed single values; no backfill. (c) Mouse-wheel over the Learn globe now zooms instead of scrolling the page — accepted; it's what a globe-shaped object implies, and the canvas is a bounded region.
+
+**Verification:** `npm run build` green; lint 0 new findings (one pre-existing `prefer-const` fixed in passing). Browser-verified via dev sign-in: Learn directory click from 1,377px deep opens the country page at top; "See Colombia coffees" lands with the filter bar at the top of the viewport and the Colombia pill active; dial renders Awful/Incredible anchors; add-flow shows the legend, the "Still needed" hint, and the range placeholder; detail renders "1,200 masl" via the new formatter. **Migration `0017` is written but NOT yet pushed — run `supabase db push` before the next deploy** (the add-flow insert and the palate ratings query reference the new column).
+
+**Metric:** Rating/add-form completion rate and time-to-complete in PostHog, plus rage-click/dead-click counts on the Learn globe in session replays — compare before/after in the next usability sessions. For elevation specifically: % of new coffees whose bag states a range that lands with `elevation_masl_max` populated.
+
+**Next action:** Push migration `0017`; re-enter Jono's Attikan Estate elevation as "1200–1650" via Edit details to restore the lost range; carry the remaining interview items (form fatigue/per-brew-vs-bag redesign, Learn collapsible groups, edit-permission question vs. #045) per the INTERVIEWS.md Round 2 inventory.
+
+---

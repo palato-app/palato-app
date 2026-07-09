@@ -5,6 +5,7 @@ import { prepareImage, uploadBagImage } from '../../lib/bagImage'
 import { RatingForm, type RatingFormSubmitPayload } from '../rating/RatingForm'
 import { EditCoffeeForm } from '../coffee/EditCoffeeForm'
 import { track } from '../../lib/track'
+import { parseElevationInput } from '../../lib/format'
 import type { Coffee } from '../../lib/useCoffees'
 import {
   PROCESS_OPTIONS,
@@ -505,7 +506,13 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
         process_detail: ex.process_detail ?? '',
         roaster_stated_roast_level: ROAST_FROM_SCAN[ex.roast_level] ?? '',
         variety: ex.variety ?? '',
-        elevation_masl: ex.elevation ? (String(ex.elevation).match(/\d+/)?.[0] ?? '') : '',
+        // Keep a stated range intact ("1200–1650") instead of collapsing to the first number
+        elevation_masl: (() => {
+          if (!ex.elevation) return ''
+          const parsed = parseElevationInput(String(ex.elevation))
+          if (!parsed) return ''
+          return parsed.max != null ? `${parsed.min}–${parsed.max}` : String(parsed.min)
+        })(),
         roaster_tasting_notes: Array.isArray(ex.tasting_notes) ? ex.tasting_notes.join(', ') : '',
       }
       setPrefilledSnapshot(prefilled)
@@ -674,7 +681,7 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
         }
       }
 
-      let imageUrl = bagImageUrl
+      const imageUrl = bagImageUrl
       // If no image from scan and no captured image, allow proceeding without
       const variety = coffee.variety
         ? coffee.variety.split(',').map((v) => v.trim()).filter(Boolean)
@@ -682,7 +689,7 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
       const tastingNotesArr = coffee.roaster_tasting_notes
         ? coffee.roaster_tasting_notes.split(',').map((n) => n.trim()).filter(Boolean)
         : null
-      const elevation = coffee.elevation_masl ? parseInt(coffee.elevation_masl, 10) : null
+      const elevation = coffee.elevation_masl ? parseElevationInput(coffee.elevation_masl) : null
 
       const { data: coffeeRow, error: insertError } = await supabase
         .from('coffees')
@@ -697,7 +704,8 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
           process_detail: coffee.process_detail.trim() || null,
           roaster_stated_roast_level: coffee.roaster_stated_roast_level,
           variety,
-          elevation_masl: elevation,
+          elevation_masl: elevation?.min ?? null,
+          elevation_masl_max: elevation?.max ?? null,
           roaster_tasting_notes_raw: tastingNotesArr,
           bag_image_url: imageUrl,
           created_by: user.id,
@@ -945,13 +953,23 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
   }
 
   if (step === 'details') {
-    const canSave = coffee.roaster_name && coffee.coffee_name && coffee.origin_country && coffee.process && coffee.roaster_stated_roast_level
+    const missingRequired = [
+      !coffee.roaster_name && 'roaster',
+      !coffee.coffee_name && 'coffee name',
+      !coffee.origin_country && 'origin country',
+      !coffee.process && 'process',
+      !coffee.roaster_stated_roast_level && 'roast level',
+    ].filter(Boolean) as string[]
+    const canSave = missingRequired.length === 0
     return (
       <div style={s.container}>
         <button onClick={() => setStep('capture')} style={s.backLink}>← Back</button>
         <p style={s.stepEyebrow}>Step 2 of 3</p>
         <h2 style={s.heading}>Coffee details</h2>
-        <p style={s.subheading}>Check the details and correct anything wrong.</p>
+        <p style={s.subheading}>
+          Check the details and correct anything wrong. Fields marked{' '}
+          <span style={s.required}>*</span> are required — everything else is optional.
+        </p>
 
         {scanning && scanStatus && (
           <div style={s.scanBanner}>{scanStatus}</div>
@@ -1072,7 +1090,8 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
           </div>
           <div style={s.fieldGroup}>
             <label style={s.label}>Elevation (masl)</label>
-            <input style={s.input} type="number" value={coffee.elevation_masl} onChange={(e) => setCoffee({ ...coffee, elevation_masl: e.target.value })} placeholder="e.g. 2000" />
+            <input style={s.input} type="text" inputMode="numeric" value={coffee.elevation_masl} onChange={(e) => setCoffee({ ...coffee, elevation_masl: e.target.value })} placeholder="e.g. 2000 or 1200–1650" />
+            <p style={s.helperText}>A single number or the range from the bag.</p>
           </div>
           <div style={s.fieldGroup}>
             <label style={s.label}>Roaster's tasting notes</label>
@@ -1092,6 +1111,9 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
           >
             {saving ? 'Saving…' : 'Save & Rate →'}
           </button>
+          {!canSave && !scanning && (
+            <p style={s.helperText}>Still needed: {missingRequired.join(', ')}.</p>
+          )}
         </div>
       </div>
     )

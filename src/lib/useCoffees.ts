@@ -14,6 +14,8 @@ export type Coffee = {
   roaster_stated_roast_level: string | null
   variety: string[] | null
   elevation_masl: number | null
+  // High end of a stated elevation range (migration 0017); null = single value.
+  elevation_masl_max: number | null
   roast_date: string | null
   roaster_tasting_notes_raw: string[] | null
   sca_score: number | null
