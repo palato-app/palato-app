@@ -5,7 +5,7 @@ A living record of user research signal for Palato. Each round of interviews add
 
 This doc contains both raw signal (verbatim quotes, sample composition) and synthesis (themes, implications, action items). Direct user quotes are kept short and used sparingly.
 
-This is **not** a substitute for full interview transcripts (those live elsewhere) and **not** a place for product roadmap decisions (those go in DECISIONS.md after synthesis).
+This is **not** a substitute for full interview transcripts (those live in `docs/interviews/`, one file per session) and **not** a place for product roadmap decisions (those go in DECISIONS.md after synthesis).
 
 Names of respondents who explicitly engaged via personal email: first name only. Anonymized when in doubt. No emails, no last names.
 
@@ -125,3 +125,75 @@ Josh's framing suggests the rating flow shouldn't end at "submit." A short set o
 - [ ] Explore the post-rating engagement loop: what are the 3–5 "daily input" questions a user could answer after rating that would build enough signal to generate personalized insights? Map these to the atomic action flow.
 - [ ] Test the Oura/Apple Watch positioning frame in the next 2 interviews — does it resonate across segments or is it specific to data-oriented users like Josh?
 - [ ] Log a DECISIONS.md entry on the positioning tension: "Vivino for coffee" vs "Oura for coffee" — not a decision yet, but the frame is worth documenting so it can be pressure-tested deliberately.
+
+---
+
+## Round 2 — In-app usability interviews (July 2026)
+
+First round conducted against the shipped product (onboarding → quiz → add-and-rate → Learn → Palate → recommendations), using the Round 2 script in [docs/interview-guide.md](docs/interview-guide.md). Sessions are think-aloud walkthroughs on the participant's own phone, with a live add-and-rate task using a real bag.
+
+### Jono — July 8, 2026
+
+**Transcript:** [docs/interviews/2026-07-08-jono.md](docs/interviews/2026-07-08-jono.md) (includes full verbatim transcript + anecdotal observations). 46 minutes — tighten future sessions.
+
+**Profile:** 13 years in specialty; daily V60 (40g @ 1:17, two people); ~3 bags/month from 2+ roasters, ~$66/month. NYC, brick-and-mortar buyer (Big Mouth, Bird & Branch). Buying criteria in order: price-to-value, roast date, origin, tasting notes. Hard ceiling ~$24/12oz. Estimates 15% of bags "incredible," 15% "awful." Segment read: behaviorally **Deep into it**, but motivationally a **value-maximizer** — a flavor of enthusiast our segments don't yet name (skilled and engaged, but explicitly *not* chasing quality at any price). Recruited via personal network (family) — same recruitment-bias caveat as Round 1.
+
+**Top signals:**
+
+1. **Selective logging, not habitual logging.** Would only log coffees he's genuinely impressed by; a gifted/one-off bag isn't worth the effort because the memory isn't *actionable* ("I know I'm not going to get my hands on it again"). Flat no to rating every coffee even if the app were free. Consistent with Round 1 Theme 1 (memory friction) but sharpens it: the log's value is proportional to re-acquirability. Tension to watch: the palate engine assumes rating volume; this user will supply sparse, positively-biased data.
+2. **Rating-form fatigue is real and mid-form.** "Man, this is a lot of info for a coffee I'm never going to have again" — plus real-life time pressure (child at home) → skipped "add more details." Independently reproduces Jesse's own May self-test findings (Decisions #027/#028 territory). Second confirmed voice; this is now validated debt, not opinion.
+3. **Per-brew vs. per-bag ambiguity.** Couldn't tell if the form captures one brew session or the whole-bag experience. New finding; goes to the heart of what a "rating event" means in the schema.
+4. **Learn: depth before framing.** Overwhelming as a flat wall; wants collapsible region groups (click "Caribbean" → countries). Globe expectations are absolute: must spin freely and pinch-zoom ("It's not a globe if it doesn't spin"). Wrong scroll position on region click compounds it. Also: a globe on the *Palate* tab reads as misplaced ("my mouth is not a globe").
+5. **Recommendations: general > hyper-specific, and never a dead end.** A specific-bag rec he can't get locally is ignored ("not already in my lifestyle of how I shop"); a region/style rec is welcome. But a specific rec **with a working purchase link** flips him to yes — even as an in-person shopper. Price shown must match the roaster's site exactly; "don't lead me to a 404 or a sold-out coffee." Shipping info explicitly not expected. Local-shop recs ("go try this shop in the West Village") would resonate strongly — the urban brick-and-mortar case is underserved.
+6. **App identity readback:** "a diary of coffee" + educational tool + palate tracker — and palate tracking is the part he's *least* interested in. Not social, not commerce (yet). Would consolidate his existing web-browsing behavior if community ratings/notes-vs-roaster-claims + browsing + purchasing lived in one place (echoes Round 1 Theme 3). Trust in recs must be *earned* through his own logged data.
+7. **Starting palate landed flat.** "It wasn't wrong at all… it wasn't data that moved me in any way." Onboarding itself "painless," but factoids were skimmed. The quiz reveal is accurate-but-inert for this segment.
+
+**Verbatim worth keeping:**
+
+- "Man, this is a lot of info for a coffee I'm never going to have again." — the rating-cost ceiling.
+- "It's not a globe if it doesn't spin."
+- "My mouth is not a globe." — on the Palate tab's map.
+- "I don't want another information silo." — recs must terminate in a purchasable page.
+- "Don't lead me to a 404 or a sold-out coffee."
+- "It wasn't wrong at all. But it wasn't data that moved me in any way." — starting palate.
+- "I can't afford to be that picky." — the value-maximizer thesis in one line.
+- "I feel stuck." — searching the catalog with intent to buy, no purchase path visible (coffee not yet augmented).
+
+**Issue inventory (replication status noted; prioritization → DECISIONS.md / TECH_DEBT.md, not here):**
+
+| # | Issue | Status |
+|---|---|---|
+| 1 | Learn region click lands at wrong scroll position | **Fixed July 8, 2026** (scroll reset on Learn drill-down + all AuthedApp view changes) |
+| 2 | Palate map country click → catalog jumps to top instead of the country section | **Fixed July 8, 2026** (origin-filtered catalog arrivals land on the results bar) |
+| 3 | Rating dial has no scale anchors (had to ask "5 is great, 1 is terrible?") | **Fixed July 8, 2026** ("Bad"/"Incredible" anchors under 1 and 5) |
+| 4 | Globe: no free spin, no pinch-zoom | **Fixed July 8, 2026** (zoom enabled with clamped bounds + drag inertia) |
+| 5 | Add-coffee form doesn't mark required fields (hit validation stop on roast level) | **Fixed July 8, 2026** (legend + live "Still needed: …" hint on add + edit forms) |
+| 6 | Elevation field can't take a range — user typed 1200 for "1200–1650" | **Fixed July 8, 2026** (migration 0017 + range parsing everywhere; Decision #063) |
+| 7 | Rating form fatigue / length | **Confirms known debt** (Decisions #027/#028; Jesse's self-test) — now 2 voices |
+| 8 | Per-brew vs. per-bag ambiguity in rating form | New, n=1, structural |
+| 9 | Learn wall-of-buttons → wants collapsible region groups | New, n=1 |
+| 10 | Non-creator "Edit details" on any coffee felt wrong | **Conflicts with Decision #045** (open-edit intentional for beta); TECH_DEBT already flags it at scale |
+| 11 | Body/acidity slider hard to drag (mobile Chrome) | New, n=1, needs repro |
+| 12 | Rate-field mis-tap jumped page to Body section | New, n=1, needs repro |
+| 13 | Descriptor matcher: "chocolate covered almonds" → almond matched, chocolate didn't | New, n=1, needs repro |
+| 14 | Couldn't navigate back to a recommendation card after leaving it | New, n=1, needs repro (may be discoverability, not a bug) |
+| 15 | No visible purchase path from catalog search ("I feel stuck") | Known gap — commerce block only on augmented coffees; fix = finish augmentation backlog |
+| 16 | Logo reads "Po-too" (L+A → U) | New, n=1, brand-sensitive |
+| 17 | Onboarding factoids skimmed | New, n=1 |
+| 18 | Starting palate accurate but inert | New, n=1, product question not bug |
+| 19 | Post-quiz dead end at night (nothing to do without a coffee to rate) | New, n=1, activation-gap design question |
+| 20 | Globe on Palate tab feels misplaced | New, n=1 |
+| 21 | OAuth consent screen shows the raw Supabase URL ("Sign in to Scroggs Freedom" gibberish) — trust-killer at the moment of asking for trust | Jesse called it live; config task (Supabase custom domain / Google consent-screen branding), not code |
+| 22 | No in-app feedback that a submitted coffee is pending admin approval ("Well, I hope it gets approved" — learned only verbally) | New, n=1; small copy add on the post-save confirmation |
+| 23 | No visible progress toward the 3-rating threshold after rating ("Your starting palette hasn't changed, but I'm on my way") | New, n=1; a "1 of 3" marker would close the loop |
+| 24 | Scan-prefilled jargon lands unexplained ("S9. I don't know what that is" / "I have no idea what these hills are") | New, n=1, wait for replication |
+| 25 | "Add more flavors" section invisible — skipped without seeing it | New; fold into the #7 form redesign, not a standalone fix |
+
+### Round 2 → action items
+
+- [ ] Move confirmed UX fixes into TECH_DEBT.md / a fix session; log any model changes (e.g. edit-permission reversal vs. Decision #045) in DECISIONS.md
+- [ ] Take the strategic threads (general-vs-specific recs, local-shop recs, community ratings, palate-tracking disinterest, value-maximizer segment) to the Claude.ai project chat — build direction, not build mechanics
+- [ ] Tighten the script toward ~30 min; the add-and-rate task + Learn + recs Q&A is the high-yield core
+- [ ] Watch for replication in the next 2–3 sessions: logo readability, factoid skimming, inert starting palate, per-brew vs. per-bag confusion, globe-on-Palate placement
+- [ ] Fix the script line "I'm going to hand you…" (remote/own-phone sessions don't hand anything)
+- [ ] Continue recruiting outside the personal network — Jono extends the Round 1 bias (family, coffee-fluent)
