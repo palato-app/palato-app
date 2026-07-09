@@ -8,7 +8,7 @@ import { EditCoffeeForm } from './EditCoffeeForm'
 import { BrewDetails, hasBrewDetails } from '../../components/BrewDetails'
 import type { RatedCoffee } from '../../lib/useUserRatings'
 import { ROAST_LABELS } from '../../lib/labels'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatElevation } from '../../lib/format'
 
 const styles = {
   container: { marginTop: '3rem' } as const,
@@ -245,7 +245,7 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
     ? coffee.process.charAt(0).toUpperCase() + coffee.process.slice(1).replace(/_/g, ' ')
     : ''
   const varietyDisplay = coffee.variety?.length ? coffee.variety.join(', ') : null
-  const elevationDisplay = coffee.elevation_masl ? `${coffee.elevation_masl} masl` : null
+  const elevationDisplay = formatElevation(coffee.elevation_masl, coffee.elevation_masl_max)
 
   if (editingCoffee) {
     return (

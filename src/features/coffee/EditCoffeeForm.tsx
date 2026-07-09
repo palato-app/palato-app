@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import type { Coffee } from '../../lib/useCoffees'
 import { PROCESS_OPTIONS, ROAST_OPTIONS } from '../../lib/labels'
+import { parseElevationInput } from '../../lib/format'
 
 type CoffeeFields = {
   roaster_name: string
@@ -33,7 +34,12 @@ function fieldsFromCoffee(coffee: Coffee): CoffeeFields {
         ? coffee.roaster_stated_roast_level
         : '',
     variety: coffee.variety?.length ? coffee.variety.join(', ') : '',
-    elevation_masl: coffee.elevation_masl != null ? String(coffee.elevation_masl) : '',
+    elevation_masl:
+      coffee.elevation_masl != null
+        ? coffee.elevation_masl_max != null
+          ? `${coffee.elevation_masl}–${coffee.elevation_masl_max}`
+          : String(coffee.elevation_masl)
+        : '',
     roaster_tasting_notes: coffee.roaster_tasting_notes_raw?.length
       ? coffee.roaster_tasting_notes_raw.join(', ')
       : '',
@@ -155,12 +161,14 @@ export function EditCoffeeForm({ coffee, onCancel, onSaved }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const canSave =
-    fields.roaster_name &&
-    fields.coffee_name &&
-    fields.origin_country &&
-    fields.process &&
-    fields.roaster_stated_roast_level
+  const missingRequired = [
+    !fields.roaster_name && 'roaster',
+    !fields.coffee_name && 'coffee name',
+    !fields.origin_country && 'origin country',
+    !fields.process && 'process',
+    !fields.roaster_stated_roast_level && 'roast level',
+  ].filter(Boolean) as string[]
+  const canSave = missingRequired.length === 0
 
   const handleSave = async () => {
     setError(null)
@@ -177,7 +185,7 @@ export function EditCoffeeForm({ coffee, onCancel, onSaved }: Props) {
       const tastingNotesArr = fields.roaster_tasting_notes
         ? fields.roaster_tasting_notes.split(',').map((n) => n.trim()).filter(Boolean)
         : null
-      const elevation = fields.elevation_masl ? parseInt(fields.elevation_masl, 10) : null
+      const elevation = fields.elevation_masl ? parseElevationInput(fields.elevation_masl) : null
 
       const { error: updateError } = await supabase
         .from('coffees')
@@ -192,7 +200,8 @@ export function EditCoffeeForm({ coffee, onCancel, onSaved }: Props) {
           process_detail: fields.process_detail.trim() || null,
           roaster_stated_roast_level: fields.roaster_stated_roast_level,
           variety,
-          elevation_masl: elevation,
+          elevation_masl: elevation?.min ?? null,
+          elevation_masl_max: elevation?.max ?? null,
           roaster_tasting_notes_raw: tastingNotesArr,
         })
         .eq('id', coffee.id)
@@ -269,7 +278,8 @@ export function EditCoffeeForm({ coffee, onCancel, onSaved }: Props) {
         </div>
         <div style={s.fieldGroup}>
           <label style={s.label}>Elevation (masl)</label>
-          <input style={s.input} type="number" value={fields.elevation_masl} onChange={(e) => setFields({ ...fields, elevation_masl: e.target.value })} placeholder="e.g. 2000" />
+          <input style={s.input} type="text" inputMode="numeric" value={fields.elevation_masl} onChange={(e) => setFields({ ...fields, elevation_masl: e.target.value })} placeholder="e.g. 2000 or 1200–1650" />
+          <p style={s.helperText}>A single number or the range from the bag.</p>
         </div>
         <div style={s.fieldGroup}>
           <label style={s.label}>Roaster's tasting notes</label>
@@ -286,6 +296,7 @@ export function EditCoffeeForm({ coffee, onCancel, onSaved }: Props) {
         >
           {saving ? 'Saving…' : 'Save changes'}
         </button>
+        {!canSave && <p style={s.helperText}>Still needed: {missingRequired.join(', ')}.</p>}
       </div>
     </div>
   )

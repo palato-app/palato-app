@@ -424,6 +424,13 @@ type Props = {
 export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
   const { coffees, loading, error } = useCoffees()
 
+  // Arriving with an origin (Learn CTA, Palate map) means "show me those
+  // coffees" — land on the filtered results, not the hero + rails above them.
+  const resultsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (initialOrigin && !loading) resultsRef.current?.scrollIntoView({ block: 'start' })
+  }, [initialOrigin, loading])
+
   const [search, setSearch] = useState('')
   // Seeded from `initialOrigin` when arriving via Learn's "See [Origin]
   // coffees" (§6). The catalog is remounted (keyed) on origin change, so the
@@ -495,7 +502,7 @@ export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
 
       <ScanHowItWorks />
 
-      <div style={styles.filterBar}>
+      <div ref={resultsRef} style={{ ...styles.filterBar, scrollMarginTop: '1.5rem' }}>
         <div style={styles.searchRow}>
           <input
             type="text"

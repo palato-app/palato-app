@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { CountryPanel } from './components/CountryPanel'
 import { RegionDetail } from './components/RegionDetail'
 import { GlobeFallback } from './components/GlobeFallback'
@@ -84,6 +84,12 @@ export function Learn({ onBrowseOrigin, onSelectCoffee }: Props) {
   const [nav, setNav] = useState<LearnLevel>({ level: 'world' })
   const canWebGL = useMemo(() => webglAvailable(), [])
 
+  // The drill-down swaps content in place, so a click far down the world
+  // directory otherwise opens the country page at that same scroll offset.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [nav])
+
   const selectCountry = (country: string) => {
     if (originByCountry(country)) setNav({ level: 'country', country })
   }
@@ -135,7 +141,7 @@ export function Learn({ onBrowseOrigin, onSelectCoffee }: Props) {
           </Suspense>
           <GlobeLegend />
           <p style={styles.globeHint}>
-            Spin the globe and tap a highlighted origin, or pick one from the list below.
+            Spin and pinch to zoom — tap a highlighted origin, or pick one from the list below.
           </p>
         </div>
       )}

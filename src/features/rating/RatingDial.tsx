@@ -208,6 +208,33 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
           )
         })}
 
+        {/* Scale anchors — make the direction of the scale unmissable */}
+        {(
+          [
+            { angle: ARC_START_DEG, word: 'Bad' },
+            { angle: ARC_END_DEG, word: 'Incredible' },
+          ] as const
+        ).map(({ angle, word }) => {
+          const pos = polarToCartesian(angle, RADIUS + STROKE_WIDTH / 2 + 42)
+          return (
+            <text
+              key={word}
+              x={pos.x}
+              y={pos.y}
+              fill="rgba(30, 20, 16, 0.45)"
+              fontSize="10"
+              fontFamily="Geist, system-ui, sans-serif"
+              fontWeight={600}
+              letterSpacing="0.08em"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              style={{ textTransform: 'uppercase' }}
+            >
+              {word}
+            </text>
+          )
+        })}
+
         {/* Major (integer) ticks with labels */}
         {majorTicks.map((v) => {
           const angle = valueToAngle(v, min, max)
