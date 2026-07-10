@@ -31,15 +31,24 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
 
   const { bg, fg } = phases[phase]
 
-  // iOS colors the status/address bar from theme-color once at load and never
-  // re-samples the page, so it sat on ember (phase 0) through the whole splash.
-  // Walk the meta through each phase, then hand back cream for the app.
+  // iOS Safari honors only the FIRST dynamic theme-color write and ignores
+  // rapid follow-ups (it latched phase-0 ember and kept it all session). So:
+  // remove the meta while the splash runs — with no theme-color, iOS samples
+  // the page background for its bars — and restore the cream meta after.
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (!(meta instanceof HTMLMetaElement)) return
-    meta.content = bg
+    if (meta) document.head.removeChild(meta)
     return () => {
-      meta.content = cream
+      if (meta) document.head.appendChild(meta)
+    }
+  }, [])
+
+  // Paint <html> itself each phase so the sampled bar regions (status bar,
+  // around the address pill, overscroll) always show the splash color.
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = bg
+    return () => {
+      document.documentElement.style.backgroundColor = ''
     }
   }, [bg])
 
