@@ -233,15 +233,20 @@ export function AuthedApp() {
         />
       )}
 
-      <BottomTabBar
-        activeView={view}
-        onNavigate={(v) => {
-          if (v === 'browse') goToBrowse()
-          else if (v === 'learn') goToLearn()
-          else if (v === 'palate') goToPalate()
-          else if (v === 'more') goToMore()
-        }}
-      />
+      {/* Hidden during the full-screen form flows, like the FAB — keeps the
+          keyboard from stranding the fixed bar mid-form on iOS and prevents
+          accidental nav-away with half-filled forms. */}
+      {view !== 'rating' && view !== 'add-flow' && (
+        <BottomTabBar
+          activeView={view}
+          onNavigate={(v) => {
+            if (v === 'browse') goToBrowse()
+            else if (v === 'learn') goToLearn()
+            else if (v === 'palate') goToPalate()
+            else if (v === 'more') goToMore()
+          }}
+        />
+      )}
     </div>
   )
 }

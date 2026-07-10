@@ -1,6 +1,38 @@
+import { useEffect, useState } from 'react'
+
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
 const ember = '#D94E1F'
+
+// True while a text field has focus — i.e. the mobile keyboard is (about to be)
+// up. iOS detaches position:fixed elements from the visual viewport while the
+// keyboard is open, stranding the bar mid-page, so we unmount it instead.
+// (Unmount, not inline display — the mobile media query sets display with
+// !important.)
+function useTextFieldFocused() {
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    const NON_TEXT_INPUTS = new Set(['button', 'checkbox', 'radio', 'range', 'file', 'submit', 'reset'])
+    const isTextField = (el: EventTarget | null) => {
+      if (!(el instanceof HTMLElement)) return false
+      if (el.tagName === 'TEXTAREA' || el.isContentEditable) return true
+      return el instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(el.type)
+    }
+    const onFocusIn = (e: FocusEvent) => {
+      if (isTextField(e.target)) setFocused(true)
+    }
+    const onFocusOut = () => setFocused(false)
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+    }
+  }, [])
+
+  return focused
+}
 
 type TabView = 'browse' | 'learn' | 'palate' | 'more'
 
@@ -69,10 +101,14 @@ function TabIcon({ tabKey, active }: { tabKey: string; active: boolean }) {
 }
 
 export function BottomTabBar({ activeView, onNavigate }: Props) {
+  const textFieldFocused = useTextFieldFocused()
+
   // "More" owns the settings shell; Flavors is reached from inside it, so it
   // keeps More highlighted.
   const isTabActive = (key: string) =>
     key === 'more' ? activeView === 'more' || activeView === 'flavors' : activeView === key
+
+  if (textFieldFocused) return null
 
   return (
     <>
