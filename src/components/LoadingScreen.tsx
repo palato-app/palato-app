@@ -6,10 +6,14 @@ const espresso = '#1E1410'
 const ember = '#D94E1F'
 const gold = '#C89B3C'
 
+// Constant cream canvas with the wordmark cycling brand colors. iOS locks its
+// browser-bar tint at first paint and never re-tints mid-splash, so a cycling
+// *background* left the bars stuck on the first phase's color; a fixed cream
+// background matches the bars (and the app that follows) by construction.
 const phases = [
-  { bg: ember, fg: cream },
-  { bg: gold, fg: cream },
-  { bg: espresso, fg: cream },
+  { bg: cream, fg: ember },
+  { bg: cream, fg: gold },
+  { bg: cream, fg: espresso },
   { bg: cream, fg: ember },
 ] as const
 
@@ -30,27 +34,6 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   }, [phase, onComplete])
 
   const { bg, fg } = phases[phase]
-
-  // iOS Safari honors only the FIRST dynamic theme-color write and ignores
-  // rapid follow-ups (it latched phase-0 ember and kept it all session). So:
-  // remove the meta while the splash runs — with no theme-color, iOS samples
-  // the page background for its bars — and restore the cream meta after.
-  useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) document.head.removeChild(meta)
-    return () => {
-      if (meta) document.head.appendChild(meta)
-    }
-  }, [])
-
-  // Paint <html> itself each phase so the sampled bar regions (status bar,
-  // around the address pill, overscroll) always show the splash color.
-  useEffect(() => {
-    document.documentElement.style.backgroundColor = bg
-    return () => {
-      document.documentElement.style.backgroundColor = ''
-    }
-  }, [bg])
 
   return (
     <div
