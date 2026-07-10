@@ -212,7 +212,7 @@ export function RatingDial({ value, onChange, min = 1.0, max = 5.0, step = 0.1 }
         {(
           [
             { angle: ARC_START_DEG, word: 'Bad' },
-            { angle: ARC_END_DEG, word: 'Incredible' },
+            { angle: ARC_END_DEG, word: 'Amazing' },
           ] as const
         ).map(({ angle, word }) => {
           const pos = polarToCartesian(angle, RADIUS + STROKE_WIDTH / 2 + 42)

@@ -165,7 +165,7 @@ First round conducted against the shipped product (onboarding → quiz → add-a
 |---|---|---|
 | 1 | Learn region click lands at wrong scroll position | **Fixed July 8, 2026** (scroll reset on Learn drill-down + all AuthedApp view changes) |
 | 2 | Palate map country click → catalog jumps to top instead of the country section | **Fixed July 8, 2026** (origin-filtered catalog arrivals land on the results bar) |
-| 3 | Rating dial has no scale anchors (had to ask "5 is great, 1 is terrible?") | **Fixed July 8, 2026** ("Bad"/"Incredible" anchors under 1 and 5) |
+| 3 | Rating dial has no scale anchors (had to ask "5 is great, 1 is terrible?") | **Fixed July 8, 2026** ("Bad"/"Amazing" anchors under 1 and 5) |
 | 4 | Globe: no free spin, no pinch-zoom | **Fixed July 8, 2026** (zoom enabled with clamped bounds + drag inertia) |
 | 5 | Add-coffee form doesn't mark required fields (hit validation stop on roast level) | **Fixed July 8, 2026** (legend + live "Still needed: …" hint on add + edit forms) |
 | 6 | Elevation field can't take a range — user typed 1200 for "1200–1650" | **Fixed July 8, 2026** (migration 0017 + range parsing everywhere; Decision #063) |
