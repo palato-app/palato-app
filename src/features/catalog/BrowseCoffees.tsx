@@ -206,6 +206,7 @@ const styles = {
     letterSpacing: '-0.025em',
     margin: 0,
     fontWeight: 400,
+    color: '#1E1410',
   } as const,
   heroEm: {
     fontStyle: 'italic' as const,

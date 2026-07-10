@@ -31,6 +31,18 @@ export function LoadingScreen({ onComplete }: { onComplete: () => void }) {
 
   const { bg, fg } = phases[phase]
 
+  // iOS colors the status/address bar from theme-color once at load and never
+  // re-samples the page, so it sat on ember (phase 0) through the whole splash.
+  // Walk the meta through each phase, then hand back cream for the app.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (!(meta instanceof HTMLMetaElement)) return
+    meta.content = bg
+    return () => {
+      meta.content = cream
+    }
+  }, [bg])
+
   return (
     <div
       style={{
