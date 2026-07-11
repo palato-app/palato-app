@@ -45,10 +45,16 @@ export function useCoffees() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // The user-facing catalog hook: approved coffees only. RLS also returns a
+  // caller's own pending coffees and (for admins) every pending/rejected row, so
+  // without this filter the admin's catalog leaks unapproved coffees (the gate is
+  // meant to keep them out of the brand surface). Admin review uses its own
+  // status-scoped queries (usePendingCoffees / useRejectedCoffees), not this hook.
   const refetch = useCallback(async () => {
     const { data, error } = await supabase
       .from('coffees')
       .select('*')
+      .eq('moderation_status', 'approved')
       .order('roaster_name', { ascending: true })
       .order('coffee_name', { ascending: true })
 
@@ -69,6 +75,7 @@ export function useCoffees() {
       const { data, error } = await supabase
         .from('coffees')
         .select('*')
+        .eq('moderation_status', 'approved')
         .order('roaster_name', { ascending: true })
         .order('coffee_name', { ascending: true })
       if (cancelled) return

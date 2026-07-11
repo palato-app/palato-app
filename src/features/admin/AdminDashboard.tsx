@@ -1,8 +1,18 @@
-import { useState } from 'react'
-import { usePendingCoffees, approveCoffee, rejectCoffee, type PendingCoffee } from './usePendingCoffees'
+import { useRef, useState, type ReactNode } from 'react'
+import {
+  usePendingCoffees,
+  useRejectedCoffees,
+  approveCoffee,
+  rejectCoffee,
+  restoreCoffee,
+  type PendingCoffee,
+} from './usePendingCoffees'
 import { CoffeePlaceholder } from '../../components/CoffeePlaceholder'
 import { AugmentSection } from './AugmentSection'
 import { MaintenanceTools } from './MaintenanceTools'
+import { useAuth } from '../../lib/auth'
+import { supabase } from '../../lib/supabase'
+import { prepareImage, uploadBagImage } from '../../lib/bagImage'
 
 const cream = '#F4EAD5'
 const espresso = '#1E1410'
@@ -104,6 +114,15 @@ const styles = {
     cursor: 'pointer' as const,
   } as const,
   empty: { color: ink50, fontSize: '0.95rem', padding: '2rem 0' } as const,
+  sectionLabel: {
+    fontSize: '0.7rem',
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+    color: ink50,
+    fontWeight: 600,
+    margin: '2.5rem 0 0.25rem',
+  } as const,
+  sectionNote: { fontSize: '0.82rem', color: ink50, margin: '0 0 0.75rem', maxWidth: '30rem', lineHeight: 1.4 } as const,
 }
 
 function summarize(c: PendingCoffee): string {
@@ -112,9 +131,79 @@ function summarize(c: PendingCoffee): string {
     .join(' · ')
 }
 
+/** The shared coffee card shell (thumb + facts), with an action-button slot. */
+function CoffeeRow({ c, children }: { c: PendingCoffee; children: ReactNode }) {
+  return (
+    <div style={styles.card}>
+      {c.bag_image_url ? (
+        <img src={c.bag_image_url} alt={`${c.coffee_name} bag`} style={styles.thumb} />
+      ) : (
+        <CoffeePlaceholder coffeeId={c.id} style={{ width: '72px', height: '96px', flexShrink: 0, borderRadius: '6px' }} />
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={styles.name}>{c.coffee_name}</p>
+        <p style={styles.meta}>{c.roaster_name}</p>
+        {summarize(c) && <p style={styles.meta}>{summarize(c)}</p>}
+        <div style={styles.actions}>{children}</div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Replace a coffee's bag photo in-app, reusing the same validate/HEIC-convert/
+ * upload path as the add flow (lib/bagImage). Fixes the "rejected only because
+ * the photo was bad" case without hand-editing Supabase Storage.
+ */
+function ReplacePhotoButton({ coffeeId, onDone }: { coffeeId: string; onDone: () => void }) {
+  const { user } = useAuth()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (inputRef.current) inputRef.current.value = '' // allow re-picking the same file
+    if (!file || !user) return
+    setBusy(true)
+    try {
+      const prepared = await prepareImage(file)
+      const url = await uploadBagImage(prepared, user.id)
+      const { error } = await supabase.from('coffees').update({ bag_image_url: url }).eq('id', coffeeId)
+      if (error) throw error
+      onDone()
+    } catch (err) {
+      alert(`Photo upload failed: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,.heic,.heif"
+        style={{ display: 'none' }}
+        onChange={onFile}
+      />
+      <button style={styles.reject} disabled={busy} onClick={() => inputRef.current?.click()}>
+        {busy ? 'Uploading…' : 'Replace photo'}
+      </button>
+    </>
+  )
+}
+
 function VerifyQueue() {
-  const { coffees, loading, error, refetch } = usePendingCoffees()
+  const pending = usePendingCoffees()
+  const rejected = useRejectedCoffees()
   const [busyId, setBusyId] = useState<string | null>(null)
+
+  // Restoring moves a coffee rejected → pending, so both lists must refresh.
+  const refetchAll = () => {
+    pending.refetch()
+    rejected.refetch()
+  }
 
   const act = async (id: string, fn: (id: string) => Promise<{ error: string | null }>) => {
     setBusyId(id)
@@ -124,55 +213,55 @@ function VerifyQueue() {
       alert(`Action failed: ${error}`)
       return
     }
-    refetch()
+    refetchAll()
   }
 
-  if (loading) return <p style={styles.empty}>Loading pending coffees…</p>
-  if (error) return <p style={styles.empty}>Couldn’t load the queue: {error}</p>
-  if (coffees.length === 0) {
-    return (
-      <p style={styles.empty}>
-        Nothing waiting. New coffees added by non-admins land here for review before
-        they enter the global catalog.
-      </p>
-    )
-  }
+  if (pending.loading) return <p style={styles.empty}>Loading pending coffees…</p>
+  if (pending.error) return <p style={styles.empty}>Couldn’t load the queue: {pending.error}</p>
 
   return (
     <div>
-      <p style={{ ...styles.meta, marginBottom: '0.5rem' }}>
-        {coffees.length} coffee{coffees.length === 1 ? '' : 's'} awaiting review
-      </p>
-      {coffees.map((c) => (
-        <div key={c.id} style={styles.card}>
-          {c.bag_image_url ? (
-            <img src={c.bag_image_url} alt={`${c.coffee_name} bag`} style={styles.thumb} />
-          ) : (
-            <CoffeePlaceholder coffeeId={c.id} style={{ width: '72px', height: '96px', flexShrink: 0, borderRadius: '6px' }} />
-          )}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={styles.name}>{c.coffee_name}</p>
-            <p style={styles.meta}>{c.roaster_name}</p>
-            {summarize(c) && <p style={styles.meta}>{summarize(c)}</p>}
-            <div style={styles.actions}>
-              <button
-                style={styles.approve}
-                disabled={busyId === c.id}
-                onClick={() => act(c.id, approveCoffee)}
-              >
+      {pending.coffees.length === 0 ? (
+        <p style={styles.empty}>
+          Nothing waiting. New coffees added by non-admins land here for review before
+          they enter the global catalog.
+        </p>
+      ) : (
+        <>
+          <p style={{ ...styles.meta, marginBottom: '0.5rem' }}>
+            {pending.coffees.length} coffee{pending.coffees.length === 1 ? '' : 's'} awaiting review
+          </p>
+          {pending.coffees.map((c) => (
+            <CoffeeRow key={c.id} c={c}>
+              <button style={styles.approve} disabled={busyId === c.id} onClick={() => act(c.id, approveCoffee)}>
                 {busyId === c.id ? '…' : 'Approve'}
               </button>
-              <button
-                style={styles.reject}
-                disabled={busyId === c.id}
-                onClick={() => act(c.id, rejectCoffee)}
-              >
+              <button style={styles.reject} disabled={busyId === c.id} onClick={() => act(c.id, rejectCoffee)}>
                 Reject
               </button>
-            </div>
-          </div>
+              <ReplacePhotoButton coffeeId={c.id} onDone={refetchAll} />
+            </CoffeeRow>
+          ))}
+        </>
+      )}
+
+      {rejected.coffees.length > 0 && (
+        <div>
+          <p style={styles.sectionLabel}>Rejected · {rejected.coffees.length}</p>
+          <p style={styles.sectionNote}>
+            Kept out of the catalog, never deleted. Restore sends a coffee back to the queue for
+            re-review — if you rejected it only for a bad photo, replace the photo first.
+          </p>
+          {rejected.coffees.map((c) => (
+            <CoffeeRow key={c.id} c={c}>
+              <button style={styles.approve} disabled={busyId === c.id} onClick={() => act(c.id, restoreCoffee)}>
+                {busyId === c.id ? '…' : 'Restore'}
+              </button>
+              <ReplacePhotoButton coffeeId={c.id} onDone={refetchAll} />
+            </CoffeeRow>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 }

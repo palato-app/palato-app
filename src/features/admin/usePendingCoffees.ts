@@ -6,10 +6,14 @@ import type { Coffee } from '../../lib/useCoffees'
 export type PendingCoffee = Coffee & { created_by: string | null }
 
 /**
- * Coffees awaiting admin verification (moderation_status = 'pending'). Admin RLS
- * (migration 0013) lets admins read pending rows; non-admins never see them.
+ * Admin-only view of coffees in one moderation state. Admin RLS (migration 0013)
+ * lets admins read pending/rejected rows; non-admins never see them.
  */
-export function usePendingCoffees() {
+function useCoffeesByStatus(
+  status: 'pending' | 'rejected',
+  orderColumn: 'created_at' | 'updated_at',
+  ascending: boolean,
+) {
   const [coffees, setCoffees] = useState<PendingCoffee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -19,8 +23,8 @@ export function usePendingCoffees() {
     const { data, error } = await supabase
       .from('coffees')
       .select('*')
-      .eq('moderation_status', 'pending')
-      .order('created_at', { ascending: true })
+      .eq('moderation_status', status)
+      .order(orderColumn, { ascending })
     if (error) {
       setError(error.message)
       setLoading(false)
@@ -29,31 +33,30 @@ export function usePendingCoffees() {
     setCoffees((data as PendingCoffee[]) ?? [])
     setError(null)
     setLoading(false)
-  }, [])
+  }, [status, orderColumn, ascending])
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
-      const { data, error } = await supabase
-        .from('coffees')
-        .select('*')
-        .eq('moderation_status', 'pending')
-        .order('created_at', { ascending: true })
+      await load()
       if (cancelled) return
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-        return
-      }
-      setCoffees((data as PendingCoffee[]) ?? [])
-      setLoading(false)
     })()
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [load])
 
   return { coffees, loading, error, refetch: load }
+}
+
+/** Coffees awaiting review — oldest first (FIFO queue). */
+export function usePendingCoffees() {
+  return useCoffeesByStatus('pending', 'created_at', true)
+}
+
+/** Rejected coffees — most recently rejected first, so a just-rejected coffee is on top. */
+export function useRejectedCoffees() {
+  return useCoffeesByStatus('rejected', 'updated_at', false)
 }
 
 /**
@@ -77,6 +80,20 @@ export async function rejectCoffee(id: string): Promise<{ error: string | null }
   const { error } = await supabase
     .from('coffees')
     .update({ moderation_status: 'rejected', verified: false })
+    .eq('id', id)
+  return { error: error?.message ?? null }
+}
+
+/**
+ * Restore a rejected coffee back into the review queue (moderation_status =
+ * 'pending'). Makes Reject reversible — e.g. when a coffee was only rejected for
+ * a bad photo, not because it doesn't belong. It returns to 'pending' (not
+ * straight to 'approved') so it gets a fresh look before entering the catalog.
+ */
+export async function restoreCoffee(id: string): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('coffees')
+    .update({ moderation_status: 'pending' })
     .eq('id', id)
   return { error: error?.message ?? null }
 }
