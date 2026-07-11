@@ -9,6 +9,7 @@ import { BrewDetails, hasBrewDetails } from '../../components/BrewDetails'
 import type { RatedCoffee } from '../../lib/useUserRatings'
 import { ROAST_LABELS } from '../../lib/labels'
 import { formatDate, formatElevation } from '../../lib/format'
+import { useIsAdmin } from '../../lib/useIsAdmin'
 
 const styles = {
   container: { marginTop: '3rem' } as const,
@@ -211,6 +212,9 @@ type Props = {
 export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
   const { coffee, loading, error, refetch: refetchCoffee } = useCoffee(coffeeId)
   const { rating: userRating, refetch: refetchRating } = useUserRatingForCoffee(coffeeId)
+  // Catalog facts are admin-curated (Decision #064 revises #045's open-edit):
+  // RLS (migration 0018) rejects non-admin updates; this just hides the door.
+  const { isAdmin } = useIsAdmin()
   const [showBrewDetails, setShowBrewDetails] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -247,7 +251,7 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
   const varietyDisplay = coffee.variety?.length ? coffee.variety.join(', ') : null
   const elevationDisplay = formatElevation(coffee.elevation_masl, coffee.elevation_masl_max)
 
-  if (editingCoffee) {
+  if (editingCoffee && isAdmin) {
     return (
       <EditCoffeeForm
         coffee={coffee}
@@ -343,25 +347,27 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
             )}
           </div>
 
-          <button
-            onClick={() => setEditingCoffee(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '0.2rem 0',
-              marginBottom: '2rem',
-              fontFamily: 'Geist, system-ui, sans-serif',
-              fontSize: '0.8rem',
-              fontWeight: 500,
-              color: '#1E1410',
-              opacity: 0.5,
-              cursor: 'pointer',
-              alignSelf: 'flex-start',
-              textDecoration: 'underline',
-            }}
-          >
-            Edit details
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setEditingCoffee(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '0.2rem 0',
+                marginBottom: '2rem',
+                fontFamily: 'Geist, system-ui, sans-serif',
+                fontSize: '0.8rem',
+                fontWeight: 500,
+                color: '#1E1410',
+                opacity: 0.5,
+                cursor: 'pointer',
+                alignSelf: 'flex-start',
+                textDecoration: 'underline',
+              }}
+            >
+              Edit details
+            </button>
+          )}
 
           {userRating && (
             <div style={styles.userRatingBlock}>

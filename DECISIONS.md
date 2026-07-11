@@ -770,3 +770,18 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** Push migration `0017`; re-enter Jono's Attikan Estate elevation as "1200–1650" via Edit details to restore the lost range; carry the remaining interview items (form fatigue/per-brew-vs-bag redesign, Learn collapsible groups, edit-permission question vs. #045) per the INTERVIEWS.md Round 2 inventory.
 
 ---
+## #064 — July 11, 2026 — Coffee edits become admin-only (revises #045's open-edit catalog)
+
+**Decision:** Only admins may update coffee rows. Migration `0018` replaces the #045 open-edit UPDATE policy (`using (true)`, migration `0007`) with `using (public.is_admin())`, and the two "Edit details" doors in the UI (coffee detail, and the scan flow's "same coffee, wrong details" dedup path) render only for admins. Regular users still add coffees (insert → `pending` → verify queue) and rate them; fact corrections route through admins. The DB policy is the real gate — hiding the buttons is just UX.
+
+**Alternatives considered:** (1) *Keep open-edit, add an audit log* — preserves community correction but pushes moderation to after-the-fact cleanup; wrong side of the #052 curation model. (2) *Creator-may-edit-own-pending* — defensible and may return later, but the scan flow does all correction pre-insert, so nothing needs it today; simplest rule wins. (3) *Suggest-an-edit queue* (non-admins propose, admins approve, mirroring augmentations) — the likely long-term shape, deferred until volume demands it.
+
+**Rationale:** #045 assumed a small trusted user base; the first real outside session (Jono, July 8) demonstrated a brand-new user rewriting live catalog facts from the detail page. Post-#052 the catalog is a moderated brand surface — verify-gating new coffees while leaving all facts world-writable was incoherent (the gate could be bypassed by editing an approved coffee). Least-privilege is the house rule.
+
+**Tradeoffs accepted:** (a) Community fact-fixes now bottleneck on admins — acceptable at current scale; revisit with the suggest-an-edit queue. (b) The #063 workflow "re-enter Attikan's elevation via Edit details" now requires an admin account (Jesse has one). (c) The `enforce_admin_only_columns` trigger (0013) becomes redundant under this policy; kept as defense-in-depth.
+
+**Verification:** build + lint green; RLS denial is enforced server-side regardless of client. Migration `0018` pushed alongside a check that `0017` (elevation range) actually landed — #063 left it flagged as unpushed.
+
+**Metric:** zero non-admin coffee UPDATEs in Supabase logs; admin edit latency (how long a wrong fact sits before an admin fixes it) becomes the number to watch for the suggest-an-edit decision.
+
+---

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../lib/auth'
+import { useIsAdmin } from '../../lib/useIsAdmin'
 import { prepareImage, uploadBagImage } from '../../lib/bagImage'
 import { RatingForm, type RatingFormSubmitPayload } from '../rating/RatingForm'
 import { EditCoffeeForm } from '../coffee/EditCoffeeForm'
@@ -389,6 +390,9 @@ const s = {
 
 export function AddAndRateFlow({ onComplete, onCancel }: Props) {
   const { user } = useAuth()
+  // Editing a matched coffee's facts is admin-only (Decision #064, migration
+  // 0018) — non-admins would hit an RLS error on save, so hide the door.
+  const { isAdmin } = useIsAdmin()
 
   // Step state
   const [step, setStep] = useState<FlowStep>('capture')
@@ -1015,13 +1019,15 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
                     >
                       Rate this →
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => editMatch(c)}
-                      style={s.matchEditButton}
-                    >
-                      Edit details
-                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => editMatch(c)}
+                        style={s.matchEditButton}
+                      >
+                        Edit details
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
