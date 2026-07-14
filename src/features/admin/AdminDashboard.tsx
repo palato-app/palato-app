@@ -13,18 +13,20 @@ import { MaintenanceTools } from './MaintenanceTools'
 import { useAuth } from '../../lib/auth'
 import { supabase } from '../../lib/supabase'
 import { prepareImage, uploadBagImage } from '../../lib/bagImage'
+import { theme } from '../../lib/theme'
+import { runAugment } from './useAugmentations'
+// Same sanctioned admin→learn seam as AugmentSection: proposed regions must stay
+// inside Learn's demarcated vocabulary (Decision #062).
+import { regionsForCountry } from '../learn/data/originsData'
 
-const cream = '#F4EAD5'
-const espresso = '#1E1410'
-const ember = '#D94E1F'
-const ink50 = 'rgba(30,20,16,0.5)'
-const line = 'rgba(30,20,16,0.12)'
+const { cream, espresso, ember, ink50 } = theme
+const line = theme.gridColor // the 0.12-ink hairline used across admin surfaces
 
 type Section = 'verify' | 'augment'
 
 const styles = {
   h1: {
-    fontFamily: 'Instrument Serif, Georgia, serif',
+    fontFamily: theme.displayFont,
     fontSize: '2.4rem',
     lineHeight: 1.05,
     margin: '0 0 0.25rem',
@@ -48,7 +50,7 @@ const styles = {
     border: 'none',
     padding: '0.4rem 0',
     marginBottom: '-1px',
-    fontFamily: 'Geist, system-ui, sans-serif',
+    fontFamily: theme.bodyFont,
     fontSize: '0.95rem',
     fontWeight: 500,
     color: espresso,
@@ -87,13 +89,25 @@ const styles = {
     padding: '0 4px',
   } as const,
   name: {
-    fontFamily: 'Instrument Serif, Georgia, serif',
+    fontFamily: theme.displayFont,
     fontSize: '1.3rem',
     lineHeight: 1.1,
     margin: 0,
   } as const,
   meta: { fontSize: '0.82rem', color: ink50, margin: '0.2rem 0 0' } as const,
-  actions: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem' } as const,
+  actions: { display: 'flex', gap: '0.5rem', marginTop: '0.6rem', flexWrap: 'wrap' as const } as const,
+  urlInput: {
+    width: '100%',
+    padding: '0.45rem 0.65rem',
+    border: `1px solid ${line}`,
+    borderRadius: '8px',
+    fontSize: '0.82rem',
+    fontFamily: theme.bodyFont,
+    boxSizing: 'border-box' as const,
+    background: 'transparent',
+    color: espresso,
+    marginTop: '0.6rem',
+  } as const,
   approve: {
     background: espresso,
     color: cream,
@@ -198,6 +212,10 @@ function VerifyQueue() {
   const pending = usePendingCoffees()
   const rejected = useRejectedCoffees()
   const [busyId, setBusyId] = useState<string | null>(null)
+  // Per-coffee product-page URL, pasted by the admin before approving. When set,
+  // approval also stamps coffees.source_url and fires augmentation immediately —
+  // the cheap fetch-only path, no discovery search (revision of #047/#048).
+  const [urls, setUrls] = useState<Record<string, string>>({})
 
   // Restoring moves a coffee rejected → pending, so both lists must refresh.
   const refetchAll = () => {
@@ -213,6 +231,28 @@ function VerifyQueue() {
       alert(`Action failed: ${error}`)
       return
     }
+    refetchAll()
+  }
+
+  const approveWithUrl = async (c: PendingCoffee) => {
+    const url = (urls[c.id] ?? '').trim()
+    if (url && !/^https:\/\/.+\..+/.test(url)) {
+      alert('The product page URL must start with https://')
+      return
+    }
+    setBusyId(c.id)
+    const { error } = await approveCoffee(c.id, url || undefined)
+    if (error) {
+      setBusyId(null)
+      alert(`Action failed: ${error}`)
+      return
+    }
+    if (url) {
+      const vocab = c.origin_country ? regionsForCountry(c.origin_country).map((r) => r.name) : []
+      const { error: augErr } = await runAugment(c.id, vocab)
+      if (augErr) alert(`Approved, but augmentation failed: ${augErr}. You can re-run it from the Augment tab.`)
+    }
+    setBusyId(null)
     refetchAll()
   }
 
@@ -233,8 +273,16 @@ function VerifyQueue() {
           </p>
           {pending.coffees.map((c) => (
             <CoffeeRow key={c.id} c={c}>
-              <button style={styles.approve} disabled={busyId === c.id} onClick={() => act(c.id, approveCoffee)}>
-                {busyId === c.id ? '…' : 'Approve'}
+              <input
+                style={styles.urlInput}
+                type="url"
+                placeholder="Roaster product page URL (optional — approves + augments in one step)"
+                value={urls[c.id] ?? ''}
+                disabled={busyId === c.id}
+                onChange={(e) => setUrls((prev) => ({ ...prev, [c.id]: e.target.value }))}
+              />
+              <button style={styles.approve} disabled={busyId === c.id} onClick={() => approveWithUrl(c)}>
+                {busyId === c.id ? '…' : (urls[c.id] ?? '').trim() ? 'Approve & augment' : 'Approve'}
               </button>
               <button style={styles.reject} disabled={busyId === c.id} onClick={() => act(c.id, rejectCoffee)}>
                 Reject

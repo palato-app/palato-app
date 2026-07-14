@@ -103,7 +103,7 @@ export function usePendingAugmentations() {
 export async function runAugment(
   coffeeId: string,
   regionVocab: string[] = [],
-): Promise<{ error: string | null; fieldCount?: number }> {
+): Promise<{ error: string | null; fieldCount?: number; costUsd?: number; reason?: string }> {
   const { data: { session } } = await supabase.auth.getSession()
   try {
     const res = await fetch('/api/augment', {
@@ -116,15 +116,15 @@ export async function runAugment(
     })
     // A serverless timeout (504) or platform error returns HTML, not JSON —
     // surface the status so the failure reason is visible, not swallowed.
-    let data: { error?: string; parseError?: boolean; fieldCount?: number } = {}
+    let data: { error?: string; parseError?: boolean; fieldCount?: number; costUsd?: number; reason?: string } = {}
     try {
       data = await res.json()
     } catch {
       return { error: `HTTP ${res.status}${res.status === 504 ? ' (timeout — try again or reduce scope)' : ''}` }
     }
     if (!res.ok) return { error: data.error || `HTTP ${res.status}` }
-    if (data.parseError) return { error: 'Claude returned unparseable output.' }
-    return { error: null, fieldCount: data.fieldCount ?? 0 }
+    if (data.parseError) return { error: 'Claude returned unparseable output.', costUsd: data.costUsd }
+    return { error: null, fieldCount: data.fieldCount ?? 0, costUsd: data.costUsd, reason: data.reason }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Network error.' }
   }

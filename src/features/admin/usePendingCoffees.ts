@@ -63,11 +63,18 @@ export function useRejectedCoffees() {
  * Approve a coffee into the global catalog. Sets moderation_status = 'approved'
  * and keeps the legacy `verified` boolean coherent. The enforce_admin_only_columns
  * trigger (0013) permits this only for admins.
+ *
+ * `sourceUrl` (optional) is the roaster's product page, pasted by the admin at
+ * review time — it becomes the coffee's provenance (`source_url`, also admin-only
+ * per 0013) and lets augmentation fetch the page directly instead of paying for
+ * a discovery search.
  */
-export async function approveCoffee(id: string): Promise<{ error: string | null }> {
+export async function approveCoffee(id: string, sourceUrl?: string): Promise<{ error: string | null }> {
+  const patch: Record<string, unknown> = { moderation_status: 'approved', verified: true }
+  if (sourceUrl) patch.source_url = sourceUrl
   const { error } = await supabase
     .from('coffees')
-    .update({ moderation_status: 'approved', verified: true })
+    .update(patch)
     .eq('id', id)
   return { error: error?.message ?? null }
 }

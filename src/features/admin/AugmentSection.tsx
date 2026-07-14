@@ -12,12 +12,10 @@ import {
   type Augmentation,
   type ProposedFields,
 } from './useAugmentations'
+import { theme } from '../../lib/theme'
 
-const cream = '#F4EAD5'
-const espresso = '#1E1410'
-const ember = '#D94E1F'
-const ink50 = 'rgba(30,20,16,0.5)'
-const line = 'rgba(30,20,16,0.12)'
+const { cream, espresso, ember, ink50 } = theme
+const line = theme.gridColor // the 0.12-ink hairline used across admin surfaces
 
 const FIELD_LABELS: Record<keyof ProposedFields, string> = {
   roaster_name: 'Roaster',
@@ -45,11 +43,17 @@ function fmt(v: unknown): string {
   return String(v)
 }
 
+// API spend per run is cents-scale — three decimals below a dollar so a 1.4¢
+// run doesn't render as "$0.01" everywhere.
+function fmtUsd(n: number): string {
+  return `$${n.toFixed(n < 1 ? 3 : 2)}`
+}
+
 const s = {
-  h2: { fontFamily: 'Instrument Serif, Georgia, serif', fontSize: '1.5rem', margin: '1.5rem 0 0.5rem' } as const,
+  h2: { fontFamily: theme.displayFont, fontSize: '1.5rem', margin: '1.5rem 0 0.5rem' } as const,
   sub: { fontSize: '0.82rem', color: ink50, margin: '0 0 0.75rem' } as const,
   card: { padding: '1rem 0', borderBottom: `1px solid ${line}` } as const,
-  name: { fontFamily: 'Instrument Serif, Georgia, serif', fontSize: '1.2rem', margin: 0 } as const,
+  name: { fontFamily: theme.displayFont, fontSize: '1.2rem', margin: 0 } as const,
   meta: { fontSize: '0.8rem', color: ink50, margin: '0.15rem 0 0' } as const,
   fieldRow: { display: 'grid', gridTemplateColumns: '22px 100px 1fr', gap: '0.5rem', alignItems: 'start', fontSize: '0.82rem', padding: '0.25rem 0' } as const,
   fieldName: { color: ink50 } as const,
@@ -62,7 +66,7 @@ const s = {
   approveOff: { background: 'rgba(30,20,16,0.25)', color: cream, border: 'none', borderRadius: '999px', padding: '0.4rem 1.1rem', fontSize: '0.82rem', fontWeight: 600, cursor: 'not-allowed' as const } as const,
   reject: { background: 'none', color: ink50, border: `1px solid ${line}`, borderRadius: '999px', padding: '0.4rem 1.1rem', fontSize: '0.82rem', cursor: 'pointer' as const } as const,
   src: { fontSize: '0.74rem', color: ink50, marginTop: '0.4rem', wordBreak: 'break-all' as const } as const,
-  search: { width: '100%', padding: '0.5rem 0.75rem', border: `1px solid ${line}`, borderRadius: '8px', fontSize: '0.9rem', fontFamily: 'Geist, system-ui, sans-serif', boxSizing: 'border-box' as const, background: 'transparent', color: espresso } as const,
+  search: { width: '100%', padding: '0.5rem 0.75rem', border: `1px solid ${line}`, borderRadius: '8px', fontSize: '0.9rem', fontFamily: theme.bodyFont, boxSizing: 'border-box' as const, background: 'transparent', color: espresso } as const,
   pickRow: { display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.55rem 0', borderBottom: `1px solid ${line}` } as const,
   augBtn: { background: 'none', color: espresso, border: `1px solid ${espresso}`, borderRadius: '999px', padding: '0.3rem 0.9rem', fontSize: '0.78rem', cursor: 'pointer' as const, whiteSpace: 'nowrap' as const } as const,
   batchBar: { display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.6rem 0' } as const,
@@ -106,7 +110,12 @@ function ProposalCard({ aug, onDone }: { aug: Augmentation; onDone: () => void }
   return (
     <div style={s.card}>
       <p style={s.name}>{aug.coffee?.coffee_name ?? 'Coffee'}</p>
-      <p style={s.meta}>{aug.coffee?.roaster_name}</p>
+      <p style={s.meta}>
+        {aug.coffee?.roaster_name}
+        {typeof aug.raw_response?.est_cost_usd === 'number' && (
+          <span> · run cost {fmtUsd(aug.raw_response.est_cost_usd)}</span>
+        )}
+      </p>
       {fields.length === 0 ? (
         <p style={s.empty}>No changes proposed (web data matched what we have).</p>
       ) : (
@@ -168,6 +177,7 @@ export function AugmentSection() {
   const [progress, setProgress] = useState<string | null>(null)
   const [running, setRunning] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+  const [needsUrl, setNeedsUrl] = useState<string[]>([])
   const [showAugmented, setShowAugmented] = useState(false)
 
   // Refresh both the proposal list and the coffee list (the latter so a just-
@@ -213,16 +223,21 @@ export function AugmentSection() {
   const runBatch = async (ids: string[]) => {
     setRunning(true)
     setErrors([])
+    setNeedsUrl([])
     const errs: string[] = []
+    const noUrl: string[] = []
     let ready = 0
     let nothing = 0
+    let spend = 0
     for (let i = 0; i < ids.length; i++) {
       const c = coffees.find((x) => x.id === ids[i])
       setProgress(`Augmenting ${i + 1} of ${ids.length}: ${c?.coffee_name ?? '…'}…`)
       const vocab = c?.origin_country ? regionsForCountry(c.origin_country).map((r) => r.name) : []
-      const { error, fieldCount } = await runAugment(ids[i], vocab)
+      const { error, fieldCount, costUsd, reason } = await runAugment(ids[i], vocab)
+      if (costUsd) spend += costUsd
       if (error) errs.push(`${c?.coffee_name ?? 'Coffee'} — ${error}`)
       else if (fieldCount && fieldCount > 0) ready++
+      else if (reason === 'needs_url') noUrl.push(c?.coffee_name ?? 'Coffee')
       else nothing++
       refetch()
     }
@@ -231,9 +246,12 @@ export function AugmentSection() {
     setProgress(
       `Done — ${ready} proposal${ready === 1 ? '' : 's'} ready` +
         `${nothing ? `, ${nothing} had nothing to add` : ''}` +
-        `${errs.length ? `, ${errs.length} failed` : ''}.`,
+        `${noUrl.length ? `, ${noUrl.length} need${noUrl.length === 1 ? 's' : ''} a URL` : ''}` +
+        `${errs.length ? `, ${errs.length} failed` : ''}` +
+        ` · ${fmtUsd(spend)} API spend.`,
     )
     setErrors(errs)
+    setNeedsUrl(noUrl)
   }
 
   return (
@@ -251,9 +269,9 @@ export function AugmentSection() {
 
       <h2 style={s.h2}>Run augmentation</h2>
       <p style={s.sub}>
-        Claude searches the web for the roaster’s official data + where to buy it, and proposes
-        fixes/fills — nothing is applied until you approve it above. Tick fields per proposal to
-        accept only some.
+        Fetches the roaster’s product page (the URL you pasted at approval, or one cheap search
+        to find it) and Claude proposes fixes/fills + where to buy — nothing is applied until you
+        approve it above. Tick fields per proposal to accept only some.
         {augmentedCount > 0 && (
           <>
             {' '}
@@ -292,6 +310,13 @@ export function AugmentSection() {
             <li key={i}>{e}</li>
           ))}
         </ul>
+      )}
+
+      {needsUrl.length > 0 && (
+        <p style={{ ...s.sub, margin: '0 0 0.75rem' }}>
+          No product page found for: {needsUrl.join(', ')}. Paste the roaster’s product URL when
+          approving in the Verify queue — or set it on the coffee — and re-run.
+        </p>
       )}
 
       <div>
