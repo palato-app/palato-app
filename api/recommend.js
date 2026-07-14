@@ -90,6 +90,7 @@ export default async function handler(req, res) {
       userScoped
         .from('coffees')
         .select(`id, roaster_name, coffee_name, origin_country, process, roaster_stated_roast_level, bag_image_url,
+                 purchase_url, purchase_availability,
                  coffee_flavor_descriptors ( descriptor:flavor_descriptors ( descriptor, category ) )`)
         .eq('moderation_status', 'approved'),
     ]);
@@ -126,7 +127,13 @@ export default async function handler(req, res) {
     const originFreq = {};
     for (const c of coffees || []) if (c.origin_country) originFreq[c.origin_country] = (originFreq[c.origin_country] || 0) + 1;
 
-    const candidates = (coffees || []).filter((c) => !ratedIds.has(c.id));
+    // Only recommend coffees the user can actually buy (Decision #067): a
+    // purchase link must be on file, and not flagged sold-out. No buy link =
+    // treated as unavailable, so it never reaches a recommendation card — this
+    // is exactly the "don't lead me to a 404 or a sold-out coffee" ask.
+    const candidates = (coffees || []).filter(
+      (c) => !ratedIds.has(c.id) && c.purchase_url && c.purchase_availability !== 'no',
+    );
 
     // --- Deterministic shortlists ---
     const uniqueList = topBy(candidates, (c) => {

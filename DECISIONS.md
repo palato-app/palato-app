@@ -817,3 +817,20 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Metric:** share of coffees approved from here forward that carry a non-null `purchase_url` — target ~100%; later watched against commerce-block impression → outbound-click rate once instrumented.
 
 ---
+## #067 — July 13, 2026 — No purchase link = unbuyable: "not available" on detail, excluded from recs (extends #054/#066)
+
+**Decision:** A coffee with no `purchase_url` on file is treated as unbuyable across the app. (1) Its detail page now shows "Not currently available for purchase" in the commerce block instead of rendering nothing. (2) The recommendation engine (#053) excludes every coffee without a `purchase_url` — and, by extension, any flagged sold-out (`purchase_availability = 'no'`) — from all three shortlists, so a rec card can never point at a coffee the user can't buy. The buy link comes from the admin-pasted URL at approval (#066) or an approved augmentation proposal; its absence is the signal.
+
+**Why:** Both Round 2 usability sessions hammered this — Jono: "don't lead me to a 404 or a sold-out coffee," "I don't want another information silo." A recommendation the user can't act on is worse than none, and a detail page that silently omits any purchase affordance leaves them guessing. Making "no link = not available" an explicit, app-wide rule keeps the commerce surface honest and the recommendations actionable.
+
+**Alternatives considered:** (1) *Leave the commerce block empty when no link* (status quo) — ambiguous; can't tell "unavailable" from "not yet added." (2) *Exclude only no-link coffees from recs, keep sold-out ones* — rejected; a sold-out link is functionally unbuyable and reproduces the exact dead-end Jono flagged. Only explicit `'no'` is excluded, so 'unsure'/'yes'/unknown still qualify. (3) *"No longer available" wording* — softened to "Not currently available" so we don't falsely assert a coffee was once for sale when we may simply lack its URL.
+
+**Tradeoffs accepted:** (a) Until the URL-less backlog is reaugmented / URL'd, recommendation inventory shrinks to the buyable subset — recs may be thin or empty for now. Intended pressure to finish augmentation, not a regression; ordering is populate-links-first, then the exclusion has inventory. (b) Cached recommendations don't retroactively refresh — a cached card may still show a now-excluded coffee until the cache regenerates (next rating / staleness). Acceptable; self-heals. (c) A coffee that's genuinely available but never got a URL reads as "not available" — accepted per the explicit "no URL ⇒ assume unavailable" rule; the fix is to add the URL.
+
+**Verification:** build + typecheck; on the deployed app, a coffee with a `purchase_url` shows the buy button, one without shows "Not currently available for purchase," and its id never appears on a recommendation card.
+
+**Metric:** recommendation cards that resolve to a live, purchasable coffee — target 100% (0 dead-end recs); watched with the buyable-catalog share from #066.
+
+**Next action (Jesse, ops):** batch-reaugment the URL-less catalog from the Augment tab so purchase links populate and recommendation inventory recovers.
+
+---
