@@ -116,7 +116,7 @@ Josh's framing suggests the rating flow shouldn't end at "submit." A short set o
 ### Round 1 → action items
 
 - [ ] Reach out to ~10 Curious Upgrader prospects via different channels before booking interviews
-- [ ] Book Lucy and Jeremy for first interviews
+- [x] Book Lucy and Jeremy for first interviews (Lucy: June 18; Jeremy: July 13 — see Round 2)
 - [ ] Follow up with Kyle for email (he said "Sure!" but didn't leave one)
 - [ ] Push to schedule Kevin — most useful skeptic in sample
 - [ ] Add `roast_date`, separated tasting notes, and `producer`/`farm` fields to schema (informs tonight's migration)
@@ -189,11 +189,63 @@ First round conducted against the shipped product (onboarding → quiz → add-a
 | 24 | Scan-prefilled jargon lands unexplained ("S9. I don't know what that is" / "I have no idea what these hills are") | New, n=1, wait for replication |
 | 25 | "Add more flavors" section invisible — skipped without seeing it | New; fold into the #7 form redesign, not a standalone fix |
 
+### Jeremy — July 13, 2026
+
+**Transcript:** [docs/interviews/2026-07-13-jeremy.md](docs/interviews/2026-07-13-jeremy.md) (structured notes + anecdotal observations + full verbatim transcript). Remote (Zoom, own phone, screen-shared). Session itself was efficient once the walkthrough started; ~15 min of catch-up at the top (personal friend).
+
+**Profile:** Jeremy Lupinacci — former Q-grader, part-time coffee influencer ("Jeremymakescoffee"), Fullerton, CA. This is the Round 1 screener Jeremy (self-reported Professional, 2–4 bags/month) finally interviewed. ~95% espresso (black Americanos, 2–3 cups/day) on a full home setup; buys ~10 lbs/month including a weekly church bulk buy; personal spend ~4 bags/month at $23–25, mostly variety. Ethiopian natural/washed for espresso, Guatemala/Mexico for chocolatey profiles; V60 or AeroPress+Prismo for gifted/unusual bags. Quality split: 15% incredible / 65% mid / 20% bad. Priority ranking: 1) bang for buck, 2) joy, 3) palate expansion — "because I also know my taste now." Saves empty bags; ~40 framed as wall art. Recruitment: personal network — same bias caveat as every session so far.
+
+**Top signals:**
+
+1. **The value-maximizer segment now includes a Q-grader.** Bang-for-buck ranked #1 even by the most credentialed palate in the sample — same rationale as Jono ("because I've had so much coffee"). Nearly identical quality splits too (Jeremy 15/65/20, Jono ~15/70/15). Two voices, opposite coasts, opposite brew methods: expertise seems to *converge* on value-maximizing, not diverge from it. The "expanding my palate" pitch is the *weakest* hook for exactly the users with the most data to give.
+2. **The journal is the personal draw — and the quiz can't express it.** Unprompted: "I wish I could remember more of the experiences with some of these bags… I would value some type of track record." The one quiz option he wanted and couldn't find: "keep track of my coffee memories." His strongest re-buy story (the Iceland strawberry coffee) is a memory with the roaster attached but the *data* missing — a literal spec for the log. Extends Round 1 Theme 1 with a new nuance: for high-volume drinkers the failure isn't losing the coffee, it's losing the *experience*.
+3. **Per-brew vs. per-bag: replicated, and he designed the fix.** Independently proposed the exact structure Jono's confusion pointed at: keep flavor/body/acidity/score as the *bag* rating; move extraction, brew method, and dosing into dated per-cup journal entries under the bag ("this is the cup of coffee I had on July 13th, with this bag") or a collapsible advanced section. Issue #8 is now n=2 and comes with a structural proposal. He also tied per-cup entries to the future social layer ("What did Lance Hedrick brew this morning?") and to espresso (where journaling brew parameters is the value, since flavor scoring is unreliable — supports filter-first).
+4. **Form length: third voice, but with a Q-grader's calibration of the floor.** Core fields = "exactly what information I would be thinking of if I'm scoring a coffee"; everything after acidity is past the line ("the Q grading system itself is like too much"). Issue #7 now has 3 voices *and* a validated minimum: how-was-it, flavor notes, body, acidity. Everything else is journal territory. Also wants all fields editable after the fact (they are — worth confirming that's discoverable).
+5. **Body/acidity sliders need numeric anchors (1–5).** Loves the dial's decimal specificity; the sliders below it are "eyeballing" — can't compare across bags ("this was slightly more of a light body… you might miscategorize it"). New issue, distinct from Jono's dial-anchor fix.
+6. **The globe landed — but the July 8 fix may have overshot.** "No notes, this is sick" on the origin pages; Harvest and Elevation called out as highlights. But spin sensitivity is now too high on mobile ("I'm barely moving my finger") — likely a regression from the July 8 drag-inertia fix, needs a mobile pass. Feature request with a clear why: **regional elevation** (not just country-level), because elevation predicts profile ("if it's Huila, I'll have much more of an affinity because of the elevation"). Varietal walls are fine as skim-reference ("same way as a Wikipedia page") — matches Jono's "depth before framing" but with more tolerance.
+7. **Counter-signals to Jono — segment-dependent, not settled:** factoids *landed* ("fun factoids… feels very conversational" vs. Jono's skim); the starting palate *landed* ("it feels accurate for what I know my profile to be" vs. "accurate but inert"); pronunciation read fine ("Palato probably makes most sense"). One-for-one on each — keep watching, don't act yet.
+8. **Trust-killer replicated:** joked about the raw Supabase URL at sign-in — "saving my information to a Russian farm. But I trust you." Second session in a row where the OAuth screen burned trust at the exact moment of asking for it (Jono issue #21, now n=2). He trusted it *because he knows Jesse personally* — a real user won't.
+9. **Recommendation filters:** wants both lenses explicitly — "what does the community rate highest" *and* "what would be most aligned with my preference." Complements Jono's general-vs-specific finding; community ratings are now requested by both Round 2 participants.
+10. **Gamification and profile as retention/commerce levers:** Letterboxd-style top-4 favorites on a public profile; check-off coffees by country *and region* — explicitly tied to buying behavior ("I would get more into rating and scoring and buying bags if there was that kind of dopamine incentive") and, his suggestion, to monetization (promoted placements in those discovery surfaces).
+
+**Beyond the interview (logged here, decided elsewhere):** Jesse floated formal collaboration — Jeremy is genuinely interested, thinking it over during a 2-week Europe trip; committed as a sounding board regardless. Jesse named the gaps: distribution, marketing, biz dev/revenue modeling. Monetization options discussed: affiliate per-bag commission vs. subscription w/ trial vs. promoted placements. Jeremy joins the WhatsApp beta community. These are venture-track threads for the Claude.ai project chat, not build mechanics.
+
+**Verbatim worth keeping:**
+
+- "I wish I could remember more of the experiences with some of these bags of coffee." — the memory gap, from the highest-volume drinker yet.
+- "The most annoying thing is knowing that it's going to run out." — seasonality as the pain, not discovery.
+- "As a Q grader, this is exactly what information I would be thinking of… [but] the Q grading system itself is like too much." — the form-length floor and ceiling in one breath.
+- "This is like the cup of coffee I had on July 13th, with this bag." — the per-cup journal, designed by a user.
+- "No notes, this is sick." — the origin pages.
+- "Saving my information to a Russian farm. But I trust you." — the OAuth screen, surviving on personal trust alone.
+- "I would love to check off all the boxes and regions in the world." — gamification as purchase driver.
+- "Number one priority is probably bang for my buck… because I also know my taste now." — value-maximizer thesis, second voice.
+
+**Issue inventory (replication status noted; prioritization → DECISIONS.md / TECH_DEBT.md, not here):**
+
+| # | Issue | Status |
+|---|---|---|
+| J1 | Quiz origin question is single-select; should be multi-select | Confirmed live by Jesse ("I meant to add multi-select") |
+| J2 | Post-quiz lands on catalog's "Start here" rail; should default to Palate | Confirmed live by Jesse ("that's not really where I want you to start") |
+| J3 | Body/acidity sliders lack numeric labels (1–5) for cross-bag comparison | New, n=1, low-cost |
+| J4 | Extraction/brew/dosing too heavy for the bag rating → collapsible advanced section or per-cup journal entries | **Replicates #7 (now 3 voices) + #8 (now n=2)** — with a structural proposal |
+| J5 | Globe spin sensitivity too high on mobile | New; likely regression from the July 8 inertia fix (Jono #4) |
+| J6 | Raw Supabase URL on OAuth consent screen | **Replicates Jono #21 (n=2)** — config task, rising urgency |
+| J7 | Scan didn't extract the cursive coffee name (everything else pre-filled) | New, n=1; expected failure mode, feeds the scan eval |
+| J8 | Newly added coffee doesn't surface at the top of the catalog | Jesse called it live ("it should go to the top") |
+| J9 | Chocolate descriptor granularity — wanted "milk chocolate," felt limited to milk/dark | New, n=1 (adjacent to Jono #13 descriptor-matcher miss) |
+| J10 | Quiz motivation question has no "track my coffee memories" option | New, n=1; journal motivation is invisible to the quiz |
+| J11 | Regional (sub-country) elevation data on origin pages | Feature request, n=1, clear rationale (elevation → profile targeting) |
+| J12 | Profile "favorite coffees" showcase (Letterboxd top-4) | Feature request, n=1, social-layer track |
+| J13 | Country/region check-off gamification | Feature request, n=1, retention/commerce track |
+
 ### Round 2 → action items
 
 - [ ] Move confirmed UX fixes into TECH_DEBT.md / a fix session; log any model changes (e.g. edit-permission reversal vs. Decision #045) in DECISIONS.md
 - [ ] Take the strategic threads (general-vs-specific recs, local-shop recs, community ratings, palate-tracking disinterest, value-maximizer segment) to the Claude.ai project chat — build direction, not build mechanics
 - [ ] Tighten the script toward ~30 min; the add-and-rate task + Learn + recs Q&A is the high-yield core
-- [ ] Watch for replication in the next 2–3 sessions: logo readability, factoid skimming, inert starting palate, per-brew vs. per-bag confusion, globe-on-Palate placement
+- [ ] Watch for replication in the next 2–3 sessions: logo readability (Jeremy: fine — 1 for, 1 against), factoid skimming (Jeremy: landed — 1 for, 1 against), inert starting palate (Jeremy: landed — 1 for, 1 against), globe-on-Palate placement (Jeremy: no signal). ~~Per-brew vs. per-bag confusion~~ → **replicated 7/13 (Jeremy, with structural fix proposed)** — ready for a DECISIONS.md call on the rating-flow split
+- [ ] Mobile pass on globe spin sensitivity — Jeremy reports the July 8 inertia fix overshot on touch (J5)
+- [ ] Prioritize the OAuth consent-screen branding config task — trust-killer now confirmed n=2 (Jono #21 / Jeremy J6)
 - [ ] Fix the script line "I'm going to hand you…" (remote/own-phone sessions don't hand anything)
 - [ ] Continue recruiting outside the personal network — Jono extends the Round 1 bias (family, coffee-fluent)
