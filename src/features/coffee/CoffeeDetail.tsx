@@ -515,9 +515,9 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
             </div>
           )}
 
-          {(coffee.purchase_url || coffee.price_usd != null) && (
-            <div style={styles.commerceBlock}>
-              {coffee.purchase_url && (
+          <div style={styles.commerceBlock}>
+            {coffee.purchase_url ? (
+              <>
                 <a
                   href={coffee.purchase_url}
                   target="_blank"
@@ -526,17 +526,21 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                 >
                   Buy from {coffee.retailer_name || coffee.roaster_name} ↗
                 </a>
-              )}
-              {coffee.purchase_availability === 'no' && (
-                <p style={styles.availNote}>Listed as out of stock when last checked.</p>
-              )}
-              {coffee.web_augmented_at && (
-                <p style={styles.freshNote}>
-                  Checked {formatDate(coffee.web_augmented_at)} — confirm availability on the roaster's site.
-                </p>
-              )}
-            </div>
-          )}
+                {coffee.purchase_availability === 'no' && (
+                  <p style={styles.availNote}>Listed as out of stock when last checked.</p>
+                )}
+                {coffee.web_augmented_at && (
+                  <p style={styles.freshNote}>
+                    Checked {formatDate(coffee.web_augmented_at)} — confirm availability on the roaster's site.
+                  </p>
+                )}
+              </>
+            ) : (
+              // No purchase link on file → we treat the coffee as unbuyable
+              // (Decision #067). These are also excluded from recommendations.
+              <p style={styles.availNote}>Not currently available for purchase.</p>
+            )}
+          </div>
 
           <button onClick={onRate} style={styles.rateButton}>
             {userRating ? 'Rate it again' : 'Rate this coffee'}
