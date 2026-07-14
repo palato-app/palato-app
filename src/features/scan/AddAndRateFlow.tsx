@@ -431,6 +431,14 @@ export function AddAndRateFlow({ onComplete, onCancel }: Props) {
   const coffeeRef = useRef(coffee)
   coffeeRef.current = coffee
 
+  // Each step is an internal state swap, not a route/view change, so AuthedApp's
+  // view-level scroll reset never fires between steps. Without this, advancing
+  // from a scrolled-down details form into the rate step leaves the window
+  // scrolled past the rating dial. Reset to the top on every step change.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [step])
+
   // Auto-navigate after completion
   useEffect(() => {
     if (step !== 'complete') return
