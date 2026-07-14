@@ -15,10 +15,13 @@ import { hydratePalateProfileFromSession } from './palateProfile'
  */
 export function useQuizHydration(onHydrated?: () => void) {
   const { user } = useAuth()
-  // Keep the latest callback in a ref so the effect stays keyed on [user]
-  // only — an inline arrow from the caller won't re-run hydration each render.
+  // Keep the latest callback in a ref so the hydration effect stays keyed on
+  // [user] only — an inline arrow from the caller won't re-run hydration each
+  // render. Assign in an effect (not during render) to keep render pure.
   const onHydratedRef = useRef(onHydrated)
-  onHydratedRef.current = onHydrated
+  useEffect(() => {
+    onHydratedRef.current = onHydrated
+  })
 
   useEffect(() => {
     if (!user) return
