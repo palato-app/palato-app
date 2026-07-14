@@ -64,14 +64,21 @@ export function useRejectedCoffees() {
  * and keeps the legacy `verified` boolean coherent. The enforce_admin_only_columns
  * trigger (0013) permits this only for admins.
  *
- * `sourceUrl` (optional) is the roaster's product page, pasted by the admin at
- * review time — it becomes the coffee's provenance (`source_url`, also admin-only
- * per 0013) and lets augmentation fetch the page directly instead of paying for
- * a discovery search.
+ * `productUrl` (optional) is the roaster's product page, pasted by the admin at
+ * review time. It does double duty: it becomes the coffee's provenance
+ * (`source_url`) AND its user-facing buy link (`purchase_url`) — so approving
+ * with a URL GUARANTEES the "Buy from …" button on the coffee (Decision #054),
+ * with no dependence on the augmentation model proposing a link. Augmentation
+ * then fetches that same page to enrich price / weight / availability, reviewed
+ * as a proposal as usual. Both columns are admin-only (0013 trigger); the admin
+ * caller passes the guard.
  */
-export async function approveCoffee(id: string, sourceUrl?: string): Promise<{ error: string | null }> {
+export async function approveCoffee(id: string, productUrl?: string): Promise<{ error: string | null }> {
   const patch: Record<string, unknown> = { moderation_status: 'approved', verified: true }
-  if (sourceUrl) patch.source_url = sourceUrl
+  if (productUrl) {
+    patch.source_url = productUrl // provenance + the page augmentation fetches
+    patch.purchase_url = productUrl // the guaranteed buy link
+  }
   const { error } = await supabase
     .from('coffees')
     .update(patch)

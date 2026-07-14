@@ -802,3 +802,18 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** Re-augment the live catalog under v6 (it was waiting on a v4→v5 rerun anyway), watching cost + region-match rate; then the augmentation-accuracy eval.
 
 ---
+## #066 — July 13, 2026 — The admin-pasted product URL IS the buy link (revises #054/#065)
+
+**Decision:** When an admin approves a coffee with a product-page URL in the Verify queue, that URL now populates `purchase_url` (the user-facing "Buy from …" link) directly, alongside `source_url` (provenance / the page augmentation fetches). Previously the pasted URL set only `source_url`, and `purchase_url` could arrive *only* through the augmentation proposal — Haiku had to propose the link and an admin had to accept that field. First live #065 run confirmed the cost win (1¢) but shipped no buy button: the model either returned `purchase_url: null` or left it in an unaccepted proposal. Since the admin finds and vets the URL by hand, it's already human-verified — route it straight to `purchase_url` and guarantee the commerce block. Augmentation still fetches the same page to enrich price / bag weight / availability as a reviewable proposal.
+
+**Why:** #054's commerce block renders "Buy from {roaster}" only when `purchase_url` is set. Gating the buy link on a small model's extraction plus a second approval step was the weak link — the atomic commercial value (a working buy link) shouldn't hinge on model judgment when a human already pasted the exact URL. No cost impact: the column is set client-side at approval; the augmentation call is unchanged.
+
+**Alternatives considered:** (1) *Prompt-tune Haiku to reliably propose `purchase_url`* — still behind a model call that can fail and a second approval. (2) *Require a URL to approve* — rejected for now; legacy backlog and not-yet-for-sale coffees may lack one, and the button now reads "Approve (no buy link)" so the absence is a visible, deliberate choice. (3) *Keep `purchase_url` review-gated* — #048's "never auto-overwrite" caution doesn't apply when the admin is the one supplying the value.
+
+**Tradeoffs accepted:** (a) A wrong/mistyped URL becomes a live buy link with no second review — mitigated by https-validation and deliberate paste; a bad link is a one-field edit. (b) `web_augmented_at` (the "Checked {date}" line) is not stamped by approval, so a just-approved coffee shows a buy button with no price/date until augmentation is accepted — acceptable (a link beats nothing; price fills in shortly after). (c) Empty-URL approval now nudges "Approve (no buy link)" — a little friction traded for making the payment-link gap visible at the moment of approval, which is the intent.
+
+**Verification:** build + typecheck; on the deployed app, approve a pending coffee with a URL and confirm the "Buy from …" button appears on the coffee detail immediately, before any augmentation proposal is accepted.
+
+**Metric:** share of coffees approved from here forward that carry a non-null `purchase_url` — target ~100%; later watched against commerce-block impression → outbound-click rate once instrumented.
+
+---
