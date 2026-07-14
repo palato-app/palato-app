@@ -276,13 +276,13 @@ function VerifyQueue() {
               <input
                 style={styles.urlInput}
                 type="url"
-                placeholder="Roaster product page URL (optional — approves + augments in one step)"
+                placeholder="Roaster product-page URL — becomes the Buy link, then augments price & details"
                 value={urls[c.id] ?? ''}
                 disabled={busyId === c.id}
                 onChange={(e) => setUrls((prev) => ({ ...prev, [c.id]: e.target.value }))}
               />
               <button style={styles.approve} disabled={busyId === c.id} onClick={() => approveWithUrl(c)}>
-                {busyId === c.id ? '…' : (urls[c.id] ?? '').trim() ? 'Approve & augment' : 'Approve'}
+                {busyId === c.id ? '…' : (urls[c.id] ?? '').trim() ? 'Approve + buy link' : 'Approve (no buy link)'}
               </button>
               <button style={styles.reject} disabled={busyId === c.id} onClick={() => act(c.id, rejectCoffee)}>
                 Reject
