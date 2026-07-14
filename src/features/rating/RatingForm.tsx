@@ -106,6 +106,33 @@ const s = {
     fontFamily: 'Geist, system-ui, sans-serif',
     color: espresso,
   } as const,
+  advancedDivider: {
+    borderTop: '1px solid rgba(30, 20, 16, 0.15)',
+    paddingTop: '1.75rem',
+    marginBottom: '2.5rem',
+  } as const,
+  advancedToggle: {
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.15em',
+    color: espresso,
+    opacity: 0.6,
+    cursor: 'pointer' as const,
+    display: 'block',
+  } as const,
+  advancedHint: {
+    fontFamily: 'Geist, system-ui, sans-serif',
+    fontSize: '0.8rem',
+    opacity: 0.4,
+    fontStyle: 'italic' as const,
+    color: espresso,
+    margin: '0.6rem 0 0',
+  } as const,
   fieldGroup: { display: 'grid', gap: '0.35rem' } as const,
   brewGrid: {
     display: 'grid',
@@ -209,6 +236,21 @@ export function RatingForm({
   const [grindSize, setGrindSize] = useState(initial?.grindSize ?? '')
   const [waterTemp, setWaterTemp] = useState(initial?.waterTemp ?? '')
   const [tempUnit, setTempUnit] = useState<'C' | 'F'>(initial?.tempUnit ?? 'F')
+  // Advanced brew details (extraction, method, dose/grind) collapse by default
+  // so a first-time rating is just score + notes + body + acidity — the fatigue
+  // finding from the Jono/Jeremy sessions. Auto-open when editing a rating that
+  // already carries brew data, so we never hide values the user entered.
+  const [showAdvanced, setShowAdvanced] = useState(
+    !!(
+      initial?.extraction ||
+      initial?.brewMethod ||
+      initial?.doseGrams ||
+      initial?.waterGrams ||
+      initial?.brewTime ||
+      initial?.grindSize ||
+      initial?.waterTemp
+    )
+  )
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -427,6 +469,22 @@ export function RatingForm({
         </div>
       </section>
 
+      <div style={s.advancedDivider}>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          style={s.advancedToggle}
+          aria-expanded={showAdvanced}
+        >
+          {showAdvanced ? '− Advanced details' : '+ Advanced details'}
+        </button>
+        {!showAdvanced && (
+          <p style={s.advancedHint}>Extraction, brew method, dose &amp; grind — all optional</p>
+        )}
+      </div>
+
+      {showAdvanced && (
+      <>
       <section style={s.section}>
         <p style={s.sectionLabel}>Extraction</p>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -608,6 +666,8 @@ export function RatingForm({
           </>
         )}
       </section>
+      </>
+      )}
 
       <div style={s.submitRow}>
         {submitError && <p style={s.error}>Couldn't save: {submitError}</p>}
