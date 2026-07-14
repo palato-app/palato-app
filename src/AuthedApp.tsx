@@ -56,9 +56,12 @@ const headerNavButton = (active: boolean) => ({
 export function AuthedApp() {
   const { signOut } = useAuth()
   const navigate = useNavigate()
-  useQuizHydration()
   const { isAdmin } = useIsAdmin()
   const [view, setView] = useState<View>('browse')
+  // A user who just completed the pre-auth quiz should land on their freshly
+  // seeded Palate, not the default Catalog. Fires only on genuine quiz
+  // hydration (a stashed result was present); returning users are unaffected.
+  useQuizHydration(() => setView('palate'))
   const [selectedCoffeeId, setSelectedCoffeeId] = useState<string | null>(null)
   const [catalogOrigin, setCatalogOrigin] = useState<string | null>(null)
 
