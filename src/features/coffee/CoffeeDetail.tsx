@@ -516,7 +516,7 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
           )}
 
           <div style={styles.commerceBlock}>
-            {coffee.purchase_url ? (
+            {coffee.purchase_url && coffee.purchase_availability !== 'no' ? (
               <>
                 <a
                   href={coffee.purchase_url}
@@ -526,9 +526,6 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                 >
                   Buy from {coffee.retailer_name || coffee.roaster_name} ↗
                 </a>
-                {coffee.purchase_availability === 'no' && (
-                  <p style={styles.availNote}>Listed as out of stock when last checked.</p>
-                )}
                 {coffee.web_augmented_at && (
                   <p style={styles.freshNote}>
                     Checked {formatDate(coffee.web_augmented_at)} — confirm availability on the roaster's site.
@@ -536,8 +533,10 @@ export function CoffeeDetail({ coffeeId, onBack, onRate }: Props) {
                 )}
               </>
             ) : (
-              // No purchase link on file → we treat the coffee as unbuyable
-              // (Decision #067). These are also excluded from recommendations.
+              // Unbuyable = no purchase link on file, OR the biweekly availability
+              // check found the link dead (purchase_availability 'no'). Either way
+              // it reads as unavailable and is excluded from recommendations
+              // (Decisions #067 / #068).
               <p style={styles.availNote}>Not currently available for purchase.</p>
             )}
           </div>
