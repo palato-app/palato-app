@@ -37,15 +37,48 @@ const MAX_HTML_BYTES = 1_500_000;
 // most roaster carts). If a product URL ends up here, the product is gone.
 const GENERIC_PATH = /^(\/(collections(\/all)?|shop|store|coffee|products|)\/?)$/i;
 
+// Shopify's per-product JSON endpoint (/products/{handle}.json) is the most
+// reliable stock signal: authoritative `available` per variant, present even when
+// the storefront renders JSON-LD via JS or bot-blocks the HTML page. Most
+// specialty roasters run Shopify. Returns 'available' | 'unavailable' | null
+// (not Shopify / couldn't tell).
+async function shopifyStock(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  const handle = u.pathname.match(/\/products\/([^/?#]+)/)?.[1];
+  if (!handle) return null;
+  try {
+    const r = await fetch(`${u.origin}/products/${handle}.json`, {
+      headers: { 'User-Agent': UA, Accept: 'application/json' },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) return null;
+    const variants = (await r.json())?.product?.variants;
+    if (!Array.isArray(variants) || variants.length === 0) return null;
+    return variants.some((v) => v.available) ? 'available' : 'unavailable';
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Read a buy link and decide availability. Returns:
- *   'unavailable' — dead, redirected off the product, or JSON-LD sold-out
- *   'available'   — JSON-LD confirms in stock
+ *   'unavailable' — dead, redirected off the product, Shopify/JSON-LD sold-out
+ *   'available'   — Shopify/JSON-LD confirms in stock
  *   'unknown'     — live but no clear signal, or inconclusive (timeout, 403, 5xx)
  * 'unknown' NEVER flips a coffee — we only act on definite signals so a live
  * coffee is never hidden by mistake.
  */
 async function checkAvailability(url) {
+  // Most reliable signal first — works even when the HTML is JS-rendered/blocked.
+  const shop = await shopifyStock(url);
+  if (shop) return shop;
+
   let res;
   try {
     res = await fetch(url, {
