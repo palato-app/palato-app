@@ -441,11 +441,14 @@ export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
   )
   const [selectedRoasts, setSelectedRoasts] = useState<Set<string>>(new Set())
   const [selectedProcesses, setSelectedProcesses] = useState<Set<string>>(new Set())
+  // "Available to buy" — a coffee with a live purchase link (has a URL and isn't
+  // flagged unavailable by the biweekly check). Decisions #067/#068.
+  const [onlyBuyable, setOnlyBuyable] = useState(false)
   const [sortKey, setSortKey] = useState<SortKey>('roaster')
 
   const filterValues = useMemo(() => deriveFilterValues(coffees), [coffees])
 
-  const hasActiveFilters = search.length > 0 || selectedOrigins.size > 0 || selectedRoasts.size > 0 || selectedProcesses.size > 0
+  const hasActiveFilters = search.length > 0 || selectedOrigins.size > 0 || selectedRoasts.size > 0 || selectedProcesses.size > 0 || onlyBuyable
 
   const filtered = useMemo(() => {
     let result = coffees
@@ -467,15 +470,18 @@ export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
       result = result.filter((c) => c.roaster_stated_roast_level !== null && selectedRoasts.has(c.roaster_stated_roast_level))
     if (selectedProcesses.size > 0)
       result = result.filter((c) => c.process !== null && selectedProcesses.has(c.process))
+    if (onlyBuyable)
+      result = result.filter((c) => c.purchase_url != null && c.purchase_availability !== 'no')
 
     return sortCoffees(result, sortKey)
-  }, [coffees, search, selectedOrigins, selectedRoasts, selectedProcesses, sortKey])
+  }, [coffees, search, selectedOrigins, selectedRoasts, selectedProcesses, onlyBuyable, sortKey])
 
   function clearAll() {
     setSearch('')
     setSelectedOrigins(new Set())
     setSelectedRoasts(new Set())
     setSelectedProcesses(new Set())
+    setOnlyBuyable(false)
   }
 
   if (loading) return <p style={{ opacity: 0.5 }}>Loading coffees…</p>
@@ -544,6 +550,28 @@ export function BrowseCoffees({ onSelectCoffee, initialOrigin = null }: Props) {
               displayLabel={(v) => PROCESS_LABELS[v] || v}
             />
           )}
+
+          {/* Boolean toggle, not a value dropdown — mirrors the pill styling so
+              it reads as one of the filters (Decision #068). */}
+          <button
+            onClick={() => setOnlyBuyable((v) => !v)}
+            aria-pressed={onlyBuyable}
+            style={{
+              fontFamily: 'Geist, system-ui, sans-serif',
+              fontSize: '0.8rem',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '20px',
+              border: onlyBuyable ? '1px solid #D94E1F' : '1px solid rgba(30, 20, 16, 0.2)',
+              background: onlyBuyable ? 'rgba(217, 78, 31, 0.08)' : 'rgba(255, 255, 255, 0.35)',
+              color: onlyBuyable ? '#D94E1F' : '#1E1410',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              fontWeight: onlyBuyable ? 600 : 400,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Available to buy
+          </button>
 
           <div style={styles.divider} />
 

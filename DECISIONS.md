@@ -834,3 +834,23 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action (Jesse, ops):** batch-reaugment the URL-less catalog from the Augment tab so purchase links populate and recommendation inventory recovers.
 
 ---
+## #068 — July 13, 2026 — Buy-link liveness: biweekly availability check, weekly ops email, "Available to buy" filter (extends #067)
+
+**Decision:** Keep commerce honest as inventory churns, via three additions plus migration 0019 (`purchase_checked_at`, `unavailable_since` on coffees):
+1. **Biweekly availability check** (`api/check-availability.js`, Vercel cron) — re-fetches each coffee's `purchase_url` on a ~14-day cadence; a 404/410 flips `purchase_availability` → 'no' (coffee then reads "Not currently available" and drops from recommendations, #067), a live link keeps it active and restores a coffee this job previously took down. Runs *daily* but only re-checks coffees that are due (never checked, or `purchase_checked_at` > 14 days), staggering the load. Service role — `auth.uid()` is null, so the 0013 trigger permits the write.
+2. **Weekly ops email** (`api/weekly-report.js`, Sundays ~6pm ET) — three indicators to jesse.m.eshleman@gmail.com + jesse@palato.coffee via Resend: new coffees added this week, avg cost/gram across the buyable catalog, coffees that went unavailable this week. No per-coffee noise — just the numbers that confirm the machinery works.
+3. **Catalog "Available to buy" filter** + a **detail refinement**: a coffee flagged unavailable shows "Not currently available" rather than a dead buy button. "Available to buy" ≔ `purchase_url` present AND `purchase_availability != 'no'`.
+
+**Why:** Specialty coffee is seasonal and sells out — the pain every interviewee named (Jeremy: "the most annoying thing is knowing it's going to run out"). A buy link that 404s is worse than none (Jono: "don't lead me to a 404"). #066/#067 guarantee a link at approval and hide unbuyable coffees; this keeps that true over time without manual re-checking, and the weekly email is the feedback loop proving the system functions.
+
+**Alternatives considered:** (1) *A paid web-search per coffee to confirm availability* (Jesse's phrasing) — replaced with a direct HTTP liveness fetch: "no 404 returned" IS the check, and it's free vs. re-billing search results (the #065 lesson). (2) *"Every 14 days" as a literal cron* — Vercel cron takes standard expressions, so a daily run + a due-gate yields the biweekly cadence and spreads work. (3) *Detect sold-out from page content in the checker* — deferred; augmentation already reads in-stock at fetch time, and the checker owns the dead-link case Jesse specified. (4) *An email SDK dependency* — avoided; Resend's REST API over `fetch` needs no new package.
+
+**Tradeoffs accepted:** (a) A page that loads but shows "sold out" (200, no 404) isn't caught by the liveness check — augmentation's JSON-LD read is the sold-out signal; the checker only handles dead links and won't clobber a legit augment 'no' (disambiguated via `unavailable_since`, which only the checker sets). (b) Sunday 22:00 UTC = 6pm EDT but 5pm EST — cron can't track DST; revisit in November. (c) New infra/secrets to provision — `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY` + a Resend-verified palato.coffee sender, `CRON_SECRET` — and a Vercel plan that permits crons; the code is ready, activation is a config/deploy step. (d) Vercel Hobby caps cron frequency; the daily + due-gate design fits one daily invocation.
+
+**Verification:** build + typecheck + lint; catalog "Available to buy" toggle filters in-browser; detail shows "Not currently available" for an unbuyable coffee. Server crons verified on deploy — manual trigger with the `CRON_SECRET` header: a dead test link flips to 'no', and a report email arrives at both addresses with correct numbers.
+
+**Metric:** the weekly email is itself the metric surface — target 0 live buy links that 404, plus the avg-cost/gram trend and the weekly unavailable count as a churn signal.
+
+**Next action:** provision secrets + Resend domain, deploy, confirm one manual run of each cron. Gated behind tomorrow's re-augmentation — URLs must exist before the checker has anything to verify.
+
+---

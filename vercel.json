@@ -2,5 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/check-availability", "schedule": "0 8 * * *" },
+    { "path": "/api/weekly-report", "schedule": "0 22 * * 0" }
   ]
 }
