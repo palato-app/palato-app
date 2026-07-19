@@ -38,7 +38,15 @@ export function pickStartHere(
       : null
   const roastTarget = profile.flavor_unsure ? null : roastTargetIndex(profile.roast_preference)
 
-  const scored = coffees.map((c) => {
+  // Never surface a coffee the user can't buy (Decisions #067/#068). A "picked
+  // for you" card that leads to a dead or sold-out page breaks trust and earns
+  // zero affiliate — so match only over coffees with a live buy link. Uses live
+  // catalog data, so it reflects the availability check immediately (no cache).
+  const buyable = coffees.filter(
+    (c) => c.purchase_url != null && c.purchase_availability !== 'no',
+  )
+
+  const scored = buyable.map((c) => {
     let score = 0
     if (concreteOrigin && c.origin_country === concreteOrigin) score += 60
     if (roastTarget !== null && c.roaster_stated_roast_level) {
