@@ -131,6 +131,24 @@ export async function runAugment(
 }
 
 /**
+ * Set a coffee's buy link directly from the Augment tab. Writes the pasted URL to
+ * BOTH purchase_url (the user-facing "Buy from…" link — makes the coffee buyable
+ * immediately) and source_url (the page augmentation fetches for free). Same
+ * double-duty as approval (#066), but for coffees already in the catalog — the
+ * fast bulk-URL path (#068 follow-up). Admin-only (0018 policy / 0013 trigger).
+ */
+export async function setCoffeeBuyLink(
+  coffeeId: string,
+  url: string,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('coffees')
+    .update({ purchase_url: url, source_url: url })
+    .eq('id', coffeeId)
+  return { error: error?.message ?? null }
+}
+
+/**
  * Approve a proposal — applying ONLY the chosen fields (per-field accept/reject).
  * Writes the selected proposed facts onto the coffee, stamps provenance
  * (source_url / web_augmented_at / augmentation_raw — admin-only columns, guarded
