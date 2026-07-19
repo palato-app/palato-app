@@ -854,3 +854,32 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** provision secrets + Resend domain, deploy, confirm one manual run of each cron. Gated behind tomorrow's re-augmentation — URLs must exist before the checker has anything to verify.
 
 ---
+
+## #069 — July 19, 2026 — Mission, vision, theme, and core values (provisional first draft)
+
+**Status:** Provisional — Jesse flagged this as "subject to change." Logged now so the wording is captured and versionable; not yet locked.
+
+**Decision:** Adopt a first articulation of Palato's mission, vision, theme, and core values.
+
+**Mission:** We will help 50,000 people enjoy their coffee more by 2030, because no one should tolerate their daily ritual.
+
+**Vision:** We imagine a generation of coffee drinkers whose curiosity about flavor motivates them to care for the places their coffee comes from.
+
+**Theme:** When we learn to expand our palates, coffee stops being fuel and becomes a world to explore.
+
+**Core values:**
+- **Character outpaces everything.** How we build matters more than what we ship. We aspire to do the right thing, especially when no one else knows.
+- **Grow to the grave.** We are dedicated to constantly learn. We are explorers and deeply curious in nature.
+- **Creation is a gift.** Coffee is a good thing that grew out of the ground, and gifts are meant to be enjoyed rather than extracted from.
+- **Tell great stories.** Every coffee carries a place, a season, and a unique set of hands. We refuse to flatten that into a stale product description that misses the beauty in between.
+- **Give more than we take.** We exist to serve our people first and foremost. If we can't tell the public about a decision we made, we do not make it.
+
+**Why:** Palato is now driven as a real, profitable, and redemptive venture (see CLAUDE.md, *What Palato Is*). It has an accumulating record of *how* it's built (this log) and *what's broken* (TECH_DEBT), but no written statement of *why it exists* or the character it's meant to hold to. Capturing these makes them reviewable, quotable, and a check against future product decisions — the "Give more than we take" value in particular is a concrete decision filter, not just sentiment.
+
+**Alternatives considered:** (1) *Keep these in the Claude.ai project chat / brand thinking, out of the repo* — rejected: these should sit alongside the decision history the build actually references, and "subject to change" is exactly what a versioned, append-only log handles well. (2) *Wait until they're locked* — rejected: logging the draft now preserves the exact wording and lets later revisions show as diffs rather than replacing an unrecorded original.
+
+**Tradeoffs accepted:** These are aspirational statements, not yet validated against users or a business model; the 50,000-by-2030 mission number and the B2B revenue thesis (#058) haven't been reconciled here. This entry records intent, not proof. Expect a follow-up decision when the wording firms up.
+
+**Metric:** The mission carries its own headline metric — 50,000 people who "enjoy their coffee more" by 2030 — which will need an operational definition (what counts as a helped person; how "enjoy more" is measured) before it can be tracked. Deferred to that follow-up.
+
+---
