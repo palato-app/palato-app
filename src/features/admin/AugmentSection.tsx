@@ -7,6 +7,7 @@ import { regionsForCountry } from '../learn/data/originsData'
 import {
   usePendingAugmentations,
   runAugment,
+  setCoffeeBuyLink,
   approveAugmentation,
   rejectAugmentation,
   type Augmentation,
@@ -67,7 +68,12 @@ const s = {
   reject: { background: 'none', color: ink50, border: `1px solid ${line}`, borderRadius: '999px', padding: '0.4rem 1.1rem', fontSize: '0.82rem', cursor: 'pointer' as const } as const,
   src: { fontSize: '0.74rem', color: ink50, marginTop: '0.4rem', wordBreak: 'break-all' as const } as const,
   search: { width: '100%', padding: '0.5rem 0.75rem', border: `1px solid ${line}`, borderRadius: '8px', fontSize: '0.9rem', fontFamily: theme.bodyFont, boxSizing: 'border-box' as const, background: 'transparent', color: espresso } as const,
-  pickRow: { display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.55rem 0', borderBottom: `1px solid ${line}` } as const,
+  pickRowWrap: { padding: '0.55rem 0', borderBottom: `1px solid ${line}` } as const,
+  pickRow: { display: 'flex', alignItems: 'center', gap: '0.6rem' } as const,
+  linkRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0.45rem 0 0', paddingLeft: '1.5rem' } as const,
+  linkInput: { flex: 1, minWidth: 0, padding: '0.35rem 0.6rem', border: `1px solid ${line}`, borderRadius: '8px', fontSize: '0.78rem', fontFamily: theme.bodyFont, boxSizing: 'border-box' as const, background: 'transparent', color: espresso } as const,
+  linkBtn: { background: espresso, color: cream, border: 'none', borderRadius: '999px', padding: '0.3rem 0.85rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' as const, whiteSpace: 'nowrap' as const } as const,
+  linkHas: { color: ember, fontSize: '0.68rem', fontWeight: 600, whiteSpace: 'nowrap' as const } as const,
   augBtn: { background: 'none', color: espresso, border: `1px solid ${espresso}`, borderRadius: '999px', padding: '0.3rem 0.9rem', fontSize: '0.78rem', cursor: 'pointer' as const, whiteSpace: 'nowrap' as const } as const,
   batchBar: { display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.6rem 0' } as const,
   empty: { color: ink50, fontSize: '0.9rem', padding: '0.75rem 0' } as const,
@@ -179,11 +185,39 @@ export function AugmentSection() {
   const [errors, setErrors] = useState<string[]>([])
   const [needsUrl, setNeedsUrl] = useState<string[]>([])
   const [showAugmented, setShowAugmented] = useState(false)
+  // Per-row buy-link paste field (fast bulk-URL entry, #068 follow-up).
+  const [linkUrls, setLinkUrls] = useState<Record<string, string>>({})
+  const [savingLinkId, setSavingLinkId] = useState<string | null>(null)
+  const [savedLinkIds, setSavedLinkIds] = useState<Set<string>>(new Set())
 
   // Refresh both the proposal list and the coffee list (the latter so a just-
   // approved coffee's web_augmented_at lands and it drops from the run list).
   const refreshAll = () => {
     refetch()
+    refetchCoffees()
+  }
+
+  // Save a pasted product URL straight onto the coffee as its buy link
+  // (purchase_url + source_url). Makes it buyable immediately — no augment call.
+  const saveLink = async (coffeeId: string) => {
+    const url = (linkUrls[coffeeId] ?? '').trim()
+    if (!/^https:\/\/.+\..+/.test(url)) {
+      alert('Paste a full product-page URL starting with https://')
+      return
+    }
+    setSavingLinkId(coffeeId)
+    const { error: linkErr } = await setCoffeeBuyLink(coffeeId, url)
+    setSavingLinkId(null)
+    if (linkErr) {
+      alert(`Couldn't save the link: ${linkErr}`)
+      return
+    }
+    setSavedLinkIds((prev) => new Set(prev).add(coffeeId))
+    setLinkUrls((prev) => {
+      const next = { ...prev }
+      delete next[coffeeId]
+      return next
+    })
     refetchCoffees()
   }
 
@@ -320,31 +354,60 @@ export function AugmentSection() {
       )}
 
       <div>
-        {filtered.map((c) => (
-          <div key={c.id} style={s.pickRow}>
-            <input
-              type="checkbox"
-              checked={picked.has(c.id)}
-              onChange={() => togglePick(c.id)}
-              disabled={running}
-              style={{ accentColor: espresso }}
-            />
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontWeight: 600 }}>{c.coffee_name}</span>
-              <span style={{ color: ink50 }}> · {c.roaster_name}</span>
-              {c.web_augmented_at && (
-                <span style={{ color: ember, fontSize: '0.7rem', marginLeft: '0.4rem' }}>✓ augmented</span>
-              )}
-            </span>
-            <button
-              style={s.augBtn}
-              disabled={running}
-              onClick={() => runBatch([c.id])}
-            >
-              {c.web_augmented_at ? 'Re-augment' : 'Augment'}
-            </button>
-          </div>
-        ))}
+        {filtered.map((c) => {
+          const hasLink = c.purchase_url != null || savedLinkIds.has(c.id)
+          return (
+            <div key={c.id} style={s.pickRowWrap}>
+              <div style={s.pickRow}>
+                <input
+                  type="checkbox"
+                  checked={picked.has(c.id)}
+                  onChange={() => togglePick(c.id)}
+                  disabled={running}
+                  style={{ accentColor: espresso }}
+                />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontWeight: 600 }}>{c.coffee_name}</span>
+                  <span style={{ color: ink50 }}> · {c.roaster_name}</span>
+                  {c.web_augmented_at && (
+                    <span style={{ color: ember, fontSize: '0.7rem', marginLeft: '0.4rem' }}>✓ augmented</span>
+                  )}
+                </span>
+                <button
+                  style={s.augBtn}
+                  disabled={running}
+                  onClick={() => runBatch([c.id])}
+                >
+                  {c.web_augmented_at ? 'Re-augment' : 'Augment'}
+                </button>
+              </div>
+              {/* Fast buy-link entry: paste the roaster's product URL and save it
+                  straight onto the coffee as purchase_url + source_url (#068). */}
+              <div style={s.linkRow}>
+                <input
+                  type="url"
+                  style={s.linkInput}
+                  placeholder={hasLink ? 'Replace buy link…' : 'Paste roaster product-page URL → the Buy link'}
+                  value={linkUrls[c.id] ?? ''}
+                  disabled={savingLinkId === c.id}
+                  onChange={(e) => setLinkUrls((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveLink(c.id) }}
+                />
+                {hasLink && !(linkUrls[c.id] ?? '').trim() ? (
+                  <span style={s.linkHas}>✓ linked</span>
+                ) : (
+                  <button
+                    style={s.linkBtn}
+                    disabled={savingLinkId === c.id || !(linkUrls[c.id] ?? '').trim()}
+                    onClick={() => saveLink(c.id)}
+                  >
+                    {savingLinkId === c.id ? 'Saving…' : 'Set link'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })}
         {filtered.length === 0 && <p style={s.empty}>No coffees match.</p>}
       </div>
     </div>
