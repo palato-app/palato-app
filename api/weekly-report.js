@@ -18,7 +18,9 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-const FROM = 'Palato Reports <reports@palato.coffee>';
+// Sender must be on the Resend-verified domain — the reports.palato.coffee
+// SUBDOMAIN (not the bare domain). Any local-part works once the domain verifies.
+const FROM = 'Palato Weekly <noreply@reports.palato.coffee>';
 const TO = ['jesse.m.eshleman@gmail.com', 'jesse@palato.coffee'];
 
 const money = (n) => (n == null ? '—' : `$${n.toFixed(4)}/g`);
