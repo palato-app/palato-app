@@ -13,7 +13,6 @@ import { PalateFingerprint } from './components/PalateFingerprint'
 import { TasteProfile } from './components/TasteProfile'
 import { Origins } from './components/Origins'
 import { TasteTheWorld } from './components/TasteTheWorld'
-import { NewVarietals } from './components/NewVarietals'
 import { WhatsNext } from './components/WhatsNext'
 import { PalateStats } from './components/PalateStats'
 import { useRecommendations } from './data/useRecommendations'
@@ -183,8 +182,6 @@ export function PalateDashboard({
       />
 
       <TasteTheWorld origins={profile.origins} onBrowseOrigin={onBrowseOrigin} />
-
-      <NewVarietals onSelectCoffee={onSelectCoffee} />
 
       <WhatsNext
         recommendations={previewMode ? null : recommendations}
