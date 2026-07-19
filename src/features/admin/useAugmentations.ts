@@ -143,7 +143,15 @@ export async function setCoffeeBuyLink(
 ): Promise<{ error: string | null }> {
   const { error } = await supabase
     .from('coffees')
-    .update({ purchase_url: url, source_url: url })
+    .update({
+      purchase_url: url,
+      source_url: url,
+      // Pasting a fresh link asserts the coffee is buyable again — clear any
+      // stuck 'no' + unavailable_since so it re-enters circulation, and let the
+      // availability check re-confirm (the 0020 trigger restarts its cadence).
+      purchase_availability: 'unsure',
+      unavailable_since: null,
+    })
     .eq('id', coffeeId)
   return { error: error?.message ?? null }
 }

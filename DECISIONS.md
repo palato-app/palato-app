@@ -883,3 +883,24 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Metric:** The mission carries its own headline metric — 50,000 people who "enjoy their coffee more" by 2030 — which will need an operational definition (what counts as a helped person; how "enjoy more" is measured) before it can be tracked. Deferred to that follow-up.
 
 ---
+## #070 — July 19, 2026 — Availability check reads the page (not just the status), on a 14→7-day cadence (revises #068)
+
+**Decision:** Two upgrades to the buy-link availability job (#068):
+
+1. **Read the page, don't just check the status.** The v1 check only caught HTTP 404/410. But a sold-out coffee usually returns 200 (a "Sold Out" product page), and a removed product often 301s to the roaster's generic "all coffees" collection/home page — both looked "live." The check now: 404/410 → unavailable; **redirected onto a generic shop/collection/home path** → unavailable; **JSON-LD `availability` OutOfStock/SoldOut** → unavailable; JSON-LD `InStock` → confirmed available; a live link with no clear signal → left untouched (never guess). JSON-LD is the reliable signal because most specialty roasters run Shopify, which publishes it.
+
+2. **Cadence: first check 14 days after the link is verified, then every 7, until unavailable.** A freshly linked coffee is presumed available (the admin just added it), so we wait 14 days; then weekly to catch sell-through; and once flagged `'no'` we stop re-checking it. Needs a `purchase_url_set_at` clock start (migration 0020 + a trigger stamping every write path). Re-pasting a link (Augment tab) clears a stuck `'no'` and restarts the clock. A `?all=1` param forces a full sweep regardless of cadence — for a manual "check everything now."
+
+**Why:** Affiliate revenue and user trust both depend on never pointing at a page that can't sell the coffee. "Link still resolves" is too weak a definition of available — Jesse's catch (coffees that revert to a listing page still 200). Reading the stock signal is the difference between a check that looks like it works and one that does.
+
+**Alternatives considered:** (1) *Status-only (v1)* — misses the two most common sell-out patterns. (2) *Full-text "sold out" string matching* — noisy/false-positive-prone; kept JSON-LD + redirect as the reliable signals and deliberately do nothing on ambiguous pages (a false "unavailable" hides a sellable coffee and loses revenue too). (3) *Flat 14-day cadence (#068)* — replaced with 14→7 per Jesse; weekly re-checks catch sell-through faster once a coffee is live. (4) *Set `purchase_url_set_at` at each client write site* — a trigger is centralized and can't be forgotten by a new write path.
+
+**Tradeoffs accepted:** (a) Non-Shopify roasters without JSON-LD and without a redirect-on-removal won't be caught by the stock read — an accepted gap vs. the false-positive risk of guessing from page text. (b) Once flagged unavailable a coffee is not auto-restored; it re-enters only when an admin re-links it (deliberate — "until it's no longer available"). (c) A brand-new coffee isn't verified for 14 days; the `?all=1` manual sweep covers "check the existing catalog now." (d) Shared page-fetch logic now exists in both augment.js and check-availability.js — extract to a common module if a third consumer appears (not yet).
+
+**Verification:** build + `node --check`; migration dry-run; a manual `?all=1` run against the live catalog cross-checked against known sold-out vs in-stock roaster pages.
+
+**Metric:** false-unavailable rate (coffees flagged `'no'` that are actually in stock — target ~0) and catch latency (days from sell-out to flagged) — both visible via the weekly ops email's "no longer available" count and spot checks.
+
+**Next action:** `supabase db push` for 0020, then a manual `?all=1` sweep to smart-check the existing catalog immediately (the earlier status-only run set `purchase_checked_at`, so the cadence wouldn't otherwise revisit them for 7 days).
+
+---

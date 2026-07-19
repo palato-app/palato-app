@@ -1,17 +1,23 @@
 // /api/check-availability.js
-// Scheduled buy-link liveness check. Runs DAILY (Vercel cron) but only re-checks
-// coffees whose purchase_url hasn't been verified in ~14 days — so each coffee is
-// re-checked roughly biweekly and the work is spread across days.
+// Scheduled buy-link availability check (Decision #070, revising #068). Runs
+// DAILY (Vercel cron) but only re-checks coffees that are DUE: first check 14
+// days after a coffee's buy link was verified (purchase_url_set_at), then every
+// 7 days, and never again once it's flagged unavailable. Add ?all=1 to force a
+// full sweep of every linked coffee regardless of cadence (for a manual run).
 //
-// A 404/410 flips purchase_availability -> 'no' (the coffee then reads "Not
-// currently available" and drops out of recommendations, Decision #067). A live
-// link keeps it active, and restores a coffee THIS job previously took down.
-// "Available to buy" is defined purely as: purchase_url present AND
-// purchase_availability != 'no'.
+// It doesn't just check the status code — a 200 can be a sold-out page or a
+// redirect to the roaster's "all coffees" listing. It reads the page:
+//   * 404/410                                   -> unavailable
+//   * redirected to a generic shop/collection   -> unavailable (product removed)
+//   * JSON-LD availability OutOfStock/SoldOut    -> unavailable
+//   * JSON-LD availability InStock               -> available (confirmed)
+//   * live link, no clear signal                 -> leave as-is (never guess)
 //
-// Runs as the service role (no user session): the 0018 admins-only UPDATE policy
-// is bypassed by service_role, and the 0013 enforce_admin_only_columns trigger
-// permits it because auth.uid() is null. Requires SUPABASE_SERVICE_ROLE_KEY.
+// Unavailable flips purchase_availability -> 'no' (the coffee then reads "Not
+// currently available" and drops out of Start here + recommendations, #067/#068).
+//
+// Runs as the service role (auth.uid() null passes the 0013 trigger). Requires
+// SUPABASE_SERVICE_ROLE_KEY.
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -21,30 +27,84 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const UA = 'Mozilla/5.0 (compatible; PalatoBot/1.0; +https://palato.coffee)';
-const RECHECK_AFTER_DAYS = 14;
+const FIRST_CHECK_DAYS = 14; // first check this long after the link is verified
+const RECHECK_DAYS = 7; // then every this many days
 const BATCH = 40; // coffees per invocation — keeps the run inside maxDuration
 const CONCURRENCY = 5;
+const MAX_HTML_BYTES = 1_500_000;
 
-// A link is "dead" only on a definitive not-found. Everything inconclusive
-// (timeout, 403 bot-block, 5xx) is treated as alive so we never false-drop a
-// real link — same conservative posture as augment.js:isLivePurchaseUrl.
-async function isDeadLink(url) {
+// A generic listing/home path a removed product often redirects to (Shopify and
+// most roaster carts). If a product URL ends up here, the product is gone.
+const GENERIC_PATH = /^(\/(collections(\/all)?|shop|store|coffee|products|)\/?)$/i;
+
+/**
+ * Read a buy link and decide availability. Returns:
+ *   'unavailable' — dead, redirected off the product, or JSON-LD sold-out
+ *   'available'   — JSON-LD confirms in stock
+ *   'unknown'     — live but no clear signal, or inconclusive (timeout, 403, 5xx)
+ * 'unknown' NEVER flips a coffee — we only act on definite signals so a live
+ * coffee is never hidden by mistake.
+ */
+async function checkAvailability(url) {
+  let res;
   try {
-    const r = await fetch(url, {
+    res = await fetch(url, {
       method: 'GET',
       redirect: 'follow',
-      headers: { 'User-Agent': UA },
-      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': UA, Accept: 'text/html' },
+      signal: AbortSignal.timeout(10000),
     });
-    return r.status === 404 || r.status === 410;
   } catch {
-    return false;
+    return 'unknown'; // network/timeout — inconclusive
   }
+  if (res.status === 404 || res.status === 410) return 'unavailable';
+  if (!res.ok) return 'unknown'; // 403 bot-block / 5xx — don't false-flag
+
+  // Redirected off the product onto a generic listing/home page => product gone.
+  try {
+    const finalPath = new URL(res.url).pathname.replace(/\/+$/, '');
+    const origPath = new URL(url).pathname.replace(/\/+$/, '');
+    if (finalPath !== origPath && GENERIC_PATH.test(finalPath || '/')) return 'unavailable';
+  } catch {
+    // URL parse issue — fall through to body checks
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('text/html')) return 'unknown';
+
+  // Read a bounded chunk and look for JSON-LD stock status.
+  let html = '';
+  try {
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let bytes = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      html += decoder.decode(value, { stream: true });
+      if (bytes > MAX_HTML_BYTES) {
+        reader.cancel();
+        break;
+      }
+    }
+  } catch {
+    return 'unknown';
+  }
+
+  const blocks = [];
+  const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(html))) blocks.push(m[1]);
+  const ld = blocks.join(' ');
+  if (/"availability"\s*:\s*"[^"]*(OutOfStock|SoldOut|Discontinued)/i.test(ld)) return 'unavailable';
+  if (/"availability"\s*:\s*"[^"]*(InStock|LimitedAvailability|PreOrder|BackOrder)/i.test(ld)) return 'available';
+
+  return 'unknown';
 }
 
 export default async function handler(req, res) {
-  // Vercel Cron sends `Authorization: Bearer $CRON_SECRET`. Reject anything else
-  // so the endpoint isn't publicly triggerable.
+  // Vercel Cron sends `Authorization: Bearer $CRON_SECRET`. Reject anything else.
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized.' });
   }
@@ -52,68 +112,78 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured.' });
   }
 
-  const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-    auth: { persistSession: false },
-  });
+  const forceAll = req.query?.all === '1' || req.query?.all === 'true';
+  const db = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
-  const dueBefore = new Date(Date.now() - RECHECK_AFTER_DAYS * 86400_000).toISOString();
+  const now = Date.now();
+  const firstDue = new Date(now - FIRST_CHECK_DAYS * 86400_000).toISOString();
+  const reDue = new Date(now - RECHECK_DAYS * 86400_000).toISOString();
 
-  // Coffees with a buy link that are due a re-check: never checked, or checked
-  // more than RECHECK_AFTER_DAYS ago. Oldest/never first.
-  const { data: coffees, error } = await db
+  // Currently-buyable coffees (has a link, not already flagged 'no' — we stop
+  // once unavailable) that are due a check. `forceAll` ignores the cadence.
+  let q = db
     .from('coffees')
     .select('id, purchase_url, purchase_availability, unavailable_since')
     .not('purchase_url', 'is', null)
-    .or(`purchase_checked_at.is.null,purchase_checked_at.lt.${dueBefore}`)
+    .neq('purchase_availability', 'no');
+  if (!forceAll) {
+    // First check FIRST_CHECK_DAYS after the link was set; then every RECHECK_DAYS.
+    q = q.or(
+      `and(purchase_checked_at.is.null,purchase_url_set_at.lte.${firstDue}),purchase_checked_at.lte.${reDue}`,
+    );
+  }
+  const { data: coffees, error } = await q
     .order('purchase_checked_at', { ascending: true, nullsFirst: true })
     .limit(BATCH);
 
   if (error) return res.status(500).json({ error: error.message });
 
-  const now = new Date().toISOString();
+  const nowIso = new Date().toISOString();
   let markedUnavailable = 0;
-  let restored = 0;
-  let stillLive = 0;
+  let confirmedAvailable = 0;
+  let inconclusive = 0;
 
-  // Small concurrency so a batch of 40 finishes well inside maxDuration.
   for (let i = 0; i < (coffees || []).length; i += CONCURRENCY) {
     const chunk = coffees.slice(i, i + CONCURRENCY);
     await Promise.all(
       chunk.map(async (c) => {
-        const dead = await isDeadLink(c.purchase_url);
-        const patch = { purchase_checked_at: now };
-        if (dead) {
+        const verdict = await checkAvailability(c.purchase_url);
+        const patch = { purchase_checked_at: nowIso };
+        if (verdict === 'unavailable') {
           patch.purchase_availability = 'no';
-          // Stamp the transition once; keep the original timestamp on repeat deads.
-          patch.unavailable_since = c.unavailable_since ?? now;
-          if (c.purchase_availability !== 'no' || !c.unavailable_since) markedUnavailable++;
-        } else if (c.unavailable_since) {
-          // This job had previously taken it down; the link is back — restore it.
-          // (A 'no' with no unavailable_since came from augmentation's in-stock
-          // read, not us, so we leave that alone.)
+          patch.unavailable_since = c.unavailable_since ?? nowIso;
+          markedUnavailable++;
+        } else if (verdict === 'available') {
           patch.purchase_availability = 'yes';
-          patch.unavailable_since = null;
-          restored++;
+          confirmedAvailable++;
         } else {
-          stillLive++;
+          inconclusive++; // leave availability untouched, just record the check
         }
         await db.from('coffees').update(patch).eq('id', c.id);
       }),
     );
   }
 
-  // How many still await a check after this batch — surfaces backlog in logs.
-  const { count: remainingDue } = await db
-    .from('coffees')
-    .select('id', { count: 'exact', head: true })
-    .not('purchase_url', 'is', null)
-    .or(`purchase_checked_at.is.null,purchase_checked_at.lt.${dueBefore}`);
+  // Backlog still due after this batch (0 in force-all mode's accounting sense).
+  let remainingDue = 0;
+  if (!forceAll) {
+    const { count } = await db
+      .from('coffees')
+      .select('id', { count: 'exact', head: true })
+      .not('purchase_url', 'is', null)
+      .neq('purchase_availability', 'no')
+      .or(
+        `and(purchase_checked_at.is.null,purchase_url_set_at.lte.${firstDue}),purchase_checked_at.lte.${reDue}`,
+      );
+    remainingDue = Math.max(0, (count ?? 0) - (coffees?.length ?? 0));
+  }
 
   return res.status(200).json({
+    forceAll,
     checked: coffees?.length ?? 0,
     markedUnavailable,
-    restored,
-    stillLive,
-    remainingDue: Math.max(0, (remainingDue ?? 0) - (coffees?.length ?? 0)),
+    confirmedAvailable,
+    inconclusive,
+    remainingDue,
   });
 }
