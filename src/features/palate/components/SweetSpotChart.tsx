@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { theme } from '../../../lib/theme'
+import { useIsMobile } from '../../../lib/useIsMobile'
 import { barColor } from '../palateTheme'
 
 export type SweetSpotDatum = {
@@ -36,6 +37,7 @@ const emptyStyle = {
  * coloring (ember / ochre / muted) is driven by rawRating via barColor().
  */
 export function SweetSpotChart({ data, emptyHint }: Props) {
+  const isMobile = useIsMobile()
   const hasData = data.some((d) => (d.rawRating ?? 0) > 0)
   if (!hasData) {
     return <p style={emptyStyle}>{emptyHint ?? 'Not enough data yet.'}</p>
@@ -43,16 +45,24 @@ export function SweetSpotChart({ data, emptyHint }: Props) {
 
   return (
     <div style={{ width: '100%', marginTop: '10px' }}>
-      <ResponsiveContainer width="100%" height={150}>
-        <BarChart data={data}>
+      {/* On mobile Recharts silently drops overlapping x labels (e.g. only 3 of 6
+          varietals showed). Force every label with interval={0} and angle them so
+          they fit the narrow width; desktop keeps clean horizontal labels. The
+          taller container + XAxis height give the angled labels room. */}
+      <ResponsiveContainer width="100%" height={isMobile ? 178 : 150}>
+        <BarChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: isMobile ? 4 : 0 }}>
           <CartesianGrid vertical={false} stroke={theme.gridColorLight} />
           <XAxis
             dataKey="name"
+            interval={isMobile ? 0 : undefined}
             axisLine={{ stroke: theme.ink15 }}
             tickLine={false}
+            height={isMobile ? 52 : 30}
+            angle={isMobile ? -35 : 0}
+            textAnchor={isMobile ? 'end' : 'middle'}
             tick={{
               fill: theme.espresso,
-              fontSize: 11,
+              fontSize: isMobile ? 10 : 11,
               fontFamily: theme.bodyFont,
             }}
           />
