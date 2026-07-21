@@ -39,10 +39,13 @@ const GENERIC_PATH = /^(\/(collections(\/all)?|shop|store|coffee|products|)\/?)$
 
 // Shopify's per-product JSON endpoint (/products/{handle}.json) is the most
 // reliable stock signal: authoritative `available` per variant, present even when
-// the storefront renders JSON-LD via JS or bot-blocks the HTML page. Most
-// specialty roasters run Shopify. Returns 'available' | 'unavailable' | null
-// (not Shopify / couldn't tell).
-async function shopifyStock(url) {
+// the storefront renders JSON-LD via JS. A 404 there means the product is off the
+// storefront (archived/deleted) — an ARCHIVED product's page can still 200 with a
+// "This product is archived" notice (Onyx does exactly this). We only trust a 404
+// as "unavailable" once the site is confirmed Shopify (trustNotFound), so a
+// non-Shopify /products/ URL can't be false-flagged. Returns
+// 'available' | 'unavailable' | null (couldn't tell).
+async function shopifyStock(url, trustNotFound) {
   let u;
   try {
     u = new URL(url);
@@ -57,6 +60,7 @@ async function shopifyStock(url) {
       redirect: 'follow',
       signal: AbortSignal.timeout(8000),
     });
+    if (r.status === 404) return trustNotFound ? 'unavailable' : null;
     if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) return null;
     const variants = (await r.json())?.product?.variants;
     if (!Array.isArray(variants) || variants.length === 0) return null;
@@ -68,17 +72,13 @@ async function shopifyStock(url) {
 
 /**
  * Read a buy link and decide availability. Returns:
- *   'unavailable' — dead, redirected off the product, Shopify/JSON-LD sold-out
+ *   'unavailable' — dead, redirected off the product, archived, or sold-out
  *   'available'   — Shopify/JSON-LD confirms in stock
  *   'unknown'     — live but no clear signal, or inconclusive (timeout, 403, 5xx)
  * 'unknown' NEVER flips a coffee — we only act on definite signals so a live
  * coffee is never hidden by mistake.
  */
 async function checkAvailability(url) {
-  // Most reliable signal first — works even when the HTML is JS-rendered/blocked.
-  const shop = await shopifyStock(url);
-  if (shop) return shop;
-
   let res;
   try {
     res = await fetch(url, {
@@ -88,10 +88,15 @@ async function checkAvailability(url) {
       signal: AbortSignal.timeout(10000),
     });
   } catch {
-    return 'unknown'; // network/timeout — inconclusive
+    // HTML fetch failed — the Shopify JSON is often still reachable; try it but
+    // don't trust a 404 (couldn't confirm the site is Shopify).
+    return (await shopifyStock(url, false)) ?? 'unknown';
   }
   if (res.status === 404 || res.status === 410) return 'unavailable';
-  if (!res.ok) return 'unknown'; // 403 bot-block / 5xx — don't false-flag
+  if (!res.ok) {
+    // HTML blocked (403/429/5xx). Shopify JSON may still answer.
+    return (await shopifyStock(url, false)) ?? 'unknown';
+  }
 
   // Redirected off the product onto a generic listing/home page => product gone.
   try {
@@ -105,7 +110,7 @@ async function checkAvailability(url) {
   const contentType = res.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return 'unknown';
 
-  // Read a bounded chunk and look for JSON-LD stock status.
+  // Read a bounded chunk of the page.
   let html = '';
   try {
     const reader = res.body.getReader();
@@ -125,12 +130,21 @@ async function checkAvailability(url) {
     return 'unknown';
   }
 
+  // Confirmed Shopify? Its product JSON is authoritative — and a 404 there means
+  // the product was archived/removed even though this page still 200s.
+  if (/cdn\.shopify\.com|Shopify\.theme|myshopify\.com/i.test(html)) {
+    const shop = await shopifyStock(res.url, true);
+    if (shop) return shop;
+  }
+
+  // JSON-LD stock status + an explicit "gone" notice some 200 pages render.
   const blocks = [];
   const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let m;
   while ((m = re.exec(html))) blocks.push(m[1]);
   const ld = blocks.join(' ');
   if (/"availability"\s*:\s*"[^"]*(OutOfStock|SoldOut|Discontinued)/i.test(ld)) return 'unavailable';
+  if (/this product is archived|no longer available for (sale|purchase)/i.test(html)) return 'unavailable';
   if (/"availability"\s*:\s*"[^"]*(InStock|LimitedAvailability|PreOrder|BackOrder)/i.test(ld)) return 'available';
 
   return 'unknown';
