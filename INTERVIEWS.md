@@ -19,10 +19,10 @@ Names of respondents who explicitly engaged via personal email: first name only.
 ## Sample status
 - Round 1 screener completions: 5
 - Interview yeses (with email): 2 — Lucy, Jeremy
-- Interview yeses (no email captured): 1 — Kyle (replied "Sure!" but didn't leave email; needs follow-up)
+- Interview yeses (no email captured): 1 — Kyle (replied "Sure!" but didn't leave email; **interviewed July 20, 2026** via personal-network follow-up)
 - Maybe (business email): 1 — Kevin
 - Declined: 1 — Jes (no email left)
-- Out-of-band interviews conducted: 1 — Josh S. (May 2, 2026; recruited via Jesse's personal network, not screener)
+- Out-of-band interviews conducted: 2 — Josh S. (May 2, 2026); Joy (July 20, 2026) — both recruited via Jesse's personal network, not the screener
 
 ## Round 1 — April 25–26, 2026
 
@@ -130,7 +130,7 @@ Josh's framing suggests the rating flow shouldn't end at "submit." A short set o
 
 ## Round 2 — In-app usability interviews (July 2026)
 
-First round conducted against the shipped product (onboarding → quiz → add-and-rate → Learn → Palate → recommendations), using the Round 2 script in [docs/interview-guide.md](docs/interview-guide.md). Sessions are think-aloud walkthroughs on the participant's own phone, with a live add-and-rate task using a real bag.
+First round conducted against the shipped product (onboarding → quiz → add-and-rate → Learn → Palate → recommendations), using the Round 2 script in [docs/interview-guide.md](docs/interview-guide.md). Sessions are think-aloud walkthroughs on the participant's own phone, with a live add-and-rate task using a real bag. Four sessions so far: Jono (7/8), Jeremy (7/13), Joy (7/20), Kyle (7/20). Joy and Kyle were run on the same day and are the **first sessions Jesse did not personally facilitate** (Joy) or that shifted heavily into venture/monetization territory (Kyle).
 
 ### Jono — July 8, 2026
 
@@ -239,6 +239,96 @@ First round conducted against the shipped product (onboarding → quiz → add-a
 | J12 | Profile "favorite coffees" showcase (Letterboxd top-4) | Feature request, n=1, social-layer track |
 | J13 | Country/region check-off gamification | Feature request, n=1, retention/commerce track |
 
+### Joy — July 20, 2026
+
+**Transcript:** [docs/interviews/2026-07-20-joy.md](docs/interviews/2026-07-20-joy.md) (structured notes + anecdotal observations + full verbatim transcript). In person, own phone. **First Round 2 session Jesse did not facilitate** — a teammate ran it, narrating on-screen actions for the recording.
+
+**Profile:** Joy — 62, ~10 years into specialty (introduced by Jono, ex-Intelligentsia; gateway was Bridgeport in Chicago). Daily pour over on a Hario Switch, 1:16 @ 205°F, 40g→640g. Passenger subscriber (3 bags/mo, ~$65–70) supplemented from Big Mouth (1–2/mo, $18–27); ~$100–115/mo for two. Palate shifting dark→medium; leans chocolatey/nutty, recoils from "bitey"/acidic. Quality split ~10/80/10. Recruited via personal network (coffee-fluent, Jesse/Jono's circle) — same recruitment-bias caveat as every session so far. Segment read: a **joy-first spender**, not a value-maximizer — she'll happily pay more ("it's our habit… I don't mind spending more") and ranks *experiencing joy* above uniqueness and well above value ("I'm just not going to" buy a $65 Geisha, but not out of thrift). The first clear counter to the Jono/Jeremy value-maximizer convergence.
+
+**Top signals:**
+
+1. **"Like having your colors done" — a positioning line for the non-technical enthusiast.** Joy's own, unprompted, repeated twice: the app tells you what suits your palate the way a color analyst tells you which yellows suit you, so you stop "buying blindly." This is the Oura/Vivino framing debate answered in a *third* register — self-knowledge as personal-styling, not data-wearable and not social-proof. Lands emotionally for an older, non-quantified user in a way the "starting palate" reveal (which she found "limited right now") did not.
+2. **Café-cup logging, not just bags (new, strong).** Her most animated feature ask: log a coffee she loved *at a shop* — "that one cup may be more information for me than a bag I'm buying blindly." She'd ask the barista, photograph the bag, and enter the brew method manually. Distinct from the add-a-bag flow the product assumes; goes to the same per-brew-vs-per-bag question Jono/Jeremy raised, from the demand side (she *wants* a per-cup record of a non-purchasable experience).
+3. **Learn as a brew-education destination + expert brew recs per coffee (new, strong).** Wants Learn to teach brew *methods* and *ratios* (Kalita vs. V60; "it's not always 1:16?"), not just origins — because that's what she actually struggles with. And a per-coffee expert brew recommendation ("a barista-award winner: here's my ratio") — "takes the guesswork out and I'm not wasting coffee." Trust mechanism: credentials alone suffice ("you've got a title behind your name"). Explicit tone requirement: approachable, straight-answer, *not* pretentious (the anti-Onyx-barista).
+4. **OAuth Supabase-URL trust-killer — now n=3.** "Rolfo Sousa was in the Supabase… it's crazy." Third consecutive session where the consent screen burns trust at the ask (Jono #21, Jeremy J6, Joy). Urgency rising.
+5. **Globe: outlines too dark + spins too fast.** Country/continent outlines are illegible ("unless you know your geography, I don't know what that is" — wants faint/dashed continent traces); zooming in helped. Spin-too-fast replicates the Jeremy J5 / Jono #4 globe-feel thread — now the sensitivity complaint spans both Learn *and* the Palate map.
+6. **Two new activation-flow bugs at the very start.** "Unlock Your Palate" didn't read as *create an account* ("doesn't seem clear this is where I create an account") — n=1 but it's the primary CTA. And **"Rate Your First Coffee" routed to the catalog, not the rating flow** — a concrete misroute, distinct from Jeremy's J2 (post-quiz *landing*), here it's the empty-state CTA.
+7. **Flavor-notes list overwhelms → search-first.** Faced with the descriptor grid: "this feels overwhelming… I'm tasting all these things." Preferred to type ("cherry"→matched "red cherry"), wanted the list collapsed. Reinforces the descriptor-entry redesign (Jono #25, the "add more flavors" thread) with a clean "type, don't scroll" vote.
+8. **Origin-affinity fallback "somewhere else" reads as inert/incomplete** — she picked it because her palate is mid-migration (Ethiopian→medium, origin-agnostic) and the label gave nothing back. Adjacent to Jono's "accurate but inert" starting palate (#18), but here it's the *fallback copy* specifically.
+9. **"Cheating" tell — users treat rating as a self-test.** She asked whether reading the bag's notes first is cheating. The app should explicitly bless subjectivity ("you don't have to taste what they say"); it currently relies on the facilitator to say it.
+10. **Counter-signals to the value-maximizer thesis** (see profile): joy-first, spend-willing, seasonal-grief-driven. Her re-buy pain is for *unre-acquirable* seasonal coffees (Big Shoulders Ugandan Bugisu; Onyx Chalbesa Anaerobic) — so her recommendation need is "find me something *similar*," not "buy this again." She also volunteered a sharp critique of the wine analogy: bottled wine "lives on a shelf longer," so coffee's seasonality is *less* predictable than wine's — the "Vivino for coffee" frame has a demand-side seam.
+
+**Verbatim worth keeping:**
+
+- "Not too different from somebody who had their colors done." — the positioning line.
+- "As I add to my library it's going to expand and show what I really lean towards… it dials into my palate." — the product thesis in a non-technical user's words.
+- "That one cup of coffee may be more information for me than a bag of beans that I'm buying blindly." — the café-logging ask.
+- "I just want a good cup of coffee." / "Just tell me the answer." — the anti-pretentious tone requirement (re: the snarky Onyx barista).
+- "It takes the guesswork out of it for me and I'm not wasting coffee." — why an expert per-coffee brew rec would land.
+- "Rolfo Sousa was in the Supabase." — the OAuth trust-killer, n=3.
+- "Unlock your palette doesn't seem clear to me that this is where I create an account." — the primary-CTA gap.
+- "Experiencing joy when I taste coffee would be first." — the joy-first segment, against the value-maximizer grain.
+
+**Issue inventory (replication status noted; prioritization → DECISIONS.md / TECH_DEBT.md, not here):**
+
+| # | Issue | Status |
+|---|---|---|
+| Y1 | "Unlock Your Palate" CTA doesn't signal account creation | New, n=1, primary-CTA copy |
+| Y2 | "Rate Your First Coffee" empty-state CTA routes to catalog, not the rating flow | New, n=1; misroute (distinct from Jeremy J2's post-quiz landing) |
+| Y3 | OAuth consent screen exposes raw Supabase URL | **Replicates Jono #21 / Jeremy J6 — now n=3**, config task, rising urgency |
+| Y4 | Globe country/continent outlines too dark to distinguish | New, n=1; wants faint/dashed continent traces |
+| Y5 | Globe spins too fast (Learn + Palate map) | **Replicates Jeremy J5 / Jono #4 globe-feel** |
+| Y6 | "MASL" abbreviation unexplained on origin pages | New, n=1; wants an info tooltip |
+| Y7 | Flavor-notes list overwhelming as a scroll; wants type/search-first | **Reinforces Jono #25 / descriptor-entry redesign** |
+| Y8 | Origin-affinity fallback label "somewhere else" reads as inert | New, n=1 (adjacent to Jono #18 inert starting palate) |
+| Y9 | No brew-method / ratio education in Learn | Feature request, n=1, clear rationale |
+| Y10 | No expert brew recommendation per coffee (ratio/temp) | Feature request, n=1, purchase-confidence lever |
+| Y11 | No café/per-cup logging path (log a great shop cup, not just a bag) | Feature request, n=1; ties to per-brew-vs-per-bag (Jono #8 / Jeremy J4) |
+| Y12 | Advanced brew fields (extraction) unexplained for newer users | New, n=1; inline education |
+
+### Kyle — July 20, 2026
+
+**Transcript:** [docs/interviews/2026-07-20-kyle.md](docs/interviews/2026-07-20-kyle.md) (structured notes + anecdotal observations + full verbatim transcript). Remote (Zoom, own phone, screen-shared), photo-from-library for the add-and-rate task. This is the Round 1 screener Kyle (self-reported "Deep into it," buys a few times/year) finally interviewed — the self-report-vs-behavior gap the Round 1 sample flagged. Session ran long into venture/monetization territory.
+
+**Profile:** Kyle — 34, Shift Lead at [Kuppa Joy](https://kuppajoy.com/). Chemex at home (currently jerry-rigged: filter in a baking sieve over a Pyrex, pending real filters); Fellow kettle named the single best home investment. Prefers going *out* for coffee to brewing at home; home routine is "utilitarian… I just need caffeine in my veins" (Trader Joe's in the pantry). Buying specialty on/off ~6–8 years, ~$25–50/mo, 1–2 bags; most memorable recent buy Cat and Cloud (Santa Cruz). Quality split ~5–10% incredible, rest fine-to-disappointing (sometimes brew execution, not the bean). Recruited via personal network — same bias caveat. Segment read: a coffee *professional* with a *casual-at-home* behavior — the "expertise doesn't equal home spend" case the Round 1 self-report gap predicted, now confirmed in the room.
+
+**Top signals:**
+
+1. **The quiz's motivation set is a replicated gap (n=2).** Kyle's actual motivation — *"I want to get better at knowing what I like"* — is not an option; Jeremy's ("track my coffee memories") wasn't either. Two Round 2 users, two different core motivations, both invisible to the motivation question. The fixed answer set is now validated debt (Jeremy J10 → n=2, different missing option).
+2. **The product thesis, tested by its natural skeptic.** Kyle is the sample's clearest "pour-over flavor reward is marginal" voice — the notes "have to be appreciated with a different part of your brain… that part gets over the novelty really fast"; "I've never craved an Ethiopian to get through a stressful day." And *he* raised the question the whole app is a bet on: "if I really focused on my palate… would it actually get there?" Jesse: "That's what I'm building." He's the ideal longitudinal validation-or-refutation case — if Palato can move *Kyle's* flavor reward, the thesis holds.
+3. **Show a fleshed-out example palate before the 3-rating unlock (new, strong).** His strongest unprompted ask: "I'm craving to see what someone else's palate looks like… bait it, here's what you're growing into." Sample/demo data doubles as (a) an activation fix for the empty state (the flip side of Jono's post-quiz dead-end #19) and (b) his on-ramp into the social layer.
+4. **Lead the rec cards with "Something You'll Love."** Reading the three cards, he hit "Try Something Unique" first and couldn't tell it was personalized ("this could be anywhere… is this connected to me?"). Putting "Something You'll Love" first would immediately signal *this is from your data*. Cheap ordering change, clear rationale.
+5. **Social = follow specific people + similarity nudges (n=2 for a social layer).** Explicitly *not* Instagram/Venmo. Wants to search a profile ("what's Jesse been drinking?") and a notification — *"Jesse just drank a coffee super similar to one you rated highly — you should try it."* Grounded in the data-richness of the profile. Complements Jeremy's Letterboxd-style profile ask (J12); the social-layer signal is now converging across Round 2.
+6. **Back-button bug after the duplicate warning.** Duplicate detection *worked* (clear "already in your catalog" message), but hitting back sent him to the **login screen**, and the bottom nav briefly vanished. New, concrete, n=1.
+7. **Variety-as-barrier → a personalized-subscription monetization idea.** Boredom with two weeks of one coffee → wants mix-and-match / multi-bag packs → his invented ~$20/mo profile-matched subscription with a pre-ship "match my profile or surprise me" prompt. Notably he reinvented the app's own three-rec framing as a fulfillment model. He'd *pay* for this ("existing subs like Blue Bottle lack the personalization") — a rare willingness-to-pay signal in the round, but for *fulfillment*, not for the app itself.
+8. **Trade Coffee is the competitor to study.** Jesse walked Trade's quiz-to-subscription flow live; Kyle's read is it already does this "less detailed," and Jesse's is that Trade's quality skews "lackluster mega-roaster" (Stumptown-tier). Differentiation wedge Kyle names: personalization depth + small-roaster curation ("Palato Certified"). Action-item'd for research.
+9. **OAuth screen was a *non*-issue for Kyle — a counter-signal.** "Is that link really scary to you?" → "No." Where Jono/Jeremy/Joy read the raw Supabase URL as a trust-killer, Kyle (a more technical user) shrugged. Doesn't lower the fix priority — the trust-killer stands at n=3 among *non*-technical users — but it bounds the claim: it burns trust for the mainstream user, not the developer-literate one.
+10. **Scan sparse-text failure feeds the eval.** OCR pre-filled some fields but not all; the flow demanded process/wash that "isn't always on the bag." His pro instinct surfaced the catalog-quality question directly ("is there some way to validate the data? you could end up with duplicates that are incorrect") — the exact concern the moderation gate exists to answer.
+
+**Verbatim worth keeping:**
+
+- "If I really focused on my palate… would it actually get there?" — the skeptic asking the product's core question (Jesse: "That's what I'm building").
+- "I've never craved an Ethiopian to get through a stressful day." — the marginal-flavor-reward thesis, vividly.
+- "I have a sense of hope and trust in this app currently that hasn't let me down yet." — trust signal from a professional, mid-critique.
+- "I'm craving to see what someone else's palette looks like… here's what you're growing into." — the example-palate ask.
+- "Something you love first would make me understand you're showing me something based on my data." — the rec-label reorder.
+- "Jesse just drank a coffee that is super similar to one you rated highly. You should try it." — the social similarity-nudge, user-designed.
+- "The nomenclature is not absolutely specific… it says mango, there's no guarantee you're actually going to taste that." — the trust-in-notes pain (echoes Round 1 Theme 3).
+- "I would use Duolingo every day… but I won't pay for it." — why he's against the app subscription but not against a fulfillment subscription.
+
+**Issue inventory (replication status noted; prioritization → DECISIONS.md / TECH_DEBT.md, not here):**
+
+| # | Issue | Status |
+|---|---|---|
+| K1 | Quiz motivation lacks "get better at knowing what I like" | **Replicates the missing-motivation gap (Jeremy J10) — now n=2**, different option |
+| K2 | No example/demo palate before the 3-rating unlock | New, n=1; activation + social on-ramp (flip side of Jono #19) |
+| K3 | Rec cards should lead with "Something You'll Love," not "Try Something Unique" | New, n=1; ordering, clear rationale |
+| K4 | Back button after duplicate warning → login screen; bottom nav vanishes | New, n=1, bug |
+| K5 | Wants lightweight social: follow people, view palates, similarity nudges | **Complements Jeremy J12 — social layer now n=2** |
+| K6 | Scan didn't fill all fields (sparse bag text); flow needs process not on bag | New; expected scan failure mode, feeds the scan eval |
+| K7 | Raw Supabase URL on OAuth screen — **not** alarming to this (technical) user | **Counter-signal to Jono #21 / Jeremy J6 / Joy Y3** — bounds the trust-killer to non-technical users |
+| K8 | Wants an interpretive/"personality-test" layer on the palate reveal | New, n=1 (adjacent to Joy's "colors done" framing) |
+
 ### Round 2 → action items
 
 - [ ] Move confirmed UX fixes into TECH_DEBT.md / a fix session; log any model changes (e.g. edit-permission reversal vs. Decision #045) in DECISIONS.md
@@ -246,6 +336,14 @@ First round conducted against the shipped product (onboarding → quiz → add-a
 - [ ] Tighten the script toward ~30 min; the add-and-rate task + Learn + recs Q&A is the high-yield core
 - [ ] Watch for replication in the next 2–3 sessions: logo readability (Jeremy: fine — 1 for, 1 against), factoid skimming (Jeremy: landed — 1 for, 1 against), inert starting palate (Jeremy: landed — 1 for, 1 against), globe-on-Palate placement (Jeremy: no signal). ~~Per-brew vs. per-bag confusion~~ → **replicated 7/13 (Jeremy, with structural fix proposed)** — ready for a DECISIONS.md call on the rating-flow split
 - [ ] Mobile pass on globe spin sensitivity — Jeremy reports the July 8 inertia fix overshot on touch (J5)
-- [ ] Prioritize the OAuth consent-screen branding config task — trust-killer now confirmed n=2 (Jono #21 / Jeremy J6)
+- [ ] Prioritize the OAuth consent-screen branding config task — trust-killer now **n=3** among non-technical users (Jono #21 / Jeremy J6 / Joy Y3); Kyle (technical) shrugged (K7), so the fix is about mainstream trust, not universal
+- [ ] Fix the empty-state onboarding CTAs: "Rate Your First Coffee" misroutes to the catalog (Joy Y2) and "Unlock Your Palate" doesn't read as account creation (Joy Y1)
+- [ ] Fix the back-button-after-duplicate → login-screen bug + disappearing bottom nav (Kyle K4)
+- [ ] Reorder the recommendation cards to lead with "Something You'll Love" (Kyle K3) — signals personalization
+- [ ] Design the pre-unlock example/demo palate — activation fix + social on-ramp, requested by Kyle (K2), and the flip side of Jono's post-quiz dead-end (#19)
+- [ ] Widen the quiz motivation set — "get better at knowing what I like" (Kyle K1) and "track my coffee memories" (Jeremy J10); the fixed set is now a **n=2** gap
+- [ ] The social layer is now requested by two Round 2 participants (Kyle K5 follow-people/similarity-nudges; Jeremy J12 profiles) — take the go/no-go to the Claude.ai project chat with this evidence
+- [ ] New product threads for the project chat: café/per-cup logging (Joy Y11), brew-method + expert-ratio education in Learn (Joy Y9/Y10), the joy-first vs. value-maximizer segment split (Joy vs. Jono/Jeremy), and the personalized-subscription / "Palato Certified" monetization model + a Trade Coffee competitive teardown (Kyle)
+- [ ] Mobile pass on globe spin sensitivity — now n=2 (Jeremy J5 / Joy Y5); Joy also flags illegible continent outlines (Y4)
 - [ ] Fix the script line "I'm going to hand you…" (remote/own-phone sessions don't hand anything)
-- [ ] Continue recruiting outside the personal network — Jono extends the Round 1 bias (family, coffee-fluent)
+- [ ] Continue recruiting outside the personal network — Joy and Kyle both extend the Round 1 bias (personal network, coffee-fluent); still zero cold Curious Upgraders
