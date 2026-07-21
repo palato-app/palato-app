@@ -135,18 +135,27 @@ export default async function handler(req, res) {
       (c) => !ratedIds.has(c.id) && c.purchase_url && c.purchase_availability !== 'no',
     );
 
+    // Favor the little guys (Decision #071). A roaster with many coffees in the
+    // buyable catalog is a proxy for "big" (Onyx, Blue Bottle carry deep
+    // lineups), so its coffees are down-weighted; a 1–2-coffee independent keeps
+    // full weight. sqrt keeps it gentle — palate fit still leads, this just
+    // tilts ties and near-ties toward small roasters.
+    const roasterCount = {};
+    for (const c of candidates) roasterCount[c.roaster_name] = (roasterCount[c.roaster_name] || 0) + 1;
+    const roasterWeight = (c) => 1 / Math.sqrt(roasterCount[c.roaster_name] || 1);
+
     // --- Deterministic shortlists ---
     const uniqueList = topBy(candidates, (c) => {
       const { fams, descs } = familiesOf(c.coffee_flavor_descriptors);
       const novel = [...descs].filter((d) => !userDescs.has(d)).length;
       if (novel === 0) return 0;
       const sharesLiked = [...fams].some((f) => likedFamilies.has(f));
-      return novel * (sharesLiked ? 2 : 1) + (sharesLiked ? 1 : 0);
+      return (novel * (sharesLiked ? 2 : 1) + (sharesLiked ? 1 : 0)) * roasterWeight(c);
     }, 6);
 
     const exploreList = topBy(candidates, (c) => {
       if (!c.origin_country || userOrigins.has(c.origin_country)) return 0;
-      return 1 / (originFreq[c.origin_country] || 1) + (UNCOMMON_ORIGINS.has(c.origin_country) ? 1 : 0) + 0.01;
+      return (1 / (originFreq[c.origin_country] || 1) + (UNCOMMON_ORIGINS.has(c.origin_country) ? 1 : 0) + 0.01) * roasterWeight(c);
     }, 6);
 
     const loveList = topBy(candidates, (c) => {
@@ -156,7 +165,7 @@ export default async function handler(req, res) {
       s += roastW[c.roaster_stated_roast_level] || 0;
       s += processW[c.process] || 0;
       s += originW[c.origin_country] || 0;
-      return s;
+      return s * roasterWeight(c);
     }, 6);
 
     const shortlists = {
@@ -214,13 +223,35 @@ Respond with ONLY valid JSON, no markdown:
       love: 'Close to the coffees you already score highly — a safe bet for your taste.',
     };
     const PROC = { natural: 'natural', honey: 'honey', anaerobic: 'anaerobic', washed: 'washed' };
+    // Enforce roaster diversity across the three cards (Decision #071) — never two
+    // picks from the same roaster. Built in order; each card takes the first
+    // candidate from a not-yet-used roaster, preferring Claude's pick then the
+    // shortlist order. Falls back to the top pick if every candidate's roaster is
+    // already taken (better a repeat than an empty card).
+    const usedRoasters = new Set();
     const build = (kind) => {
       const list = shortlists[kind];
       if (!list.length) return null;
       const pick = picks[kind];
-      const inList = pick && list.some((c) => c.coffeeId === pick.coffeeId);
-      const chosen = inList ? byId.get(pick.coffeeId) : byId.get(list[0].coffeeId);
+      const claudeId = pick && list.some((c) => c.coffeeId === pick.coffeeId) ? pick.coffeeId : null;
+      const order = claudeId
+        ? [claudeId, ...list.map((c) => c.coffeeId).filter((id) => id !== claudeId)]
+        : list.map((c) => c.coffeeId);
+
+      let chosen = byId.get(order[0]) || null;
+      for (const id of order) {
+        const c = byId.get(id);
+        if (c && !usedRoasters.has(c.roaster_name)) {
+          chosen = c;
+          break;
+        }
+      }
       if (!chosen) return null;
+      usedRoasters.add(chosen.roaster_name);
+
+      // Claude's reason describes its picked coffee — only reuse it if diversity
+      // didn't move us to a different coffee.
+      const reason = claudeId === chosen.id && pick.reason ? pick.reason : TEMPLATES[kind];
       return {
         kind,
         coffeeId: chosen.id,
@@ -229,7 +260,7 @@ Respond with ONLY valid JSON, no markdown:
         roaster: chosen.roaster_name,
         process: PROC[chosen.process] || chosen.process || 'other',
         roastLevel: (chosen.roaster_stated_roast_level || 'medium').replace(/_/g, '-'),
-        reason: (inList && pick.reason) ? pick.reason : TEMPLATES[kind],
+        reason,
       };
     };
 

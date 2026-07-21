@@ -904,3 +904,20 @@ A running log of meaningful product, technical, and strategic decisions. Each en
 **Next action:** `supabase db push` for 0020, then a manual `?all=1` sweep to smart-check the existing catalog immediately (the earlier status-only run set `purchase_checked_at`, so the cadence wouldn't otherwise revisit them for 7 days).
 
 ---
+## #071 — July 19, 2026 — Recommendations favor small/independent roasters (diversity + size heuristic)
+
+**Decision:** The recommendation engine (#053) now (1) never puts two of the three cards on the same roaster, and (2) down-weights coffees from roasters with large catalog footprints. A roaster's coffee count in the buyable catalog is a proxy for "big" — the weight is `1/sqrt(count)`, so a 1-coffee independent keeps full weight while a deep-lineup roaster (Onyx, Blue Bottle) is gently pushed down. Palate fit still leads; this tilts ties and near-ties toward the little guys and guarantees three distinct roasters.
+
+**Why:** The #067 buyability filter had a structural side effect — big roasters run Shopify with reliable, confirmable buy links, so they always survive the "must be buyable" gate, while small/independent roasters (least likely to have a confirmable online store) fall out. Recommendations concentrated on the big guys (2× Onyx, 1× Blue Bottle in one set) — the exact opposite of Palato's redemptive-venture mission (#069, "give more than we take"; support the growers and small roasters). Jesse chose the diversity + size-heuristic approach over a curated flag (deferred) or diversity-only.
+
+**Alternatives considered:** (1) *Curated "independent roaster" flag* — most accurate and most on-mission, but needs a schema + admin surface + Jesse's ongoing curation; deferred, may revisit. (2) *Diversity only* — stops same-roaster repeats but doesn't actively push toward small; rejected as too passive. (3) *Hard-exclude a big-roaster list* — blunt and brittle. (4) *Multiplicative down-weight by raw count (1/count)* — too aggressive (a 10-coffee roaster all but excluded); `1/sqrt` is the gentler curve.
+
+**Tradeoffs accepted:** (a) Catalog-frequency is an imperfect proxy — a small roaster that happens to have several coffees in Palato gets penalized, and a big roaster with few gets a pass; accepted for zero data cost, with the curated flag as the eventual upgrade. (b) The tilt can surface a slightly-worse palate match from a small roaster over a better one from a big roaster — intended, within reason (sqrt keeps it gentle). (c) The deeper tension stands: "only recommend buyable coffees" and "champion the little guys" partly conflict, since the little guys are the least likely to be online-purchasable — this heuristic only rebalances *among linkable* roasters.
+
+**Verification:** node --check + unit tests (roasterWeight curve; three-distinct-roaster assembly with a forced same-roaster shortlist). Real check: regenerate recs and confirm three distinct roasters with visible small-roaster presence.
+
+**Metric:** roaster distribution across issued recommendation cards — share going to independent/small roasters should rise materially vs. the big-roaster concentration that triggered this.
+
+**Next action:** watch the mix after a few regenerations; if the frequency proxy misfires on specific roasters, upgrade to the curated independent flag.
+
+---
